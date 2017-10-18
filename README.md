@@ -1,6 +1,6 @@
 # e2e-harness
 
-[![CircleCI](https://circleci.com/gh/giantswarm/e2e-harness.svg?style=svg)](https://circleci.com/gh/giantswarm/e2e-harness)
+[![CircleCI](https://circleci.com/gh/giantswarm/e2e-harness.svg?style=shield)](https://circleci.com/gh/giantswarm/e2e-harness)
 
 Harness for custom kubernetes e2e testing.
 
