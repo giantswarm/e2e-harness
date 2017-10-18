@@ -6,7 +6,7 @@ Harness for custom kubernetes e2e testing.
 
 ## Getting Project
 
-Clone the git repository: https://github.com/giantswarm/shipyard.git
+Clone the git repository: https://github.com/giantswarm/e2e-harness.git
 
 ## Running e2e-harness
 
@@ -16,7 +16,7 @@ TODO
 
 - Mailing list: [giantswarm](https://groups.google.com/forum/!forum/giantswarm)
 - IRC: #[giantswarm](irc://irc.freenode.org:6667/#giantswarm) on freenode.org
-- Bugs: [issues](https://github.com/giantswarm/shipyard/issues)
+- Bugs: [issues](https://github.com/giantswarm/e2e-harness/issues)
 
 ## Contributing & Reporting Bugs
 
@@ -24,4 +24,4 @@ See [CONTRIBUTING.md](/giantswarm/e2e-harness/blob/master/CONTRIBUTING.md) for d
 
 ## License
 
-Shipyard is under the Apache 2.0 license. See the [LICENSE](/giantswarm/e2e-harness/blob/master/LICENSE) file for details.
+E2e-Harness is under the Apache 2.0 license. See the [LICENSE](/giantswarm/e2e-harness/blob/master/LICENSE) file for details.
