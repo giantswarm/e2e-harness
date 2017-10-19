@@ -12,8 +12,50 @@ jobs:
 
     - run: ./architect build
 
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./e2e-harness
+
     - deploy:
         command: |
           if [ "${CIRCLE_BRANCH}" == "master" ]; then
             ./architect deploy
           fi
+
+  e2eSetup:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run: ./e2e-harness setup --image-tag=${CIRCLE_SHA1}
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./.e2e-harness
+
+  e2eTeardown:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run: ./e2e-harness teardown
+
+workflows:
+  version: 2
+  build_e2e:
+    jobs:
+      - build
+      - e2eSetup:
+          requires:
+          - build
+      - e2eTeardown:
+          requires:
+          - e2eSetup
