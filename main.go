@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	gitCommit = "latest"
+	gitCommit = "n/a"
 	name      = "e2e-harness"
 )
 
