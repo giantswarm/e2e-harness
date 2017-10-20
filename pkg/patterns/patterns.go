@@ -8,8 +8,22 @@ import (
 	"github.com/giantswarm/micrologger"
 )
 
-// FindMatch returns true if the given pattern is found in the input pipe.
-func FindMatch(logger micrologger.Logger, input io.Reader, pattern string) (bool, error) {
+type Matcher interface {
+	Find(input io.Reader, pattern string) (bool, error)
+}
+
+type Patterns struct {
+	logger micrologger.Logger
+}
+
+func New(logger micrologger.Logger) *Patterns {
+	return &Patterns{
+		logger: logger,
+	}
+}
+
+// Find returns true if the given pattern is found in the input pipe.
+func (pa *Patterns) Find(input io.Reader, pattern string) (bool, error) {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
 		return false, err
@@ -17,7 +31,7 @@ func FindMatch(logger micrologger.Logger, input io.Reader, pattern string) (bool
 
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
-		logger.Log("debug", "line to match: "+scanner.Text())
+		pa.logger.Log("debug", "line to match: "+scanner.Text())
 		if r.MatchString(scanner.Text()) {
 			return true, nil
 		}

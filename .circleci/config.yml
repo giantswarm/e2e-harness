@@ -16,12 +16,31 @@ jobs:
         root: .
         paths:
         - ./e2e-harness
+        - ./architect
 
     - deploy:
         command: |
           if [ "${CIRCLE_BRANCH}" == "master" ]; then
             ./architect deploy
           fi
+
+  e2eTestBuild:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run: |
+        cp -ar vendor e2e
+
+        # the next commands are only needed for dog-fooding this repo
+        mkdir -p e2e/vendor/github.com/giantswarm/e2e-harness
+        cp -ar pkg e2e/vendor/github.com/giantswarm/e2e-harness
+
+        cd e2e
+        ../architect build --project e2e-harness-e2e
 
   e2eSetup:
     machine: true
@@ -31,7 +50,22 @@ jobs:
     - attach_workspace:
         at: .
 
-    - run: ./e2e-harness setup
+    - run: ./e2e-harness setup --name=ci-e2e-harness-${CIRCLE_SHA1:0:7}
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./.e2e-harness
+
+  e2eTestExecution:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run: ./e2e-harness test
 
     - persist_to_workspace:
         root: .
@@ -53,9 +87,16 @@ workflows:
   build_e2e:
     jobs:
       - build
+      - e2eTestBuild:
+          requires:
+          - build
       - e2eSetup:
           requires:
           - build
-      - e2eTeardown:
+      - e2eTestExecution:
           requires:
           - e2eSetup
+          - e2eTestBuild
+      - e2eTeardown:
+          requires:
+          - e2eTestExecution

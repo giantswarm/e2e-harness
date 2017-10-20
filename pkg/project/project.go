@@ -2,22 +2,30 @@ package project
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/giantswarm/e2e-harness/pkg/docker"
-	"github.com/giantswarm/e2e-harness/pkg/patterns"
+	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/results"
+	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/e2e-harness/pkg/tasks"
+	"github.com/giantswarm/e2e-harness/pkg/wait"
 	"github.com/giantswarm/micrologger"
 	yaml "gopkg.in/yaml.v2"
 )
 
+const (
+	DefaultSonobuoyValuesFile = "/workdir/sonobuoy.yaml"
+)
+
 type E2e struct {
-	Version  string `yaml:"version"`
-	Setup    []Step `yaml:"setup"`
-	Teardown []Step `yaml:"teardown"`
+	Version          string        `yaml:"version"`
+	Setup            []Step        `yaml:"setup"`
+	Teardown         []Step        `yaml:"teardown"`
+	OutOfClusterTest []Step        `yaml:"outOfClusterTest"`
+	InClusterTest    InClusterTest `yaml:"inClusterTest"`
 }
 
 type Step struct {
@@ -29,39 +37,77 @@ type WaitStep struct {
 	Run     string        `yaml:"run"`
 	Match   string        `yaml:"match"`
 	Timeout time.Duration `yaml:"timeout"`
+	Step    time.Duration `yaml:"step"`
+}
+
+type InClusterTest struct {
+	Enabled bool     `yaml:"enabled"`
+	Env     []EnvVar `yaml:"env"`
+}
+
+type EnvVar struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
+}
+
+type Config struct {
+	Name      string
+	GitCommit string
+}
+
+type Dependencies struct {
+	Logger  micrologger.Logger
+	Runner  runner.Runner
+	Wait    *wait.Wait
+	Results *results.Results
 }
 
 type Project struct {
-	logger micrologger.Logger
-	docker *docker.Docker
+	logger  micrologger.Logger
+	runner  runner.Runner
+	wait    *wait.Wait
+	results *results.Results
+	cfg     *Config
 }
 
-const (
-	defaultTimeout = 120
-)
+type SonoBuoyValues struct {
+	ImageName string   `yaml:"imageName"`
+	ImageTag  string   `yaml:"imageTag"`
+	Env       []EnvVar `yaml:"env"`
+}
 
-var (
-	initTiller = Step{
-		Run: "helm init",
-		WaitFor: WaitStep{
-			Run:   "kubectl get pod -n kube-system",
-			Match: `tiller-deploy.*1/1\s*Running`,
-		},
-	}
-)
-
-func New(logger micrologger.Logger, docker *docker.Docker) *Project {
+func New(deps *Dependencies, cfg *Config) *Project {
 	return &Project{
-		logger: logger,
-		docker: docker,
+		logger:  deps.Logger,
+		runner:  deps.Runner,
+		wait:    deps.Wait,
+		results: deps.Results,
+		cfg:     cfg,
 	}
 }
 
 func (p *Project) CommonSetupSteps() error {
 	p.logger.Log("info", "executing common setup steps")
-	steps := []Step{initTiller}
-	for _, step := range steps {
-		if err := p.runStep(step); err != nil {
+	steps := []Step{
+		Step{
+			Run: "kubectl create clusterrolebinding permissive-binding --clusterrole cluster-admin --group=system:serviceaccounts",
+		},
+		Step{
+			Run: "kubectl -n kube-system create sa tiller",
+		},
+		Step{
+			Run: "kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller",
+		},
+		Step{
+			Run: "helm init --service-account tiller",
+			WaitFor: WaitStep{
+				Run:   "kubectl get pod -n kube-system",
+				Match: `tiller-deploy.*1/1\s*Running`,
+			},
+		}}
+
+	for _, s := range steps {
+		if err := p.runStep(s); err != nil {
 			return err
 		}
 	}
@@ -100,56 +146,64 @@ func (p *Project) TeardownSteps() error {
 	return nil
 }
 
-func (p *Project) runStep(step Step) error {
-	p.logger.Log("info", fmt.Sprintf("executing step with command %q", step.Run))
-	if err := p.docker.RunPortForward(os.Stdout, step.Run); err != nil {
+func (p *Project) OutOfClusterTest() error {
+	p.logger.Log("info", "executing out of cluster tests")
+
+	e2e, err := p.readProjectFile()
+	if err != nil {
 		return err
 	}
 
-	if err := p.wait(step.WaitFor); err != nil {
+	for _, step := range e2e.OutOfClusterTest {
+		if err := p.runStep(step); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Project) InClusterTest() error {
+	p.logger.Log("info", "executing in-cluster tests")
+
+	e2e, err := p.readProjectFile()
+	if err != nil {
+		return err
+	}
+
+	if !e2e.InClusterTest.Enabled {
+		p.logger.Log("info", "in-cluster tests disabled")
+		return nil
+	}
+
+	bundle := []tasks.Task{
+		p.createSonobuoyValues,
+		p.installSonobuoyChart,
+		p.results.Unpack,
+		p.results.Interpret,
+	}
+	return tasks.Run(bundle)
+}
+
+func (p *Project) runStep(step Step) error {
+	p.logger.Log("info", fmt.Sprintf("executing step with command %q", step.Run))
+	// expand env vars
+	sEnv := os.ExpandEnv(step.Run)
+	if err := p.runner.RunPortForward(os.Stdout, sEnv); err != nil {
+		return err
+	}
+
+	md := &wait.MatchDef{
+		Run:      step.WaitFor.Run,
+		Match:    step.WaitFor.Match,
+		Deadline: step.WaitFor.Timeout,
+	}
+	if err := p.wait.For(md); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *Project) wait(ws WaitStep) error {
-	if ws.Timeout == 0 {
-		ws.Timeout = defaultTimeout
-	}
-
-	timeout := time.After(ws.Timeout * time.Second)
-	tick := time.Tick(500 * time.Millisecond)
-
-	for {
-		select {
-		case <-timeout:
-			return fmt.Errorf("timeout looking for pattern %q with command %q", ws.Match, ws.Run)
-		case <-tick:
-			// pipe the output of the docker command to the input of FindMatch,
-			// this way we can handle potentially long outputs witout having
-			// to store them in a variable
-			r, w := io.Pipe()
-			// writing without a reader will deadlock so write in a goroutine
-			go func() {
-				defer w.Close()
-				p.docker.RunPortForward(w, ws.Run)
-			}()
-			p.logger.Log("debug", "checking pattern "+ws.Match)
-			ok, err := patterns.FindMatch(p.logger, r, ws.Match)
-			if err != nil {
-				return err
-			} else if ok {
-				p.logger.Log("debug", "match found")
-				// Match found
-				return nil
-			}
-			p.logger.Log("debug", "match not found, retrying")
-		}
-	}
-}
-
 func (p *Project) readProjectFile() (*E2e, error) {
-	// read project file
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -170,4 +224,61 @@ func (p *Project) readProjectFile() (*E2e, error) {
 		return nil, err
 	}
 	return e2e, nil
+}
+
+func (p *Project) createSonobuoyValues() error {
+	p.logger.Log("info", "creating sonobuoy values")
+
+	e2e, err := p.readProjectFile()
+	if err != nil {
+		return err
+	}
+
+	sonobuoyValues := &SonoBuoyValues{
+		ImageName: "quay.io/giantswarm/" + p.cfg.Name + "-e2e",
+		ImageTag:  p.cfg.GitCommit,
+		Env:       e2e.InClusterTest.Env,
+	}
+
+	content, err := yaml.Marshal(sonobuoyValues)
+	if err != nil {
+		return err
+	}
+
+	basedir, err := harness.BaseDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(basedir, DefaultSonobuoyValuesFile)
+	err = ioutil.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Project) installSonobuoyChart() error {
+	p.logger.Log("info", "cleaning up previous sonobuoy deployments")
+
+	p.runStep(Step{
+		Run: "helm delete --purge sonobuoy-chart",
+		WaitFor: WaitStep{
+			Run:   "kubectl get ns heptio-sonobuoy",
+			Match: `Error from server \(NotFound\): namespaces "heptio-sonobuoy" not found`,
+		},
+	})
+
+	p.logger.Log("info", "installing sonobuoy chart")
+	installSonobuoyChart := Step{
+		Run: "helm install /home/e2e-harness/resources/sonobuoy-chart --name sonobuoy-chart --values " + DefaultSonobuoyValuesFile,
+		WaitFor: WaitStep{
+			Run:   "kubectl logs sonobuoy --namespace=heptio-sonobuoy",
+			Match: "no-exit was specified, sonobuoy is now blocking",
+		},
+	}
+	if err := p.runStep(installSonobuoyChart); err != nil {
+		return err
+	}
+	return nil
 }

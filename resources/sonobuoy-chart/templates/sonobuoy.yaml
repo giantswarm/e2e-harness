@@ -54,9 +54,6 @@ data:
         "PluginNamespace": "heptio-sonobuoy",
         "Plugins": [
             {
-                "name": "systemd_logs"
-            },
-            {
                 "name": "e2e"
             }
         ],
@@ -109,6 +106,66 @@ metadata:
     component: sonobuoy
   name: sonobuoy-config-cm
   namespace: heptio-sonobuoy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-plugins-cm
+  namespace: heptio-sonobuoy
+data:
+  e2e.yaml: |
+    driver: Job
+    name: e2e
+    resultType: e2e
+    spec:
+      containers:
+      - image: {{ .Values.imageName }}:{{ .Values.imageTag }}
+        imagePullPolicy: Always
+        name: e2e
+        volumeMounts:
+        - mountPath: /tmp/results
+          name: results
+        env:
+        {{ range .Values.env }}
+        - name: {{ .name }}
+          value: {{ .value }}
+        {{ end }}
+      - command:
+        - sh
+        - -c
+        - /sonobuoy worker global -v 5 --logtostderr
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: RESULTS_DIR
+          value: /tmp/results
+        image: gcr.io/heptio-images/sonobuoy:master
+        imagePullPolicy: Always
+        name: sonobuoy-worker
+        volumeMounts:
+        - mountPath: /etc/sonobuoy
+          name: config
+        - mountPath: /tmp/results
+          name: results
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      volumes:
+      - emptyDir: {}
+        name: results
+      - configMap:
+          name: __SONOBUOY_CONFIGMAP__
+        name: config
 ---
 apiVersion: v1
 kind: Pod
