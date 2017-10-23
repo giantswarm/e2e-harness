@@ -5,70 +5,79 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/giantswarm/micrologger"
 	yaml "gopkg.in/yaml.v2"
 )
 
-// Status represents the current state of the
-// test harness. It is the token passed amongst
-// tasks.
-type Status struct {
-	RemoteCluster bool   `yaml:"remoteCluster"`
-	GitCommit     string `yaml:"gitCommit"`
+const (
+	defaultConfigFile = "config.yaml"
+)
+
+type Harness struct {
+	logger micrologger.Logger
+	cfg    Config
 }
 
-// Init is a Task for initializing the harness.
-func Init(status Status) (Status, error) {
+type Config struct {
+	RemoteCluster bool `yaml:"remoteCluster"`
+}
+
+func New(logger micrologger.Logger, cfg Config) *Harness {
+	return &Harness{
+		logger: logger,
+		cfg:    cfg,
+	}
+}
+
+// Init initializes the harness.
+func (h *Harness) Init() error {
 	baseDir, err := BaseDir()
 	if err != nil {
-		return status, err
+		return err
 	}
-	err = os.MkdirAll(filepath.Join(baseDir, "workdir"), os.ModePerm)
-
-	return status, err
+	return os.MkdirAll(filepath.Join(baseDir, "workdir"), os.ModePerm)
 }
 
-// WriteStatus is a Task that persists the input status to a file.
-func WriteStatus(status Status) (Status, error) {
+// WriteConfig persists the current config to a file.
+func (h *Harness) WriteConfig() error {
 	dir, err := BaseDir()
 	if err != nil {
-		return status, err
+		return err
 	}
 
-	content, err := yaml.Marshal(&status)
+	content, err := yaml.Marshal(&h.cfg)
 	if err != nil {
-		return status, err
+		return err
 	}
 
-	if err := ioutil.WriteFile(
-		filepath.Join(dir, "status.yaml"),
+	err = ioutil.WriteFile(
+		filepath.Join(dir, defaultConfigFile),
 		[]byte(content),
-		0644); err != nil {
-		return status, err
-	}
+		0644)
 
-	return status, nil
+	return err
 }
 
-// ReadStatus is a Task that populates a Status struct with the data read
+// ReadConfig populates a Config struct data read
 // from a default file location.
-func ReadStatus(Status) (Status, error) {
+func (h *Harness) ReadConfig() (Config, error) {
 	dir, err := BaseDir()
 	if err != nil {
-		return Status{}, err
+		return Config{}, err
 	}
 
-	content, err := ioutil.ReadFile(filepath.Join(dir, "status.yaml"))
+	content, err := ioutil.ReadFile(filepath.Join(dir, defaultConfigFile))
 	if err != nil {
-		return Status{}, err
+		return Config{}, err
 	}
 
-	s := &Status{}
+	c := &Config{}
 
-	if err := yaml.Unmarshal(content, s); err != nil {
-		return Status{}, err
+	if err := yaml.Unmarshal(content, c); err != nil {
+		return Config{}, err
 	}
 
-	return *s, nil
+	return *c, nil
 }
 
 func BaseDir() (string, error) {
