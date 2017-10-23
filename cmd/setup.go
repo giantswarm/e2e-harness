@@ -30,12 +30,9 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		harness.WriteStatus,
 	}
 
-	// initial status
-	imageTag := RootCmd.Flags().Lookup("image-tag").Value.String()
-
-	status := &harness.Status{
+	status := harness.Status{
 		RemoteCluster: remoteCluster,
-		ImageTag:      imageTag,
+		GitCommit:     GetGitCommit(),
 	}
 
 	return tasks.Run(bundle, status)

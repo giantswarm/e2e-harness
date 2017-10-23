@@ -10,8 +10,8 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
-func Run(imageTag string, out io.Writer, entrypoint string, args ...string) error {
-	args = append([]string{"quay.io/giantswarm/e2e-harness:" + imageTag}, args...)
+func Run(gitCommit string, out io.Writer, entrypoint string, args ...string) error {
+	args = append([]string{"quay.io/giantswarm/e2e-harness:" + gitCommit}, args...)
 
 	dir, err := harness.BaseDir()
 	if err != nil {

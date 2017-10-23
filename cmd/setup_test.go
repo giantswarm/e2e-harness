@@ -22,20 +22,3 @@ func TestSetupFlags(t *testing.T) {
 		}
 	})
 }
-
-func TestSetupInheritedFlags(t *testing.T) {
-	imageTag := cmd.SetupCmd.InheritedFlags().Lookup("image-tag")
-
-	t.Run("flag exists", func(t *testing.T) {
-		if imageTag == nil {
-			t.Errorf("expected remoteFlag not nil")
-		}
-	})
-	t.Run("flag value", func(t *testing.T) {
-		actual := imageTag.Value.String()
-		expected := "latest"
-		if actual != expected {
-			t.Errorf("expected %s, got %s", expected, actual)
-		}
-	})
-}

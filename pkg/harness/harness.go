@@ -13,11 +13,11 @@ import (
 // tasks.
 type Status struct {
 	RemoteCluster bool   `yaml:"remoteCluster"`
-	ImageTag      string `yaml:"imageTag"`
+	GitCommit     string `yaml:"gitCommit"`
 }
 
-// Init initializes the harness
-func Init(status *Status) (*Status, error) {
+// Init is a Task for initializing the harness.
+func Init(status Status) (Status, error) {
 	baseDir, err := BaseDir()
 	if err != nil {
 		return status, err
@@ -27,8 +27,8 @@ func Init(status *Status) (*Status, error) {
 	return status, err
 }
 
-// WriteStatus persists the input status to a file
-func WriteStatus(status *Status) (*Status, error) {
+// WriteStatus is a Task that persists the input status to a file.
+func WriteStatus(status Status) (Status, error) {
 	dir, err := BaseDir()
 	if err != nil {
 		return status, err
@@ -49,26 +49,26 @@ func WriteStatus(status *Status) (*Status, error) {
 	return status, nil
 }
 
-// ReadStatus populates a Status struct with the data read
-// from a default file location
-func ReadStatus(*Status) (*Status, error) {
+// ReadStatus is a Task that populates a Status struct with the data read
+// from a default file location.
+func ReadStatus(Status) (Status, error) {
 	dir, err := BaseDir()
 	if err != nil {
-		return nil, err
+		return Status{}, err
 	}
 
 	content, err := ioutil.ReadFile(filepath.Join(dir, "status.yaml"))
 	if err != nil {
-		return nil, err
+		return Status{}, err
 	}
 
 	s := &Status{}
 
 	if err := yaml.Unmarshal(content, s); err != nil {
-		return nil, err
+		return Status{}, err
 	}
 
-	return s, nil
+	return *s, nil
 }
 
 func BaseDir() (string, error) {

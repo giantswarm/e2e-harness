@@ -25,5 +25,5 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		cluster.Delete,
 	}
 
-	return tasks.Run(bundle, nil)
+	return tasks.Run(bundle, harness.Status{})
 }

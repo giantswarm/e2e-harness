@@ -11,15 +11,15 @@ import (
 
 var (
 	files   = []string{"/task1", "/task2"}
-	taskErr = func(s *harness.Status) (*harness.Status, error) {
-		return nil, fmt.Errorf("my-error")
+	taskErr = func(s harness.Status) (harness.Status, error) {
+		return harness.Status{}, fmt.Errorf("my-error")
 	}
 )
 
 func getTaskFunc(filename string, fs afero.Fs) tasks.Task {
-	return func(s *harness.Status) (*harness.Status, error) {
+	return func(s harness.Status) (harness.Status, error) {
 		if err := afero.WriteFile(fs, filename, []byte("test!"), 0644); err != nil {
-			return nil, err
+			return harness.Status{}, err
 		}
 		return s, nil
 	}
@@ -30,7 +30,7 @@ func TestRunNoError(t *testing.T) {
 
 	bundle := []tasks.Task{getTaskFunc(files[0], fs), getTaskFunc(files[1], fs)}
 
-	status := &harness.Status{}
+	status := harness.Status{}
 	err := tasks.Run(bundle, status)
 	if err != nil {
 		t.Errorf("unexpected error %s", err)
@@ -55,7 +55,7 @@ func TestRunError(t *testing.T) {
 	bundle = append(bundle, taskErr)
 	bundle = append(bundle, getTaskFunc(files[1], fs))
 
-	status := &harness.Status{}
+	status := harness.Status{}
 	err := tasks.Run(bundle, status)
 	if err == nil {
 		t.Error("expected error didn't happen")
@@ -82,7 +82,7 @@ func TestRunIgnoreError(t *testing.T) {
 	bundle = append(bundle, taskErr)
 	bundle = append(bundle, getTaskFunc(files[1], fs))
 
-	status := &harness.Status{}
+	status := harness.Status{}
 	tasks.RunIgnoreError(bundle, status)
 
 	for _, file := range files {
