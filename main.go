@@ -14,6 +14,7 @@ var (
 
 func main() {
 	cmd.SetGitCommit(gitCommit)
+	cmd.SetProjectName(name)
 
 	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Println(err)

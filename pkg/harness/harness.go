@@ -38,7 +38,7 @@ func (h *Harness) Init() error {
 	return os.MkdirAll(filepath.Join(baseDir, "workdir"), os.ModePerm)
 }
 
-// WriteConfig persists the current config to a file.
+// WriteConfig is a Task that persists the current config to a file.
 func (h *Harness) WriteConfig() error {
 	dir, err := BaseDir()
 	if err != nil {
@@ -50,15 +50,12 @@ func (h *Harness) WriteConfig() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(
-		filepath.Join(dir, defaultConfigFile),
-		[]byte(content),
-		0644)
+	err = ioutil.WriteFile(filepath.Join(dir, defaultConfigFile), []byte(content), 0644)
 
 	return err
 }
 
-// ReadConfig populates a Config struct data read
+// ReadConfig is a Task that populates a Config struct data read
 // from a default file location.
 func (h *Harness) ReadConfig() (Config, error) {
 	dir, err := BaseDir()

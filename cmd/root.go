@@ -10,7 +10,8 @@ var (
 		Short: "Harness for custom kubernetes e2e testing",
 	}
 
-	gitCommit string
+	gitCommit   string
+	projectName string
 )
 
 func SetGitCommit(value string) {
@@ -19,4 +20,12 @@ func SetGitCommit(value string) {
 
 func GetGitCommit() string {
 	return gitCommit
+}
+
+func SetProjectName(value string) {
+	projectName = value
+}
+
+func GetProjectName() string {
+	return projectName
 }

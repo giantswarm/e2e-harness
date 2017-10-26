@@ -3,20 +3,20 @@ package cluster
 import (
 	"os"
 
-	"github.com/giantswarm/e2e-harness/pkg/docker"
+	"github.com/giantswarm/e2e-harness/pkg/runner"
 	"github.com/giantswarm/micrologger"
 )
 
 type Cluster struct {
 	logger        micrologger.Logger
-	docker        *docker.Docker
+	runner        runner.Runner
 	remoteCluster bool
 }
 
-func New(logger micrologger.Logger, docker *docker.Docker, remoteCluster bool) *Cluster {
+func New(logger micrologger.Logger, runner runner.Runner, remoteCluster bool) *Cluster {
 	return &Cluster{
 		logger:        logger,
-		docker:        docker,
+		runner:        runner,
 		remoteCluster: remoteCluster,
 	}
 }
@@ -35,7 +35,7 @@ func (c *Cluster) clusterAction(command string) error {
 	if !c.remoteCluster {
 		return nil
 	}
-	err := c.docker.Run(os.Stdout, command)
+	err := c.runner.Run(os.Stdout, command)
 
 	return err
 }

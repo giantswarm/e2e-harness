@@ -9,3 +9,6 @@ setup:
     waitFor:
       run: kubectl get secrets
       match: my-cluster-api\s*Opaque
+
+inClusterTest:
+  enabled: true

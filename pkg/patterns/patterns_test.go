@@ -80,11 +80,13 @@ kube-system   tiller-deploy-1046433508-ch23h   1/1       Running   1          16
 			expected:    false,
 		},
 	}
+	logger := microloggertest.New()
+	subject := patterns.New(logger)
+
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			inputPipe := strings.NewReader(tc.input)
-			logger := microloggertest.New()
-			actual, err := patterns.FindMatch(logger, inputPipe, tc.pattern)
+			actual, err := subject.Find(inputPipe, tc.pattern)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error didn't happen")

@@ -4,11 +4,10 @@ RUN adduser -D -u 1001 e2e-harness
 ENV HOME=/home/e2e-harness
 ENV WORKDIR=/workdir
 
-RUN mkdir -p ${WORKDIR}/resources
+RUN mkdir -p ${HOME}/resources ${WORKDIR}
+ADD resources/ ${HOME}/resources
 
-ADD resources/templates/ ${WORKDIR}/resources/templates
-
-RUN chown -R e2e-harness:e2e-harness ${WORKDIR}
+RUN chown -R e2e-harness:e2e-harness ${WORKDIR} ${HOME}
 
 RUN apk -Uuv add --update --no-cache \
       bash=4.3.48-r1 \
