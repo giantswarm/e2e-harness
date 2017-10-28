@@ -28,8 +28,6 @@ func New(logger micrologger.Logger, imageTag string) *Docker {
 // setting up the port forwarding to the remote cluster, this command
 // is meant to be used after that cluster has been initialized
 func (d *Docker) RunPortForward(out io.Writer, command string) error {
-	d.logger.Log("info", fmt.Sprintf("about to run %q in the e2e-harness container with port forwarding", command))
-
 	args := append([]string{"quay.io/giantswarm/e2e-harness:" + d.imageTag}, "-c",
 		fmt.Sprintf("shipyard -action=forward-port && %s", command))
 
@@ -38,8 +36,6 @@ func (d *Docker) RunPortForward(out io.Writer, command string) error {
 
 // Run executes a command in the e2e-harness container.
 func (d *Docker) Run(out io.Writer, command string) error {
-	d.logger.Log("info", fmt.Sprintf("about to run %q in the e2e-harness container without port forwarding", command))
-
 	var args []string
 	fields := strings.Fields(command)
 	if len(fields) > 1 {
