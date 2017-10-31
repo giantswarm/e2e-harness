@@ -234,9 +234,22 @@ func (p *Project) createSonobuoyValues() error {
 		return err
 	}
 
+	var name string
+	if os.Getenv("CIRCLE_PROJECT_REPONAME") != "" {
+		name = os.Getenv("CIRCLE_PROJECT_REPONAME")
+	} else {
+		name = p.cfg.Name
+	}
+	var tag string
+	if os.Getenv("CIRCLE_SHA1") != "" {
+		tag = os.Getenv("CIRCLE_SHA1")
+	} else {
+		tag = p.cfg.GitCommit
+	}
+
 	sonobuoyValues := &SonoBuoyValues{
-		ImageName: "quay.io/giantswarm/" + p.cfg.Name + "-e2e",
-		ImageTag:  p.cfg.GitCommit,
+		ImageName: "quay.io/giantswarm/" + name + "-e2e",
+		ImageTag:  tag,
 		Env:       e2e.InClusterTest.Env,
 	}
 
