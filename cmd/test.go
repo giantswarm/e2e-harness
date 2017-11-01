@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/giantswarm/e2e-harness/pkg/docker"
+	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
 	"github.com/giantswarm/e2e-harness/pkg/project"
 	"github.com/giantswarm/e2e-harness/pkg/results"
@@ -30,15 +31,26 @@ func runTest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	gitCommit := GetGitCommit()
-	projectName := GetProjectName()
+	projectTag := harness.GetProjectTag()
+	projectName := harness.GetProjectName()
+	h := harness.New(logger, harness.Config{})
+	cfg, err := h.ReadConfig()
+	if err != nil {
+		return err
+	}
 
-	d := docker.New(logger, gitCommit)
+	// use latest tag for consumer projects (not dog-fooding e2e-harness)
+	e2eHarnessTag := projectTag
+	if projectName != "e2e-harness" {
+		e2eHarnessTag = "latest"
+	}
+
+	d := docker.New(logger, e2eHarnessTag, cfg.RemoteCluster)
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 	pCfg := &project.Config{
-		Name:      projectName,
-		GitCommit: gitCommit,
+		Name: projectName,
+		Tag:  projectTag,
 	}
 	fs := afero.NewOsFs()
 	r := results.New(logger, fs, d)

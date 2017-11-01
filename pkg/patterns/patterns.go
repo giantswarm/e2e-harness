@@ -31,7 +31,6 @@ func (pa *Patterns) Find(input io.Reader, pattern string) (bool, error) {
 
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
-		pa.logger.Log("debug", "line to match: "+scanner.Text())
 		if r.MatchString(scanner.Text()) {
 			return true, nil
 		}

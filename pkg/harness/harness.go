@@ -31,11 +31,28 @@ func New(logger micrologger.Logger, cfg Config) *Harness {
 
 // Init initializes the harness.
 func (h *Harness) Init() error {
+	h.logger.Log("info", "starting harness initialization")
 	baseDir, err := BaseDir()
 	if err != nil {
 		return err
 	}
-	return os.MkdirAll(filepath.Join(baseDir, "workdir"), os.ModePerm)
+	dir := filepath.Join(baseDir, "workdir")
+	err = os.MkdirAll(dir, 0777)
+	if err != nil {
+		return err
+	}
+	// circumvent umask settings, by assigning the right
+	// permissions to workdir and its parent
+	err = os.Chmod(baseDir, 0777)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dir, 0777)
+	if err != nil {
+		return err
+	}
+	h.logger.Log("info", "finished harness initialization")
+	return nil
 }
 
 // WriteConfig is a Task that persists the current config to a file.
@@ -55,7 +72,7 @@ func (h *Harness) WriteConfig() error {
 	return err
 }
 
-// ReadConfig is a Task that populates a Config struct data read
+// ReadConfig populates a Config struct data read
 // from a default file location.
 func (h *Harness) ReadConfig() (Config, error) {
 	dir, err := BaseDir()
@@ -94,4 +111,11 @@ func GetProjectName() string {
 		return "e2e-harness"
 	}
 	return filepath.Base(dir)
+}
+
+func GetProjectTag() string {
+	if os.Getenv("CIRCLE_SHA1") != "" {
+		return os.Getenv("CIRCLE_SHA1")
+	}
+	return "latest"
 }

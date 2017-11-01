@@ -1,7 +1,6 @@
 package project
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -51,8 +50,8 @@ type EnvVar struct {
 }
 
 type Config struct {
-	Name      string
-	GitCommit string
+	Name string
+	Tag  string
 }
 
 type Dependencies struct {
@@ -114,8 +113,36 @@ func (p *Project) CommonSetupSteps() error {
 	return nil
 }
 
+func (p *Project) CommonTearDownSteps() error {
+	p.logger.Log("info", "starting common teardown steps")
+	steps := []Step{
+		Step{
+			Run: "helm delete --purge sonobuoy-chart || true",
+		},
+		Step{
+			Run: "helm reset --force",
+		},
+		Step{
+			Run: "kubectl delete clusterrolebinding permissive-binding",
+		},
+		Step{
+			Run: "kubectl -n kube-system delete sa tiller",
+		},
+		Step{
+			Run: "kubectl delete clusterrolebinding tiller",
+		}}
+
+	for _, s := range steps {
+		if err := p.runStep(s); err != nil {
+			return err
+		}
+	}
+	p.logger.Log("info", "finished common teardown steps")
+	return nil
+}
+
 func (p *Project) SetupSteps() error {
-	p.logger.Log("info", "executing setup steps")
+	p.logger.Log("info", "starting setup steps")
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
@@ -127,11 +154,12 @@ func (p *Project) SetupSteps() error {
 			return err
 		}
 	}
+	p.logger.Log("info", "finished setup steps")
 	return nil
 }
 
 func (p *Project) TeardownSteps() error {
-	p.logger.Log("info", "executing teardown steps")
+	p.logger.Log("info", "started teardown steps")
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
@@ -143,11 +171,12 @@ func (p *Project) TeardownSteps() error {
 			return err
 		}
 	}
+	p.logger.Log("info", "finished teardown steps")
 	return nil
 }
 
 func (p *Project) OutOfClusterTest() error {
-	p.logger.Log("info", "executing out of cluster tests")
+	p.logger.Log("info", "started out of cluster tests")
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
@@ -159,12 +188,11 @@ func (p *Project) OutOfClusterTest() error {
 			return err
 		}
 	}
+	p.logger.Log("info", "finished out of cluster tests")
 	return nil
 }
 
 func (p *Project) InClusterTest() error {
-	p.logger.Log("info", "executing in-cluster tests")
-
 	e2e, err := p.readProjectFile()
 	if err != nil {
 		return err
@@ -175,30 +203,37 @@ func (p *Project) InClusterTest() error {
 		return nil
 	}
 
+	p.logger.Log("info", "started in-cluster tests")
 	bundle := []tasks.Task{
 		p.createSonobuoyValues,
 		p.installSonobuoyChart,
 		p.results.Unpack,
 		p.results.Interpret,
 	}
-	return tasks.Run(bundle)
+	if err := tasks.Run(bundle); err != nil {
+		return nil
+	}
+	p.logger.Log("info", "finished in-cluster tests")
+	return nil
 }
 
 func (p *Project) runStep(step Step) error {
-	p.logger.Log("info", fmt.Sprintf("executing step with command %q", step.Run))
 	// expand env vars
 	sEnv := os.ExpandEnv(step.Run)
+	//if err := p.runner.RunPortForward(ioutil.Discard, sEnv); err != nil {
 	if err := p.runner.RunPortForward(os.Stdout, sEnv); err != nil {
 		return err
 	}
 
-	md := &wait.MatchDef{
-		Run:      step.WaitFor.Run,
-		Match:    step.WaitFor.Match,
-		Deadline: step.WaitFor.Timeout,
-	}
-	if err := p.wait.For(md); err != nil {
-		return err
+	if step.WaitFor.Run != "" {
+		md := &wait.MatchDef{
+			Run:      step.WaitFor.Run,
+			Match:    step.WaitFor.Match,
+			Deadline: step.WaitFor.Timeout,
+		}
+		if err := p.wait.For(md); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -234,18 +269,8 @@ func (p *Project) createSonobuoyValues() error {
 		return err
 	}
 
-	var name string
-	if os.Getenv("CIRCLE_PROJECT_REPONAME") != "" {
-		name = os.Getenv("CIRCLE_PROJECT_REPONAME")
-	} else {
-		name = p.cfg.Name
-	}
-	var tag string
-	if os.Getenv("CIRCLE_SHA1") != "" {
-		tag = os.Getenv("CIRCLE_SHA1")
-	} else {
-		tag = p.cfg.GitCommit
-	}
+	name := harness.GetProjectName()
+	tag := harness.GetProjectTag()
 
 	sonobuoyValues := &SonoBuoyValues{
 		ImageName: "quay.io/giantswarm/" + name + "-e2e",
