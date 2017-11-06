@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	// architect requires this
+	// architect requires this.
 	if len(os.Args) > 1 {
 		return
 	}
@@ -67,7 +67,7 @@ import (
 )
 
 // Test is a generic type for all the test functions, it returns a
-// description of the tests and the eventually returned error
+// description of the tests and the eventually returned error.
 type Test func() (string, error)
 
 type TestSet struct {
@@ -76,13 +76,13 @@ type TestSet struct {
 }
 
 var (
-	// tests holds the array of functions to be executed
+	// tests holds the array of functions to be executed.
 	tests = []Test{}
-	// ts is the test suite that will keep the results
+	// ts is the test suite that will keep the results.
 	ts = &results.TestSuite{}
 )
 
-// Run executes all the tests and saves the results
+// Run executes all the tests and saves the results.
 func Run() error {
 	for _, test := range tests {
 		ts.Tests++
@@ -102,7 +102,7 @@ func Run() error {
 	return results.Write(fs, ts)
 }
 
-// Add appends the given test to the existing bundle
+// Add appends the given test to the existing bundle.
 func Add(t Test) {
 	tests = append(tests, t)
 }
@@ -121,7 +121,7 @@ func init() {
 }
 
 func TestExample() (string, error) {
-  // the description of the test will be shown in the summary
+  // the description of the test will be shown in the summary.
 	desc := "example in-cluster test"
 
 	cs, err := k8sclient.New(k8sclient.DefaultConfig())
@@ -170,7 +170,7 @@ func (i *Initializer) CreateLayout() error {
 
 	baseDir := filepath.Join(wd, "e2e")
 
-	// return if base dir already exists
+	// return if base dir already exists.
 	if _, err := i.fs.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf("%s already exists", baseDir)
 	}

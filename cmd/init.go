@@ -31,7 +31,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fs := afero.NewOsFs()
 	i := initializer.New(logger, fs, projectName)
 
-	// tasks to run
+	// tasks to run.
 	bundle := []tasks.Task{
 		i.CreateLayout,
 	}
