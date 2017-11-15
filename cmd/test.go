@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/minikube"
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
 	"github.com/giantswarm/e2e-harness/pkg/project"
 	"github.com/giantswarm/e2e-harness/pkg/results"
@@ -66,6 +67,13 @@ func runTest(cmd *cobra.Command, args []string) error {
 	bundle := []tasks.Task{
 		p.OutOfClusterTest,
 		p.InClusterTest,
+	}
+
+	if !cfg.RemoteCluster {
+		// build images for minikube
+		m := minikube.New(logger, d, projectTag)
+
+		bundle = append([]tasks.Task{m.BuildImages}, bundle...)
 	}
 
 	return tasks.Run(bundle)

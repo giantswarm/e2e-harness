@@ -15,14 +15,16 @@ import (
 )
 
 type Minikube struct {
-	logger  micrologger.Logger
-	builder builder.Builder
+	logger   micrologger.Logger
+	builder  builder.Builder
+	imageTag string
 }
 
-func New(logger micrologger.Logger, builder builder.Builder) *Minikube {
+func New(logger micrologger.Logger, builder builder.Builder, tag string) *Minikube {
 	return &Minikube{
-		logger:  logger,
-		builder: builder,
+		logger:   logger,
+		builder:  builder,
+		imageTag: tag,
 	}
 }
 
@@ -100,7 +102,7 @@ func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) 
 		return err
 	}
 
-	if err := m.builder.Build(ioutil.Discard, imageName, path, env); err != nil {
+	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
 		fmt.Println("error building image", imageName)
 		return err
 	}

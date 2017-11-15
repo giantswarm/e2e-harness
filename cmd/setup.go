@@ -4,7 +4,6 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/cluster"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/minikube"
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
 	"github.com/giantswarm/e2e-harness/pkg/project"
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
@@ -70,13 +69,6 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		c.Create,
 		p.CommonSetupSteps,
 		p.SetupSteps,
-	}
-
-	if !remoteCluster {
-		// build images for minikube
-		m := minikube.New(logger, d)
-
-		bundle = append(bundle, m.BuildImages)
 	}
 
 	return tasks.Run(bundle)

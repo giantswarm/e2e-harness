@@ -78,11 +78,11 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string) error 
 	return cmd.Run()
 }
 
-func (d *Docker) Build(out io.Writer, image, path string, env []string) error {
+func (d *Docker) Build(out io.Writer, image, path, tag string, env []string) error {
 	baseArgs := []string{
 		"build",
 		"--no-cache",
-		"-t", fmt.Sprintf("%s:%s", image, d.imageTag),
+		"-t", fmt.Sprintf("%s:%s", image, tag),
 		".",
 	}
 	cmd := exec.Command("docker", baseArgs...)
