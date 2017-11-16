@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -34,22 +35,22 @@ func (h *Harness) Init() error {
 	h.logger.Log("info", "starting harness initialization")
 	baseDir, err := BaseDir()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	dir := filepath.Join(baseDir, "workdir")
 	err = os.MkdirAll(dir, 0777)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	// circumvent umask settings, by assigning the right
 	// permissions to workdir and its parent
 	err = os.Chmod(baseDir, 0777)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	err = os.Chmod(dir, 0777)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	h.logger.Log("info", "finished harness initialization")
 	return nil
@@ -59,17 +60,17 @@ func (h *Harness) Init() error {
 func (h *Harness) WriteConfig() error {
 	dir, err := BaseDir()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	content, err := yaml.Marshal(&h.cfg)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	err = ioutil.WriteFile(filepath.Join(dir, defaultConfigFile), []byte(content), 0644)
 
-	return err
+	return microerror.Mask(err)
 }
 
 // ReadConfig populates a Config struct data read
@@ -77,18 +78,18 @@ func (h *Harness) WriteConfig() error {
 func (h *Harness) ReadConfig() (Config, error) {
 	dir, err := BaseDir()
 	if err != nil {
-		return Config{}, err
+		return Config{}, microerror.Mask(err)
 	}
 
 	content, err := ioutil.ReadFile(filepath.Join(dir, defaultConfigFile))
 	if err != nil {
-		return Config{}, err
+		return Config{}, microerror.Mask(err)
 	}
 
 	c := &Config{}
 
 	if err := yaml.Unmarshal(content, c); err != nil {
-		return Config{}, err
+		return Config{}, microerror.Mask(err)
 	}
 
 	return *c, nil
@@ -97,7 +98,7 @@ func (h *Harness) ReadConfig() (Config, error) {
 func BaseDir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", microerror.Mask(err)
 	}
 	return filepath.Join(dir, ".e2e-harness"), nil
 }

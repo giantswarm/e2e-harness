@@ -7,6 +7,7 @@ import (
 
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
 	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 )
 
@@ -66,7 +67,7 @@ func (w *Wait) For(md *MatchDef) error {
 			}()
 			ok, err := w.matcher.Find(re, md.Match)
 			if err != nil {
-				return err
+				return microerror.Mask(err)
 			} else if ok {
 				return nil
 			}

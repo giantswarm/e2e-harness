@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +57,8 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		Wait:   w,
 	}
 	p := project.New(pDeps, pCfg)
-	c := cluster.New(logger, d, cfg.RemoteCluster)
+	fs := afero.NewOsFs()
+	c := cluster.New(logger, fs, d, cfg.RemoteCluster)
 
 	bundle := []tasks.Task{
 		p.TeardownSteps,

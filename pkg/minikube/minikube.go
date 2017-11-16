@@ -11,6 +11,7 @@ import (
 
 	"github.com/giantswarm/e2e-harness/pkg/builder"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 )
 
@@ -35,14 +36,14 @@ func (m *Minikube) BuildImages() error {
 	env, err := m.getDockerEnv()
 	dir, err := os.Getwd()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	name := harness.GetProjectName()
 	image := fmt.Sprintf("quay.io/giantswarm/%s", name)
 	m.logger.Log("info", "Building image "+image)
 	if err := m.buildImage(name, dir, image, env); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	e2eBinary := name + "-e2e"
@@ -50,7 +51,7 @@ func (m *Minikube) BuildImages() error {
 	e2eImage := fmt.Sprintf("quay.io/giantswarm/%s-e2e", name)
 	m.logger.Log("info", "Building image "+e2eImage)
 	if err := m.buildImage(e2eBinary, e2eDir, e2eImage, env); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -60,10 +61,10 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 	cmd := exec.Command("minikube", "docker-env")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return []string{}, err
+		return []string{}, microerror.Mask(err)
 	}
 	if err := cmd.Start(); err != nil {
-		return []string{}, err
+		return []string{}, microerror.Mask(err)
 	}
 
 	var env []string
@@ -78,11 +79,11 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return env, err
+		return env, microerror.Mask(err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return []string{}, err
+		return []string{}, microerror.Mask(err)
 	}
 
 	return env, nil
@@ -99,12 +100,12 @@ func compile(binaryName, path string) error {
 func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) error {
 	if err := compile(binaryName, path); err != nil {
 		fmt.Println("error compiling binary", binaryName)
-		return err
+		return microerror.Mask(err)
 	}
 
 	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
 		fmt.Println("error building image", imageName)
-		return err
+		return microerror.Mask(err)
 	}
 	return nil
 }

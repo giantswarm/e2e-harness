@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -10,19 +9,23 @@ import (
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 )
 
 type Cluster struct {
 	logger        micrologger.Logger
 	runner        runner.Runner
+	fs            afero.Fs
 	remoteCluster bool
 }
 
-func New(logger micrologger.Logger, runner runner.Runner, remoteCluster bool) *Cluster {
+func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, remoteCluster bool) *Cluster {
 	return &Cluster{
 		logger:        logger,
 		runner:        runner,
+		fs:            fs,
 		remoteCluster: remoteCluster,
 	}
 }
@@ -36,16 +39,16 @@ func (c *Cluster) Create() error {
 	}
 	usr, err := user.Current()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	err = c.copyMinikubeAssets(usr.HomeDir)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	err = c.setupMinikubeConfig(usr.HomeDir)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	return nil
 }
@@ -61,7 +64,7 @@ func (c *Cluster) clusterAction(command string) error {
 	}
 	err := c.runner.Run(os.Stdout, command)
 
-	return err
+	return microerror.Mask(err)
 }
 
 // copyMinikubeAssets copies all the files found in $HOME/.minikube to
@@ -73,7 +76,7 @@ func (c *Cluster) copyMinikubeAssets(homeDir string) error {
 	originDir := filepath.Join(homeDir, ".minikube")
 	baseDir, err := harness.BaseDir()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	targetDir := filepath.Join(baseDir, "workdir", ".minikube")
 
@@ -81,27 +84,27 @@ func (c *Cluster) copyMinikubeAssets(homeDir string) error {
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		targetPath := strings.Replace(path, originDir, targetDir, 1)
 		if info.IsDir() {
-			return os.MkdirAll(targetPath, os.ModePerm)
+			return c.fs.MkdirAll(targetPath, os.ModePerm)
 		}
-		return copyFile(path, targetPath)
+		return c.copyFile(path, targetPath)
 	}
 	err = filepath.Walk(originDir, walkFn)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	// copy kube config (assumes the current context is minukube)
 	origKubeCfg := filepath.Join(homeDir, ".kube", "config")
 	targetKubeCfg, err := getMinikubeConfigPath()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	targetKubeCfgDir := filepath.Dir(targetKubeCfg)
-	if err := os.MkdirAll(targetKubeCfgDir, os.ModePerm); err != nil {
-		return err
+	if err := c.fs.MkdirAll(targetKubeCfgDir, os.ModePerm); err != nil {
+		return microerror.Mask(err)
 	}
-	if err := copyFile(origKubeCfg, targetKubeCfg); err != nil {
-		return err
+	if err := c.copyFile(origKubeCfg, targetKubeCfg); err != nil {
+		return microerror.Mask(err)
 	}
 	return nil
 }
@@ -121,11 +124,13 @@ func (c *Cluster) setupMinikubeConfig(homeDir string) error {
 	// test container
 	path, err := getMinikubeConfigPath()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
-	read, err := ioutil.ReadFile(path)
+	afs := &afero.Afero{Fs: c.fs}
+
+	read, err := afs.ReadFile(path)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	// targetDir has the path where minikube certificates are stored as seen from
@@ -134,9 +139,9 @@ func (c *Cluster) setupMinikubeConfig(homeDir string) error {
 
 	newContents := strings.Replace(string(read), originDir, targetDir, -1)
 
-	err = ioutil.WriteFile(path, []byte(newContents), 0)
+	err = afs.WriteFile(path, []byte(newContents), 0)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	return nil
 }
@@ -154,15 +159,15 @@ func getMinikubeConfigPath() (string, error) {
 	return path, nil
 }
 
-func copyFile(orig, dst string) error {
-	in, err := os.Open(orig)
+func (c *Cluster) copyFile(orig, dst string) error {
+	in, err := c.fs.Open(orig)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	defer in.Close()
-	out, err := os.Create(dst)
+	out, err := c.fs.Create(dst)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	defer func() {
 		cerr := out.Close()
@@ -171,7 +176,7 @@ func copyFile(orig, dst string) error {
 		}
 	}()
 	if _, err = io.Copy(out, in); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	return out.Sync()
 }

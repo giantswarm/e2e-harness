@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +61,8 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		RemoteCluster: remoteCluster,
 	}
 	h := harness.New(logger, hCfg)
-	c := cluster.New(logger, d, remoteCluster)
+	fs := afero.NewOsFs()
+	c := cluster.New(logger, fs, d, remoteCluster)
 
 	// tasks to run
 	bundle := []tasks.Task{

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 )
@@ -165,7 +166,7 @@ func New(logger micrologger.Logger, fs afero.Fs, projectName string) *Initialize
 func (i *Initializer) CreateLayout() error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	baseDir := filepath.Join(wd, "e2e")
@@ -176,7 +177,7 @@ func (i *Initializer) CreateLayout() error {
 	}
 
 	if err := i.fs.MkdirAll(baseDir, os.ModePerm); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	afs := &afero.Afero{Fs: i.fs}
@@ -197,13 +198,13 @@ func (i *Initializer) CreateLayout() error {
 	}
 
 	if err := i.writeFiles(files, baseDir, afs); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	testsDir := filepath.Join(baseDir, "tests")
 
 	if err := i.fs.MkdirAll(testsDir, os.ModePerm); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	files = []fileDef{
@@ -218,7 +219,7 @@ func (i *Initializer) CreateLayout() error {
 	}
 
 	if err := i.writeFiles(files, testsDir, afs); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -229,7 +230,7 @@ func (i *Initializer) writeFiles(files []fileDef, baseDir string, afs *afero.Afe
 		path := filepath.Join(baseDir, f.name)
 
 		if err := afs.WriteFile(path, []byte(f.content), os.ModePerm); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	return nil

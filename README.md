@@ -50,9 +50,11 @@ for each operation mode:
 
 * Local: [minikube](https://github.com/kubernetes/minikube) should be started with
 RBAC enabled before running e2e-harness:
+
 ```
 $ minikube start --extra-config=apiserver.Authorization.Mode=RBAC
 ```
+
 * Remote: as stated above e2e-harness uses [shipyard](https://giathub.com/giantswarm/shipyard)
 for setting up the remote cluster. shipyard currently only supports AWS as the
 backend engine, so the common environment variables for granting access to AWS
@@ -77,12 +79,18 @@ see below. This is how the e2e directory looks like this:
     ├── example.go
     └── runner.go
 ```
+
 `project.yaml` defines how the end to end tests should be setup, which tests to
 run and how to tear them down. It includes the following fields:
+* `setup`: contains an array of steps to set the testing environment up.
+* `outOfClusterTest`: set of steps to execute checks as an external client
+* `inClusterTest`: configuration for the tests to be run as sonobuoy plugins, see
+below.
+* `teardown`: steps required to clean up the test environment.
 
 The rest of the files are an example of in cluster tests. These are executed as
 sonobuoy plugins. The example is written in go but you could use any langauge,
-see [the sonobuoy examples section](). These are the files included:
+see [the sonobuoy examples section](https://github.com/heptio/sonobuoy/tree/master/examples). These are the files included:
 
 * `Dockerfile`: Required, this is the image definition for the sonobuoy plugin that
 runs the in-cluster tests, see below for details.
@@ -96,20 +104,25 @@ func init() {
   Add(TestExample)
 }
 ```
+
 The test functions need to fulfill this interface:
+
 ```
 type Test func() (description string, err error)
 ```
-being the `description` used in the sonobuoy test output.
+
+The `description` used in the sonobuoy test output.
 
 ## e2e-harness lifecycle
 
 An e2e test execution involves three stages:
 
 * Setup: this is performed with the `setup` command.
+
 ```
 $ e2e-harness setup --remote=[false|true]
 ```
+
 It takes care of:
   - Initializing the project, creating an interchange directory that will
   be mounted on the test container for keeping state between command
@@ -118,7 +131,7 @@ It takes care of:
   will involve the creation of the cluster too. In local executions, the
   connection settings to be able running minikube are made available in
   the test container interchange directory.
-  - Run common set up steps: these will pu the test cluster in a common
+  - Run common set up steps: these will put the test cluster in a common
   initial state, basically installing tiller (helm's server side part) including
   the required resources to make it work with RBAC enabled.
   - Run specific setup steps: this are defined in the project file
@@ -126,18 +139,22 @@ It takes care of:
   description above) and can do things like installing the chart under test,
   setting up required external resources, etc.
 * Run tests: invoking the `test` command:
+
 ```
 $ e2e-harness test
 ```
+
 First, the out of cluster tests are executed, if any, defined as
 regular `step` entries under the `outOfClusterTests` key. Then the in cluster tests,
 if they are enabled in `project.yaml`. You should enabled them only if they are
 present, if not enabling them causes an error, see above for a descrition about
 how to write this kind of tests.
 * Teardown: the teardown phase is executing using the `teardown` command.
+
 ```
 $ e2e-harness teardown
 ```
+
 It includes:
   - Run specific teardown steps: this are defined in the project file
   `e2e/project.yaml` under the `teardown` key. They are common steps (see their
@@ -158,11 +175,12 @@ Currently the out of cluster tests are executed as `step` elements in the
 `e2e/project.yaml` file, the elements in a `step` are:
 
 * `run`: string with the command to execute, multiline allowed.
-* `WaitFor`: optional element to check if the `run` command was successful, it has
+* `waitFor`: optional element to check if the `run` command was successful, it has
 as nested items a `run` entry with the check command to be executed, a `pattern`
 entry with a regular expression pattern to be checked against the previous command
 output and a `timeout` with the number of miliseconds to keep executing the command
 and checking the output. An example step could be:
+
 ```
 - run: kubectl create namespace giantswarm
   waitFor:
@@ -170,6 +188,7 @@ and checking the output. An example step could be:
     match: giantswarm\s*Active
     timeout: 2000
 ```
+
 In this case, the first `run` entry tries to create a namespace and the `waitFor` entry
 makes sure that the namespace is created and in Active state, with a deadline of 2 seconds.
 
@@ -182,6 +201,7 @@ so keep in mind that the binaries used must be available in it.
 ### In cluster tests
 
 The in cluster tests execution are controlled by the `inClusterTests` entry in the project file:
+
 ```
 inClusterTests:
   enabled: true
@@ -191,6 +211,7 @@ inClusterTests:
   - name: ENV_VAR_2
     value: VALUE_2
 ```
+
 First of all, they must be enabled to be executed (set `enabled` field to `true`).
 You can also pass the plugin environment variables to control their execution through
 the `env` key.

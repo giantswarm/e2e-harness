@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 )
@@ -60,37 +61,37 @@ func (r *Results) Read(path string) (*TestSuite, error) {
 	cmd := "cat " + path
 	b := new(bytes.Buffer)
 	if err := r.runner.RunPortForward(b, cmd); err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 
 	ts := &TestSuite{}
 
 	if err := xml.Unmarshal(b.Bytes(), ts); err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 	return ts, nil
 }
 
 func Write(fs afero.Fs, results *TestSuite) error {
 	if err := fs.MkdirAll(path.Dir(DefaultRemoteResultsPath), os.ModePerm); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	content, err := xml.Marshal(results)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	resultsFilename := filepath.Join(DefaultRemoteResultsPath, DefaultResultsFilename)
 	err = afero.WriteFile(fs, resultsFilename, []byte(content), 0644)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	doneFilename := filepath.Join(DefaultRemoteResultsPath, "done")
 	err = afero.WriteFile(fs, doneFilename, []byte(resultsFilename), 0644)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -104,7 +105,7 @@ func (r *Results) Unpack() error {
 	}
 	for _, cmd := range cmds {
 		if err := r.runner.RunPortForward(ioutil.Discard, cmd); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	return nil
@@ -115,7 +116,7 @@ func (r *Results) Unpack() error {
 func (r *Results) Interpret() error {
 	ts, err := r.Read(DefaultResultsPath)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if ts.Failures == 0 && ts.Errors == 0 {

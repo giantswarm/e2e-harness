@@ -11,6 +11,7 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/runner"
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -89,6 +90,9 @@ func (p *Project) CommonSetupSteps() error {
 	p.logger.Log("info", "executing common setup steps")
 	steps := []Step{
 		Step{
+			Run: "kubectl config use-context minikube",
+		},
+		Step{
 			Run: "kubectl create clusterrolebinding permissive-binding --clusterrole cluster-admin --group=system:serviceaccounts",
 		},
 		Step{
@@ -107,7 +111,7 @@ func (p *Project) CommonSetupSteps() error {
 
 	for _, s := range steps {
 		if err := p.runStep(s); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	return nil
@@ -134,7 +138,7 @@ func (p *Project) CommonTearDownSteps() error {
 
 	for _, s := range steps {
 		if err := p.runStep(s); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	p.logger.Log("info", "finished common teardown steps")
@@ -146,12 +150,12 @@ func (p *Project) SetupSteps() error {
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	for _, step := range e2e.Setup {
 		if err := p.runStep(step); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	p.logger.Log("info", "finished setup steps")
@@ -163,12 +167,12 @@ func (p *Project) TeardownSteps() error {
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	for _, step := range e2e.Teardown {
 		if err := p.runStep(step); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	p.logger.Log("info", "finished teardown steps")
@@ -180,12 +184,12 @@ func (p *Project) OutOfClusterTest() error {
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	for _, step := range e2e.OutOfClusterTest {
 		if err := p.runStep(step); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	p.logger.Log("info", "finished out of cluster tests")
@@ -195,7 +199,7 @@ func (p *Project) OutOfClusterTest() error {
 func (p *Project) InClusterTest() error {
 	e2e, err := p.readProjectFile()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if !e2e.InClusterTest.Enabled {
@@ -222,7 +226,7 @@ func (p *Project) runStep(step Step) error {
 	sEnv := os.ExpandEnv(step.Run)
 	//if err := p.runner.RunPortForward(ioutil.Discard, sEnv); err != nil {
 	if err := p.runner.RunPortForward(os.Stdout, sEnv); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if step.WaitFor.Run != "" {
@@ -232,7 +236,7 @@ func (p *Project) runStep(step Step) error {
 			Deadline: step.WaitFor.Timeout,
 		}
 		if err := p.wait.For(md); err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 	}
 	return nil
@@ -241,22 +245,22 @@ func (p *Project) runStep(step Step) error {
 func (p *Project) readProjectFile() (*E2e, error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 	projectFile := filepath.Join(dir, "e2e", "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 
 	content, err := ioutil.ReadFile(projectFile)
 	if err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 
 	e2e := &E2e{}
 
 	if err := yaml.Unmarshal(content, e2e); err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 	return e2e, nil
 }
@@ -266,7 +270,7 @@ func (p *Project) createSonobuoyValues() error {
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	name := harness.GetProjectName()
@@ -280,17 +284,17 @@ func (p *Project) createSonobuoyValues() error {
 
 	content, err := yaml.Marshal(sonobuoyValues)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	basedir, err := harness.BaseDir()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	path := filepath.Join(basedir, DefaultSonobuoyValuesFile)
 	err = ioutil.WriteFile(path, []byte(content), 0644)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -316,7 +320,7 @@ func (p *Project) installSonobuoyChart() error {
 		},
 	}
 	if err := p.runStep(installSonobuoyChart); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	return nil
 }

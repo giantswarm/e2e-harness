@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 )
 
@@ -53,7 +54,7 @@ func (d *Docker) Run(out io.Writer, command string) error {
 func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string) error {
 	dir, err := harness.BaseDir()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	baseArgs := []string{
