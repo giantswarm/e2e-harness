@@ -178,5 +178,7 @@ func (c *Cluster) copyFile(orig, dst string) error {
 	if _, err = io.Copy(out, in); err != nil {
 		return microerror.Mask(err)
 	}
-	return out.Sync()
+	err = out.Sync()
+
+	return microerror.Mask(err)
 }
