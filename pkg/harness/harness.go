@@ -7,15 +7,19 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	yaml "gopkg.in/yaml.v2"
 )
 
 const (
 	defaultConfigFile = "config.yaml"
+
+	DefaultKubeConfig = "/workdir/.shipyard/config"
 )
 
 type Harness struct {
 	logger micrologger.Logger
+	fs     afero.Fs
 	cfg    Config
 }
 
@@ -23,9 +27,10 @@ type Config struct {
 	RemoteCluster bool `yaml:"remoteCluster"`
 }
 
-func New(logger micrologger.Logger, cfg Config) *Harness {
+func New(logger micrologger.Logger, fs afero.Fs, cfg Config) *Harness {
 	return &Harness{
 		logger: logger,
+		fs:     fs,
 		cfg:    cfg,
 	}
 }
@@ -37,20 +42,25 @@ func (h *Harness) Init() error {
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	dir := filepath.Join(baseDir, "workdir")
-	err = os.MkdirAll(dir, 0777)
+	workDir := filepath.Join(baseDir, "workdir")
+	err = h.fs.MkdirAll(workDir, 0777)
 	if err != nil {
 		return microerror.Mask(err)
 	}
+
+	shipyardDir := filepath.Join(workDir, ".shipyard")
+	err = h.fs.MkdirAll(shipyardDir, 0777)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
 	// circumvent umask settings, by assigning the right
 	// permissions to workdir and its parent
-	err = os.Chmod(baseDir, 0777)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-	err = os.Chmod(dir, 0777)
-	if err != nil {
-		return microerror.Mask(err)
+	for _, d := range []string{baseDir, workDir, shipyardDir} {
+		err = h.fs.Chmod(d, 0777)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 	h.logger.Log("info", "finished harness initialization")
 	return nil
@@ -81,7 +91,8 @@ func (h *Harness) ReadConfig() (Config, error) {
 		return Config{}, microerror.Mask(err)
 	}
 
-	content, err := ioutil.ReadFile(filepath.Join(dir, defaultConfigFile))
+	afs := &afero.Afero{Fs: h.fs}
+	content, err := afs.ReadFile(filepath.Join(dir, defaultConfigFile))
 	if err != nil {
 		return Config{}, microerror.Mask(err)
 	}

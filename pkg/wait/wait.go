@@ -5,10 +5,11 @@ import (
 	"io"
 	"time"
 
-	"github.com/giantswarm/e2e-harness/pkg/patterns"
-	"github.com/giantswarm/e2e-harness/pkg/runner"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+
+	"github.com/giantswarm/e2e-harness/pkg/patterns"
+	"github.com/giantswarm/e2e-harness/pkg/runner"
 )
 
 const (

@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
+
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 
 	"github.com/giantswarm/e2e-harness/pkg/builder"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/micrologger"
 )
 
 type Minikube struct {
@@ -40,17 +40,10 @@ func (m *Minikube) BuildImages() error {
 	}
 
 	name := harness.GetProjectName()
+
 	image := fmt.Sprintf("quay.io/giantswarm/%s", name)
 	m.logger.Log("info", "Building image "+image)
 	if err := m.buildImage(name, dir, image, env); err != nil {
-		return microerror.Mask(err)
-	}
-
-	e2eBinary := name + "-e2e"
-	e2eDir := filepath.Join(dir, "e2e")
-	e2eImage := fmt.Sprintf("quay.io/giantswarm/%s-e2e", name)
-	m.logger.Log("info", "Building image "+e2eImage)
-	if err := m.buildImage(e2eBinary, e2eDir, e2eImage, env); err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -89,20 +82,7 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 	return env, nil
 }
 
-func compile(binaryName, path string) error {
-	cmd := exec.Command("go", "build", "-o", binaryName, ".")
-	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
-	cmd.Dir = path
-
-	return cmd.Run()
-}
-
 func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) error {
-	if err := compile(binaryName, path); err != nil {
-		fmt.Println("error compiling binary", binaryName)
-		return microerror.Mask(err)
-	}
-
 	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
 		fmt.Println("error building image", imageName)
 		return microerror.Mask(err)

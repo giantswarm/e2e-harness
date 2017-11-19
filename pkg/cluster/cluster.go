@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/runner"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+
+	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/runner"
 )
 
 type Cluster struct {
@@ -35,7 +36,11 @@ func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, remoteClu
 // later access to it
 func (c *Cluster) Create() error {
 	if c.remoteCluster {
-		return c.clusterAction("shipyard -action=start")
+		err := c.clusterAction("shipyard -action=start")
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		return nil
 	}
 	usr, err := user.Current()
 	if err != nil {
@@ -127,6 +132,18 @@ func (c *Cluster) setupMinikubeConfig(homeDir string) error {
 		return microerror.Mask(err)
 	}
 	afs := &afero.Afero{Fs: c.fs}
+
+	// circumvent umask settings, by assigning the right permissions to shipyard dir
+	// (afero creates a .lock file on read..)
+	baseDir, err := harness.BaseDir()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	shipyardDir := filepath.Join(baseDir, "workdir", ".shipyard")
+	err = c.fs.Chmod(shipyardDir, 0777)
+	if err != nil {
+		return microerror.Mask(err)
+	}
 
 	read, err := afs.ReadFile(path)
 	if err != nil {

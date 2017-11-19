@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+
 	"github.com/giantswarm/e2e-harness/pkg/cluster"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -8,9 +12,6 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/project"
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
-	"github.com/giantswarm/micrologger"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -30,7 +31,10 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	h := harness.New(logger, harness.Config{})
+
+	fs := afero.NewOsFs()
+
+	h := harness.New(logger, fs, harness.Config{})
 	cfg, err := h.ReadConfig()
 	if err != nil {
 		return err
@@ -55,14 +59,12 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		Logger: logger,
 		Runner: d,
 		Wait:   w,
+		Fs:     fs,
 	}
 	p := project.New(pDeps, pCfg)
-	fs := afero.NewOsFs()
 	c := cluster.New(logger, fs, d, cfg.RemoteCluster)
 
-	bundle := []tasks.Task{
-		p.TeardownSteps,
-	}
+	bundle := []tasks.Task{}
 
 	if cfg.RemoteCluster {
 		bundle = append(bundle, c.Delete)

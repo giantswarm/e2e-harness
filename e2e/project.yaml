@@ -1,4 +1,6 @@
 version: 1
 
-inClusterTest:
-  enabled: true
+test:
+  env:
+    - "EXPECTED_KEY=expected_value"
+    - "TEST_USER=${USER}"
