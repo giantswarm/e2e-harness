@@ -1,4 +1,4 @@
-// +build e2e
+// +build k8srequired
 
 package e2e
 

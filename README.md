@@ -144,9 +144,9 @@ e2e tests are executed from the test container and are regular go test, for writ
 just keep in mind these considerations:
 
 * The tests will be executed from the test container, this is it's [Dockerfile](https://github.com/giantswarm/e2e-harness/blob/master/Dockerfile).
-* All the go files should be guarded by a `e2e` build tag, being their first line:
+* All the go files should be guarded by a `k8srequired` build tag, being their first line:
 ```
-// +build e2e
+// +build k8srequired
 ```
 * The kube config file path for connecting to the test cluster can be obtained from
 the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` package.
