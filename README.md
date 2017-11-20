@@ -95,7 +95,7 @@ $ e2e-harness test
 First, the binary and docker image for the project are built. Then the tests
 are compiled, not executed directly. Finally, that binary is executed in the
 test container with an environment defined by the environment variables set
-in the `project.yam` file.
+in the `project.yaml` file.
 
 * Teardown: the teardown phase is executing using the `teardown` command.
 
@@ -103,8 +103,8 @@ in the `project.yam` file.
 $ e2e-harness teardown
 ```
 
-It consists of run commomn tear down steps: these differ depending on the mode
-of operation, for remote, ephemeral clusters they are just deleted, for local
+It consists of running common tear down steps: these differ depending on the mode
+of operation, for remote ephemeral clusters, they are just deleted, for local
 clusters tiller and all the required RBAC setup is removed.
 
 ## Project initialization
@@ -146,7 +146,7 @@ just keep in mind these considerations:
 * The tests will be executed from the test container, this is it's [Dockerfile](https://github.com/giantswarm/e2e-harness/blob/master/Dockerfile).
 * All the go files should be guarded by a `e2e` build tag, being their first line:
 ```
-// build + e2e
+// +build e2e
 ```
 * The kube config file path for connecting to the test cluster can be obtained from
 the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` package.
