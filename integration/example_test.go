@@ -1,6 +1,6 @@
 // +build k8srequired
 
-package e2e
+package integration
 
 import (
 	"os"

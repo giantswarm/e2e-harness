@@ -16,6 +16,10 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 )
 
+const (
+	DefaultDirectory = "integration"
+)
+
 type E2e struct {
 	Version string `yaml:"version"`
 	Test    Test   `yaml:"test"`
@@ -176,7 +180,7 @@ func (p *Project) readProjectFile() (*E2e, error) {
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	projectFile := filepath.Join(dir, "e2e", "project.yaml")
+	projectFile := filepath.Join(dir, DefaultDirectory, "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
 		return nil, microerror.Mask(err)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/giantswarm/micrologger"
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/project"
 )
 
 type Docker struct {
@@ -58,14 +59,14 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ..
 		return microerror.Mask(err)
 	}
 
-	e2eDir := filepath.Join(filepath.Dir(baseDir), "e2e")
+	e2eDir := filepath.Join(filepath.Dir(baseDir), project.DefaultDirectory)
 	baseArgs := []string{
 		"run",
 		"-v", fmt.Sprintf("%s:%s", filepath.Join(baseDir, "workdir"), "/workdir"),
 		"-v", fmt.Sprintf("%s:/e2e", e2eDir),
 		"-e", fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
 		"-e", fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
-		"-e", "KUBECONFIG=/workdir/.shipyard/config",
+		"-e", "KUBECONFIG=" + harness.DefaultKubeConfig,
 		"--entrypoint", entrypoint,
 	}
 

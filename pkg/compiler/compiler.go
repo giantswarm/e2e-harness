@@ -49,7 +49,7 @@ func (c *Compiler) CompileTests() error {
 	name := harness.GetProjectName()
 
 	e2eBinary := name + "-e2e"
-	e2eDir := filepath.Join(dir, "e2e")
+	e2eDir := filepath.Join(dir, "integration")
 	c.logger.Log("info", "Compiling binary "+e2eBinary)
 	if err := c.compileTests(e2eBinary, e2eDir); err != nil {
 		c.logger.Log("info", "error compiling binary "+e2eBinary)
