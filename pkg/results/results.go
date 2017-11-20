@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 )
 
 const (
-	//DefaultResultsFilename    = "junit_01.xml"
 	DefaultResultsFilename    = "results.xml"
 	DefaultResultsPath        = "/workdir/plugins/e2e/" + DefaultResultsFilename
 	DefaultRemoteResultsPath  = "/tmp/results"
@@ -60,46 +61,37 @@ func (r *Results) Read(path string) (*TestSuite, error) {
 	cmd := "cat " + path
 	b := new(bytes.Buffer)
 	if err := r.runner.RunPortForward(b, cmd); err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 
 	ts := &TestSuite{}
 
 	if err := xml.Unmarshal(b.Bytes(), ts); err != nil {
-		return nil, err
+		return nil, microerror.Mask(err)
 	}
 	return ts, nil
 }
 
 func Write(fs afero.Fs, results *TestSuite) error {
 	if err := fs.MkdirAll(path.Dir(DefaultRemoteResultsPath), os.ModePerm); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	content, err := xml.Marshal(results)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	resultsFilename := filepath.Join(DefaultRemoteResultsPath, DefaultResultsFilename)
 	err = afero.WriteFile(fs, resultsFilename, []byte(content), 0644)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
-	/*
-		cmd := exec.Command("/bin/busybox", "tar", "-czf", DefaultTarResultsFilename, "*")
-		cmd.Dir = DefaultRemoteResultsPath
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-	*/
 	doneFilename := filepath.Join(DefaultRemoteResultsPath, "done")
-	//tarResultsFilename := filepath.Join(DefaultRemoteResultsPath, DefaultTarResultsFilename)
-	//err = afero.WriteFile(fs, doneFilename, []byte(tarResultsFilename), 0644)
 	err = afero.WriteFile(fs, doneFilename, []byte(resultsFilename), 0644)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -107,27 +99,29 @@ func Write(fs afero.Fs, results *TestSuite) error {
 
 func (r *Results) Unpack() error {
 	cmds := []string{
+		"rm -f /workdir/results/*.tar.gz",
 		"kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy /workdir/results --namespace=heptio-sonobuoy",
 		"tar xzf /workdir/results/*.tar.gz",
 	}
 	for _, cmd := range cmds {
-		if err := r.runner.RunPortForward(os.Stdout, cmd); err != nil {
-			return err
+		if err := r.runner.RunPortForward(ioutil.Discard, cmd); err != nil {
+			return microerror.Mask(err)
 		}
 	}
 	return nil
 }
 
-// Interpret is a Task that knows how to grab test reesults and extract
-// results from them
+// Interpret is a Task that knows how to grab test results and extract
+// the execution outcome from them.
 func (r *Results) Interpret() error {
 	ts, err := r.Read(DefaultResultsPath)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if ts.Failures == 0 && ts.Errors == 0 {
+		r.logger.Log("info", "sonobuoy plugin succeeded")
 		return nil
 	}
-	return fmt.Errorf("failures found")
+	return fmt.Errorf("sonobuoy plugin failed")
 }

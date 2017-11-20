@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,7 @@ var (
 func init() {
 	RootCmd.AddCommand(SetupCmd)
 
-	SetupCmd.Flags().BoolVar(&remoteCluster, "remote-cluster", true, "use remote cluster")
+	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
 }
 
@@ -35,15 +36,20 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	gitCommit := GetGitCommit()
-	projectName := GetProjectName()
+	projectTag := harness.GetProjectTag()
+	projectName := harness.GetProjectName()
+	// use latest tag for consumer projects (not dog-fooding e2e-harness)
+	e2eHarnessTag := projectTag
+	if projectName != "e2e-harness" {
+		e2eHarnessTag = "latest"
+	}
 
-	d := docker.New(logger, gitCommit)
+	d := docker.New(logger, e2eHarnessTag, remoteCluster)
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 	pCfg := &project.Config{
-		Name:      projectName,
-		GitCommit: gitCommit,
+		Name: projectName,
+		Tag:  projectTag,
 	}
 	pDeps := &project.Dependencies{
 		Logger: logger,
@@ -55,15 +61,16 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		RemoteCluster: remoteCluster,
 	}
 	h := harness.New(logger, hCfg)
-	c := cluster.New(logger, d, remoteCluster)
+	fs := afero.NewOsFs()
+	c := cluster.New(logger, fs, d, remoteCluster)
 
 	// tasks to run
 	bundle := []tasks.Task{
 		h.Init,
+		h.WriteConfig,
 		c.Create,
 		p.CommonSetupSteps,
 		p.SetupSteps,
-		h.WriteConfig,
 	}
 
 	return tasks.Run(bundle)
