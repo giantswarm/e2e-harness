@@ -8,6 +8,7 @@ import (
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/spf13/afero"
 
+	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/e2e-harness/pkg/initializer"
 )
 
@@ -25,7 +26,7 @@ func TestCreateLayout(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not get current directory, %v", err)
 	}
-	baseDir := filepath.Join(wd, "e2e")
+	baseDir := filepath.Join(wd, harness.DefaultKubeConfig)
 
 	t.Run("fails if base directory exists", func(t *testing.T) {
 		if err := fs.MkdirAll(baseDir, os.ModePerm); err != nil {

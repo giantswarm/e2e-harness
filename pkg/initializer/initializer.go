@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -106,7 +107,7 @@ func (i *Initializer) CreateLayout() error {
 		return microerror.Mask(err)
 	}
 
-	baseDir := filepath.Join(wd, "e2e")
+	baseDir := filepath.Join(wd, harness.DefaultKubeConfig)
 
 	// return if base dir already exists.
 	if _, err := i.fs.Stat(baseDir); !os.IsNotExist(err) {
