@@ -7,9 +7,11 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+
+	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/project"
 )
 
 type Docker struct {
@@ -29,42 +31,51 @@ func New(logger micrologger.Logger, imageTag string, remoteCluster bool) *Docker
 // RunPortForward executes a command in the e2e-harness container after
 // setting up the port forwarding to the remote cluster, this command
 // is meant to be used after that cluster has been initialized
-func (d *Docker) RunPortForward(out io.Writer, command string) error {
+func (d *Docker) RunPortForward(out io.Writer, command string, env ...string) error {
 	if !d.remoteCluster {
 		// no need to port forward in local clusters
-		return d.Run(out, command)
+		return d.Run(out, command, env...)
 	}
 
 	args := append([]string{
 		"quay.io/giantswarm/e2e-harness:" + d.imageTag},
 		"-c", fmt.Sprintf("shipyard -action=forward-port && %s", command))
 
-	return d.baseRun(out, "/bin/bash", args)
+	return d.baseRun(out, "/bin/bash", args, env...)
 }
 
 // Run executes a command in the e2e-harness container.
-func (d *Docker) Run(out io.Writer, command string) error {
+func (d *Docker) Run(out io.Writer, command string, env ...string) error {
 	args := append([]string{
 		"quay.io/giantswarm/e2e-harness:" + d.imageTag},
 		"-c", command)
 
-	return d.baseRun(out, "/bin/bash", args)
+	return d.baseRun(out, "/bin/bash", args, env...)
 }
 
-func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string) error {
-	dir, err := harness.BaseDir()
+func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ...string) error {
+	baseDir, err := harness.BaseDir()
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
+	e2eDir := filepath.Join(filepath.Dir(baseDir), project.DefaultDirectory)
 	baseArgs := []string{
 		"run",
-		"-v", fmt.Sprintf("%s:%s", filepath.Join(dir, "workdir"), "/workdir"),
+		"-v", fmt.Sprintf("%s:%s", filepath.Join(baseDir, "workdir"), "/workdir"),
+		"-v", fmt.Sprintf("%s:/e2e", e2eDir),
 		"-e", fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
 		"-e", fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
-		"-e", "KUBECONFIG=/workdir/.shipyard/config",
+		"-e", "KUBECONFIG=" + harness.DefaultKubeConfig,
 		"--entrypoint", entrypoint,
 	}
+
+	// add environment variables
+	for _, e := range env {
+		sEnv := os.ExpandEnv(e)
+		baseArgs = append(baseArgs, "-e", sEnv)
+	}
+
 	if !d.remoteCluster {
 		// accessing to local cluster requires using the host network
 		baseArgs = append(baseArgs, "--network", "host")

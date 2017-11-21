@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+
 	"github.com/giantswarm/e2e-harness/pkg/cluster"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -8,9 +12,6 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/project"
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/e2e-harness/pkg/wait"
-	"github.com/giantswarm/micrologger"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -51,17 +52,18 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		Name: projectName,
 		Tag:  projectTag,
 	}
+	fs := afero.NewOsFs()
 	pDeps := &project.Dependencies{
 		Logger: logger,
 		Runner: d,
 		Wait:   w,
+		Fs:     fs,
 	}
 	p := project.New(pDeps, pCfg)
 	hCfg := harness.Config{
 		RemoteCluster: remoteCluster,
 	}
-	h := harness.New(logger, hCfg)
-	fs := afero.NewOsFs()
+	h := harness.New(logger, fs, hCfg)
 	c := cluster.New(logger, fs, d, remoteCluster)
 
 	// tasks to run
@@ -70,7 +72,6 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		h.WriteConfig,
 		c.Create,
 		p.CommonSetupSteps,
-		p.SetupSteps,
 	}
 
 	return tasks.Run(bundle)

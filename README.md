@@ -60,59 +60,6 @@ for setting up the remote cluster. shipyard currently only supports AWS as the
 backend engine, so the common environment variables for granting access to AWS
 are required too (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`).
 
-## Project initialization
-
-From the project root execute:
-
-```
-$ e2e-harness init
-```
-
-This will create a `e2e` directory, with the required files to start writing tests,
-see below. This is how the e2e directory looks like this:
-
-```
-├── Dockerfile
-├── main.go
-├── project.yaml
-└── tests
-    ├── example.go
-    └── runner.go
-```
-
-`project.yaml` defines how the end to end tests should be setup, which tests to
-run and how to tear them down. It includes the following fields:
-* `setup`: contains an array of steps to set the testing environment up.
-* `outOfClusterTest`: set of steps to execute checks as an external client
-* `inClusterTest`: configuration for the tests to be run as sonobuoy plugins, see
-below.
-* `teardown`: steps required to clean up the test environment.
-
-The rest of the files are an example of in cluster tests. These are executed as
-sonobuoy plugins. The example is written in go but you could use any langauge,
-see [the sonobuoy examples section](https://github.com/heptio/sonobuoy/tree/master/examples). These are the files included:
-
-* `Dockerfile`: Required, this is the image definition for the sonobuoy plugin that
-runs the in-cluster tests, see below for details.
-* `main.go`: Main file of the golang example, just calls the runner.
-* `tests/runner.go`: Part of the golang example, helper file that defines methods
-required for executing the tests.
-* `tests/example.go`: Part of the golang example, this is where the actual test is
-written. It must be registered in the runner during the `init` execution:
-```
-func init() {
-  Add(TestExample)
-}
-```
-
-The test functions need to fulfill this interface:
-
-```
-type Test func() (description string, err error)
-```
-
-The `description` used in the sonobuoy test output.
-
 ## e2e-harness lifecycle
 
 An e2e test execution involves three stages:
@@ -138,90 +85,71 @@ It takes care of:
   `e2e/project.yaml` under the `setup` key. They are common steps (see their
   description above) and can do things like installing the chart under test,
   setting up required external resources, etc.
+
 * Run tests: invoking the `test` command:
 
 ```
 $ e2e-harness test
 ```
 
-First, the out of cluster tests are executed, if any, defined as
-regular `step` entries under the `outOfClusterTests` key. Then the in cluster tests,
-if they are enabled in `project.yaml`. You should enabled them only if they are
-present, if not enabling them causes an error, see above for a descrition about
-how to write this kind of tests.
+First, the binary and docker image for the project are built. Then the tests
+are compiled, not executed directly. Finally, that binary is executed in the
+test container with an environment defined by the environment variables set
+in the `project.yaml` file.
+
 * Teardown: the teardown phase is executing using the `teardown` command.
 
 ```
 $ e2e-harness teardown
 ```
 
-It includes:
-  - Run specific teardown steps: this are defined in the project file
-  `e2e/project.yaml` under the `teardown` key. They are common steps (see their
-  description above) and can do things like removing the chart under test,
-  tearing down required external resources, etc.
-  - Run commomn tear down steps: these differ depending on the mode of operation,
-  for remote, ephemeral clusters they are just deleted, for local clusters tiller
-  and all the required RBAC setup is removed.
+It consists of running common tear down steps: these differ depending on the mode
+of operation, for remote ephemeral clusters, they are just deleted, for local
+clusters tiller and all the required RBAC setup is removed.
+
+## Project initialization
+
+From the project root execute:
+
+```
+$ e2e-harness init
+```
+
+This will create a `e2e` directory, with the required files to start writing tests,
+see below. This is how the e2e directory looks like this:
+
+```
+├── client.go
+├── example_test.go
+└── project.yaml
+```
+
+`project.yaml` defines how the end to end tests should be setup using environment variables, they
+are defined as follows:
+
+```
+test:
+  env:
+  - ENV_VAR_1=VALUE_1
+  - ENV_VAR_2=${VALUE_2}
+```
+In this case, `${VALUE_2}` would be expanded and its value would be available for the tests.
+
+* `client.go`: library with a k8s client.
+* `example_test.go`: contains example tests.
 
 ## Writing tests
 
-e2e tests can be executed from agents either out of the test cluster or running
-inside that cluster:
+e2e tests are executed from the test container and are regular go test, for writing them
+just keep in mind these considerations:
 
-### Out of cluster tests
-
-Currently the out of cluster tests are executed as `step` elements in the
-`e2e/project.yaml` file, the elements in a `step` are:
-
-* `run`: string with the command to execute, multiline allowed.
-* `waitFor`: optional element to check if the `run` command was successful, it has
-as nested items a `run` entry with the check command to be executed, a `pattern`
-entry with a regular expression pattern to be checked against the previous command
-output and a `timeout` with the number of miliseconds to keep executing the command
-and checking the output. An example step could be:
-
+* The tests will be executed from the test container, this is it's [Dockerfile](https://github.com/giantswarm/e2e-harness/blob/master/Dockerfile).
+* All the go files should be guarded by a `k8srequired` build tag, being their first line:
 ```
-- run: kubectl create namespace giantswarm
-  waitFor:
-    run: kubectl get namespace
-    match: giantswarm\s*Active
-    timeout: 2000
+// +build k8srequired
 ```
-
-In this case, the first `run` entry tries to create a namespace and the `waitFor` entry
-makes sure that the namespace is created and in Active state, with a deadline of 2 seconds.
-
-All the `run` and `pattern` elements expand environment variables of the form `$ENV_VAR`
-or `${ENV_VAR}`.
-
-As all the steps in the project file, these elements are run from the test container,
-so keep in mind that the binaries used must be available in it.
-
-### In cluster tests
-
-The in cluster tests execution are controlled by the `inClusterTests` entry in the project file:
-
-```
-inClusterTests:
-  enabled: true
-  env:
-  - name: ENV_VAR_1
-    value: VALUE_1
-  - name: ENV_VAR_2
-    value: VALUE_2
-```
-
-First of all, they must be enabled to be executed (set `enabled` field to `true`).
-You can also pass the plugin environment variables to control their execution through
-the `env` key.
-
-The in cluster tests are executed as [sonobuoy plugins](https://github.com/heptio/sonobuoy/blob/master/docs/plugins.md).
-e2e-harness takes care of installing all the required sonobuoy infrastructure,
-running the plugins with a container created from the image defined by `e2e/Dockerfile`
-grabbing the results and making them available in `.e2e-harness/workdir/plugin/e2e/results.xml`.
-The example project deployed with `e2e-harness init` shows how this can be done
-using golang, see the `Project initialilzation` section for details.
+* The kube config file path for connecting to the test cluster can be obtained from
+the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` package.
 
 ## Contact
 

@@ -1,31 +1,28 @@
 package project
 
 import (
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/results"
-	"github.com/giantswarm/e2e-harness/pkg/runner"
-	"github.com/giantswarm/e2e-harness/pkg/tasks"
-	"github.com/giantswarm/e2e-harness/pkg/wait"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	yaml "gopkg.in/yaml.v2"
+
+	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/e2e-harness/pkg/wait"
 )
 
 const (
-	DefaultSonobuoyValuesFile = "/workdir/sonobuoy.yaml"
+	DefaultDirectory = "integration"
 )
 
 type E2e struct {
-	Version          string        `yaml:"version"`
-	Setup            []Step        `yaml:"setup"`
-	Teardown         []Step        `yaml:"teardown"`
-	OutOfClusterTest []Step        `yaml:"outOfClusterTest"`
-	InClusterTest    InClusterTest `yaml:"inClusterTest"`
+	Version string `yaml:"version"`
+	Test    Test   `yaml:"test"`
 }
 
 type Step struct {
@@ -40,14 +37,8 @@ type WaitStep struct {
 	Step    time.Duration `yaml:"step"`
 }
 
-type InClusterTest struct {
-	Enabled bool     `yaml:"enabled"`
-	Env     []EnvVar `yaml:"env"`
-}
-
-type EnvVar struct {
-	Name  string `yaml:"name"`
-	Value string `yaml:"value"`
+type Test struct {
+	Env []string `yaml:"env"`
 }
 
 type Config struct {
@@ -56,33 +47,27 @@ type Config struct {
 }
 
 type Dependencies struct {
-	Logger  micrologger.Logger
-	Runner  runner.Runner
-	Wait    *wait.Wait
-	Results *results.Results
+	Logger micrologger.Logger
+	Runner runner.Runner
+	Wait   *wait.Wait
+	Fs     afero.Fs
 }
 
 type Project struct {
-	logger  micrologger.Logger
-	runner  runner.Runner
-	wait    *wait.Wait
-	results *results.Results
-	cfg     *Config
-}
-
-type SonoBuoyValues struct {
-	ImageName string   `yaml:"imageName"`
-	ImageTag  string   `yaml:"imageTag"`
-	Env       []EnvVar `yaml:"env"`
+	logger micrologger.Logger
+	runner runner.Runner
+	wait   *wait.Wait
+	fs     afero.Fs
+	cfg    *Config
 }
 
 func New(deps *Dependencies, cfg *Config) *Project {
 	return &Project{
-		logger:  deps.Logger,
-		runner:  deps.Runner,
-		wait:    deps.Wait,
-		results: deps.Results,
-		cfg:     cfg,
+		logger: deps.Logger,
+		runner: deps.Runner,
+		wait:   deps.Wait,
+		fs:     deps.Fs,
+		cfg:    cfg,
 	}
 }
 
@@ -110,10 +95,11 @@ func (p *Project) CommonSetupSteps() error {
 		}}
 
 	for _, s := range steps {
-		if err := p.runStep(s); err != nil {
+		if err := p.RunStep(s); err != nil {
 			return microerror.Mask(err)
 		}
 	}
+	p.logger.Log("info", "finished common setup steps")
 	return nil
 }
 
@@ -137,7 +123,7 @@ func (p *Project) CommonTearDownSteps() error {
 		}}
 
 	for _, s := range steps {
-		if err := p.runStep(s); err != nil {
+		if err := p.RunStep(s); err != nil {
 			return microerror.Mask(err)
 		}
 	}
@@ -145,85 +131,32 @@ func (p *Project) CommonTearDownSteps() error {
 	return nil
 }
 
-func (p *Project) SetupSteps() error {
-	p.logger.Log("info", "starting setup steps")
+func (p *Project) Test() error {
+	p.logger.Log("info", "started tests")
+
+	// ./e2e is mounted in /e2e in the test container, and the binary with the e2e
+	// tests is named <project_name>-e2e so the final location in the test container
+	// is /e2e/<project_name>-e2e
+	name := harness.GetProjectName()
+	binaryPath := fmt.Sprintf("/e2e/%s-e2e", name)
 
 	e2e, err := p.readProjectFile()
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	for _, step := range e2e.Setup {
-		if err := p.runStep(step); err != nil {
-			return microerror.Mask(err)
-		}
-	}
-	p.logger.Log("info", "finished setup steps")
-	return nil
-}
-
-func (p *Project) TeardownSteps() error {
-	p.logger.Log("info", "started teardown steps")
-
-	e2e, err := p.readProjectFile()
-	if err != nil {
+	if err := p.runner.RunPortForward(os.Stdout, binaryPath, e2e.Test.Env...); err != nil {
 		return microerror.Mask(err)
 	}
 
-	for _, step := range e2e.Teardown {
-		if err := p.runStep(step); err != nil {
-			return microerror.Mask(err)
-		}
-	}
-	p.logger.Log("info", "finished teardown steps")
+	p.logger.Log("info", "finished tests")
 	return nil
 }
 
-func (p *Project) OutOfClusterTest() error {
-	p.logger.Log("info", "started out of cluster tests")
-
-	e2e, err := p.readProjectFile()
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	for _, step := range e2e.OutOfClusterTest {
-		if err := p.runStep(step); err != nil {
-			return microerror.Mask(err)
-		}
-	}
-	p.logger.Log("info", "finished out of cluster tests")
-	return nil
-}
-
-func (p *Project) InClusterTest() error {
-	e2e, err := p.readProjectFile()
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	if !e2e.InClusterTest.Enabled {
-		p.logger.Log("info", "in-cluster tests disabled")
-		return nil
-	}
-
-	p.logger.Log("info", "started in-cluster tests")
-	bundle := []tasks.Task{
-		p.createSonobuoyValues,
-		p.installSonobuoyChart,
-		p.results.Unpack,
-		p.results.Interpret,
-	}
-	if err := tasks.Run(bundle); err != nil {
-		return nil
-	}
-	p.logger.Log("info", "finished in-cluster tests")
-	return nil
-}
-
-func (p *Project) runStep(step Step) error {
+func (p *Project) RunStep(step Step) error {
 	// expand env vars
 	sEnv := os.ExpandEnv(step.Run)
+
 	//if err := p.runner.RunPortForward(ioutil.Discard, sEnv); err != nil {
 	if err := p.runner.RunPortForward(os.Stdout, sEnv); err != nil {
 		return microerror.Mask(err)
@@ -247,12 +180,13 @@ func (p *Project) readProjectFile() (*E2e, error) {
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	projectFile := filepath.Join(dir, "e2e", "project.yaml")
+	projectFile := filepath.Join(dir, DefaultDirectory, "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
 		return nil, microerror.Mask(err)
 	}
 
-	content, err := ioutil.ReadFile(projectFile)
+	afs := &afero.Afero{Fs: p.fs}
+	content, err := afs.ReadFile(projectFile)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -263,64 +197,4 @@ func (p *Project) readProjectFile() (*E2e, error) {
 		return nil, microerror.Mask(err)
 	}
 	return e2e, nil
-}
-
-func (p *Project) createSonobuoyValues() error {
-	p.logger.Log("info", "creating sonobuoy values")
-
-	e2e, err := p.readProjectFile()
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	name := harness.GetProjectName()
-	tag := harness.GetProjectTag()
-
-	sonobuoyValues := &SonoBuoyValues{
-		ImageName: "quay.io/giantswarm/" + name + "-e2e",
-		ImageTag:  tag,
-		Env:       e2e.InClusterTest.Env,
-	}
-
-	content, err := yaml.Marshal(sonobuoyValues)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	basedir, err := harness.BaseDir()
-	if err != nil {
-		return microerror.Mask(err)
-	}
-	path := filepath.Join(basedir, DefaultSonobuoyValuesFile)
-	err = ioutil.WriteFile(path, []byte(content), 0644)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	return nil
-}
-
-func (p *Project) installSonobuoyChart() error {
-	p.logger.Log("info", "cleaning up previous sonobuoy deployments")
-
-	p.runStep(Step{
-		Run: "helm delete --purge sonobuoy-chart",
-		WaitFor: WaitStep{
-			Run:   "kubectl get ns heptio-sonobuoy",
-			Match: `Error from server \(NotFound\): namespaces "heptio-sonobuoy" not found`,
-		},
-	})
-
-	p.logger.Log("info", "installing sonobuoy chart")
-	installSonobuoyChart := Step{
-		Run: "helm install /home/e2e-harness/resources/sonobuoy-chart --name sonobuoy-chart --values " + DefaultSonobuoyValuesFile,
-		WaitFor: WaitStep{
-			Run:   "kubectl logs sonobuoy --namespace=heptio-sonobuoy",
-			Match: "no-exit was specified, sonobuoy is now blocking",
-		},
-	}
-	if err := p.runStep(installSonobuoyChart); err != nil {
-		return microerror.Mask(err)
-	}
-	return nil
 }
