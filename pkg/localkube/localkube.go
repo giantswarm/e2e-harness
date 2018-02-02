@@ -29,7 +29,7 @@ func (l *Localkube) SetUp() error {
 
 	commands := []string{
 		"chmod a+x ./minikube-linux-amd64",
-		"sudo ./minikube-linux-amd64 start --vm-driver=none",
+		"sudo ./minikube-linux-amd64 start --vm-driver=none --extra-config=apiserver.Authorization.Mode=RBAC",
 		"sudo chown -R $USER $HOME/.kube",
 		"sudo chgrp -R $USER $HOME/.kube",
 		"sudo chown -R $USER $HOME/.minikube",
