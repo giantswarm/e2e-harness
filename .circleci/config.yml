@@ -24,7 +24,7 @@ jobs:
                 ./architect deploy
             fi
 
-  e2eLocalTest:
+  e2e-local-test:
     working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
     machine: true
     environment:
@@ -46,7 +46,7 @@ jobs:
           command: ./e2e-harness teardown
           when: always
 
-  e2eRemoteTest:
+  e2e-remote-test:
     working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
     machine: true
     steps:
@@ -80,16 +80,16 @@ workflows:
   build_e2e:
     jobs:
       - build
-      - e2eLocalTest:
+      - e2e-local-test:
           requires:
             - build
-      - e2eRemoteTest:
+      - e2e-remote-test:
           requires:
             - build
       - github-release:
           requires:
-            - e2eLocalTest
-            - e2eRemoteTest
+            - e2e-local-test
+            - e2e-remote-test
           filters:
             branches:
               only: master
