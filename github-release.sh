@@ -1,5 +1,6 @@
-SHA=$1
-PERSONAL_ACCESS_TOKEN=$2
+PROJECT=$1
+SHA=$2
+PERSONAL_ACCESS_TOKEN=$3
 
 SHORT_SHA=$(echo ${SHA} | head -c 7)
 DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -20,7 +21,7 @@ tag_output=$(curl \
             \"date\": \"${DATE}\"
         }
     }" \
-    https://api.github.com/repos/giantswarm/e2e-harness/git/tags
+    https://api.github.com/repos/giantswarm/${PROJECT}/git/tags
 )
 echo $tag_output | jq
 
@@ -36,7 +37,7 @@ release_output=$(curl \
         \"draft\": false,
         \"prerelease\": false
     }" \
-    https://api.github.com/repos/giantswarm/e2e-harness/releases
+    https://api.github.com/repos/giantswarm/${PROJECT}/releases
 )
 echo $release_output | jq
 
@@ -47,8 +48,8 @@ echo "Upload binary to GitHub Release"
 upload_output=$(curl \
     --header "Authorization: token ${PERSONAL_ACCESS_TOKEN}" \
     --header "Content-Type: application/octet-stream" \
-    --data-binary @e2e-harness \
-    https://uploads.github.com/repos/giantswarm/e2e-harness/releases/${RELEASE_ID}/assets?name=e2e-harness
+    --data-binary @${PROJECT} \
+    https://uploads.github.com/repos/giantswarm/${PROJECT}/releases/${RELEASE_ID}/assets?name=${PROJECT}
 )
 echo $upload_output | jq
 

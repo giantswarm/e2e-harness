@@ -73,7 +73,7 @@ jobs:
       - attach_workspace:
           at: .
 
-      - run: ./github-release.sh $CIRCLE_SHA1 $PERSONAL_ACCESS_TOKEN
+      - run: ./github-release.sh $CIRCLE_PROJECT_REPONAME $CIRCLE_SHA1 $PERSONAL_ACCESS_TOKEN
 
 workflows:
   version: 2
