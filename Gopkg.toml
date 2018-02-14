@@ -35,11 +35,20 @@
 
 [[constraint]]
   branch = "master"
+  name = "github.com/giantswarm/versionbundle"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/spf13/afero"
 
 [[constraint]]
   branch = "master"
   name = "github.com/spf13/cobra"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/cenkalti/backoff"
+
 
 [[constraint]]
   branch = "v2"
