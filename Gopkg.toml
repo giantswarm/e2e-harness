@@ -24,6 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/cenkalti/backoff"
 
 [[constraint]]
   branch = "master"
@@ -44,11 +47,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/spf13/cobra"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/cenkalti/backoff"
-
 
 [[constraint]]
   branch = "v2"
