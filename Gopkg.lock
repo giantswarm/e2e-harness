@@ -13,6 +13,18 @@
   revision = "5bd2802263f21d8788851d5305584c82a5c75d7e"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/cenkalti/backoff"
+  packages = ["."]
+  revision = "2ea60e5f094469f9e65adb9cd103795b73ae743e"
+
+[[projects]]
+  name = "github.com/coreos/go-semver"
+  packages = ["semver"]
+  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
+  version = "v0.2.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "782f4967f2dc4564575ca782fe2d04090b5faca8"
@@ -38,6 +50,19 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/giantswarm/apiextensions"
+  packages = [
+    "pkg/apis/core/v1alpha1",
+    "pkg/apis/provider/v1alpha1",
+    "pkg/clientset/versioned",
+    "pkg/clientset/versioned/scheme",
+    "pkg/clientset/versioned/typed/core/v1alpha1",
+    "pkg/clientset/versioned/typed/provider/v1alpha1"
+  ]
+  revision = "3b000f9f8d05f3feabce9971affed05036ec29f7"
+
+[[projects]]
+  branch = "master"
   name = "github.com/giantswarm/microerror"
   packages = ["."]
   revision = "325932fa68e70dd4464598f11e2f710ac1aaec46"
@@ -51,6 +76,12 @@
     "microloggertest"
   ]
   revision = "216e9191d90f55723bfc0e93801af96e6b80eb12"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/giantswarm/versionbundle"
+  packages = ["."]
+  revision = "9172db5125f7c75ba988e26ed6571151d43c3565"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -83,6 +114,12 @@
   name = "github.com/go-openapi/swag"
   packages = ["."]
   revision = "1d0bd113de87027671077d3c71eb3ac5d7dbba72"
+
+[[projects]]
+  name = "github.com/go-resty/resty"
+  packages = ["."]
+  revision = "00cb083b8cdc8b0fb1e1f5ebe24bbc23e0ff0cf6"
+  version = "v1.2"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -232,12 +269,20 @@
 [[projects]]
   name = "golang.org/x/net"
   packages = [
+    "context",
     "http2",
     "http2/hpack",
     "idna",
-    "lex/httplex"
+    "lex/httplex",
+    "publicsuffix"
   ]
   revision = "1c05540f6879653db88113bc4a2b70aec4bd491f"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
 
 [[projects]]
   name = "golang.org/x/sys"
@@ -310,6 +355,15 @@
     "storage/v1beta1"
   ]
   revision = "f63f838f2e6d362a1fd4a710ae13f603e4b51ea9"
+  version = "kubernetes-1.8.4"
+
+[[projects]]
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1"
+  ]
+  revision = "996a70a27a0dcf53642ca52601b9107cb2ad810a"
   version = "kubernetes-1.8.4"
 
 [[projects]]
@@ -414,6 +468,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "576743459b3abd63be675145a2b391b765f94a0949fc8e2cbf4ee31d99d1ad25"
+  inputs-digest = "51065c1731e2512b6dca9b68d6e33306c67e2cec81250aa09697824a47774835"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -24,6 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/cenkalti/backoff"
 
 [[constraint]]
   branch = "master"
@@ -32,6 +35,10 @@
 [[constraint]]
   branch = "master"
   name = "github.com/giantswarm/micrologger"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/giantswarm/versionbundle"
 
 [[constraint]]
   branch = "master"
