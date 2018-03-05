@@ -59,6 +59,13 @@ func (c *Compiler) CompileTests() error {
 }
 
 func (c *Compiler) compileMain(binaryName, path string) error {
+	// do not build if binary is already there
+	binPath := filepath.Join(path, binaryName)
+	if executebleExists(binPath) {
+		c.logger.Log("info", "main binary exists, not building")
+		return nil
+	}
+
 	cmd := exec.Command("go", "build", "-o", binaryName, ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
@@ -67,6 +74,13 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 }
 
 func (c *Compiler) compileTests(binaryName, path string) error {
+	// do not build if binary is already there
+	binPath := filepath.Join(path, binaryName)
+	if executebleExists(binPath) {
+		c.logger.Log("info", "test binary exists, not building")
+		return nil
+	}
+
 	cmd := exec.Command("go", "test", "-c", "-o", binaryName, "-tags", "k8srequired", ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
@@ -74,4 +88,19 @@ func (c *Compiler) compileTests(binaryName, path string) error {
 	cmd.Stdout = os.Stdout
 
 	return cmd.Run()
+}
+
+func executebleExists(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	if fi.IsDir() {
+		return false
+	}
+
+	isExecutable := fi.Mode()&os.FileMode(0111) != 0
+
+	return isExecutable
 }
