@@ -100,6 +100,11 @@ func executebleExists(path string) bool {
 		return false
 	}
 
+	// 0111 octal represents a mode with the executable bit set
+	// for user, group and others. Performing a bitwise and with
+	// the mode of the file would only result in 0 if all these
+	// bit flags are 0, so if the result of the and is different
+	// from 0 wee can assume that the file is executable.
 	isExecutable := fi.Mode()&os.FileMode(0111) != 0
 
 	return isExecutable
