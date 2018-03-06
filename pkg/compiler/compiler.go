@@ -58,6 +58,8 @@ func (c *Compiler) CompileTests() error {
 	return nil
 }
 
+// compileMain compiles a go binary in the given path giving it the provided
+// name. If the binary already exists and is executable the build is skipped
 func (c *Compiler) compileMain(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
@@ -73,6 +75,9 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 	return cmd.Run()
 }
 
+// compileTests compiles a go test binary in the given path giving it the
+// provided name. If the binary already exists and is executable the build
+// is skipped
 func (c *Compiler) compileTests(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
