@@ -64,7 +64,7 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
 	if executebleExists(binPath) {
-		c.logger.Log("info", "main binary exists, not building")
+		c.logger.Log("function", "compileMain", "level", "info", "message", "main binary exists, not building")
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func (c *Compiler) compileTests(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
 	if executebleExists(binPath) {
-		c.logger.Log("info", "test binary exists, not building")
+		c.logger.Log("function", "compileTests", "level", "info", "message", "test binary exists, not building")
 		return nil
 	}
 
