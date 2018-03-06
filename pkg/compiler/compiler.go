@@ -58,7 +58,16 @@ func (c *Compiler) CompileTests() error {
 	return nil
 }
 
+// compileMain compiles a go binary in the given path giving it the provided
+// name. If the binary already exists and is executable the build is skipped
 func (c *Compiler) compileMain(binaryName, path string) error {
+	// do not build if binary is already there
+	binPath := filepath.Join(path, binaryName)
+	if executebleExists(binPath) {
+		c.logger.Log("function", "compileMain", "level", "info", "message", "main binary exists, not building")
+		return nil
+	}
+
 	cmd := exec.Command("go", "build", "-o", binaryName, ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
@@ -66,7 +75,17 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 	return cmd.Run()
 }
 
+// compileTests compiles a go test binary in the given path giving it the
+// provided name. If the binary already exists and is executable the build
+// is skipped
 func (c *Compiler) compileTests(binaryName, path string) error {
+	// do not build if binary is already there
+	binPath := filepath.Join(path, binaryName)
+	if executebleExists(binPath) {
+		c.logger.Log("function", "compileTests", "level", "info", "message", "test binary exists, not building")
+		return nil
+	}
+
 	cmd := exec.Command("go", "test", "-c", "-o", binaryName, "-tags", "k8srequired", ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
@@ -74,4 +93,24 @@ func (c *Compiler) compileTests(binaryName, path string) error {
 	cmd.Stdout = os.Stdout
 
 	return cmd.Run()
+}
+
+func executebleExists(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	if fi.IsDir() {
+		return false
+	}
+
+	// 0111 octal represents a mode with the executable bit set
+	// for user, group and others. Performing a bitwise and with
+	// the mode of the file would only result in 0 if all these
+	// bit flags are 0, so if the result is different from 0 we
+	// can assume that the file is executable.
+	isExecutable := fi.Mode()&os.FileMode(0111) != 0
+
+	return isExecutable
 }
