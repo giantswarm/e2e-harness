@@ -109,7 +109,7 @@ func executebleExists(path string) bool {
 	// for user, group and others. Performing a bitwise and with
 	// the mode of the file would only result in 0 if all these
 	// bit flags are 0, so if the result of the and is different
-	// from 0 wee can assume that the file is executable.
+	// from 0 we can assume that the file is executable.
 	isExecutable := fi.Mode()&os.FileMode(0111) != 0
 
 	return isExecutable
