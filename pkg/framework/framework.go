@@ -73,7 +73,7 @@ type Framework struct {
 	guestCS kubernetes.Interface
 }
 
-func newFramework() (*Framework, error) {
+func New() (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -303,6 +303,34 @@ func (f *Framework) InstallAwsOperator(values string) error {
 	}
 
 	return waitFor(f.crd("awsconfig"))
+}
+
+func (f *Framework) InstallNodeOperator(values string) error {
+	var err error
+
+	nodeOperatorChartValuesEnv := os.ExpandEnv(values)
+
+	tmpfile, err := ioutil.TempFile("", "node-operator-values")
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(nodeOperatorChartValuesEnv)); err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = runCmd("helm registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = waitFor(f.crd("nodeconfig"))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
 }
 
 func (f *Framework) DeleteGuestCluster() error {
