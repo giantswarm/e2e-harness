@@ -25,7 +25,7 @@
 #   unused-packages = true
 
 [[constraint]]
-  branch = "master"
+  version = "v1.1.0"
   name = "github.com/cenkalti/backoff"
 
 [[constraint]]
@@ -45,7 +45,7 @@
   name = "github.com/spf13/afero"
 
 [[constraint]]
-  branch = "master"
+  version = "v0.0.1"
   name = "github.com/spf13/cobra"
 
 [[constraint]]

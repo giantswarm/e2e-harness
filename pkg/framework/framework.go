@@ -73,7 +73,7 @@ type Framework struct {
 	guestCS kubernetes.Interface
 }
 
-func newFramework() (*Framework, error) {
+func New() (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)

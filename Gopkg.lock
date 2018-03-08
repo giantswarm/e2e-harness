@@ -13,10 +13,10 @@
   revision = "5bd2802263f21d8788851d5305584c82a5c75d7e"
 
 [[projects]]
-  branch = "master"
   name = "github.com/cenkalti/backoff"
   packages = ["."]
-  revision = "2ea60e5f094469f9e65adb9cd103795b73ae743e"
+  revision = "61153c768f31ee5f130071d08fc82b85208528de"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/coreos/go-semver"
@@ -250,10 +250,10 @@
   revision = "bbf41cb36dffe15dff5bf7e18c447801e7ffe163"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "f91529fc609202eededff4de2dc0ba2f662240a3"
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -468,6 +468,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "51065c1731e2512b6dca9b68d6e33306c67e2cec81250aa09697824a47774835"
+  inputs-digest = "e9269c07be1b037b414818817842f8e0f2ff0b39521798c62dacbb34fb8604cb"
   solver-name = "gps-cdcl"
   solver-version = 1
