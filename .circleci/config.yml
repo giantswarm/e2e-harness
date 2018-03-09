@@ -105,12 +105,16 @@ workflows:
       - e2eLocalTest:
           requires:
           - build
+      - e2eLocalSubDirTest:
+          requires:
+          - build
       - e2eRemoteTest:
           requires:
           - build
       - github-release:
           requires:
             - e2eLocalTest
+            - e2eLocalSubDirTest
             - e2eRemoteTest
           filters:
             branches:
