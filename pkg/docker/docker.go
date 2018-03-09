@@ -105,6 +105,17 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ..
 }
 
 func (d *Docker) Build(out io.Writer, image, path, tag string, env []string) error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	dockerFilePath := filepath.Join(dir, "Dockerfile")
+	_, err = os.Stat(dockerFilePath)
+	if os.IsNotExist(err) {
+		d.logger.Log("function", "Build", "level", "info", "message", "no Dockerfile, skipping image build")
+		return nil
+	}
+
 	baseArgs := []string{
 		"build",
 		"--no-cache",

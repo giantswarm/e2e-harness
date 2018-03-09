@@ -40,6 +40,13 @@ func (c *Compiler) CompileMain() error {
 		return microerror.Mask(err)
 	}
 
+	mainPath := filepath.Join(dir, "main.go")
+	_, err = os.Stat(mainPath)
+	if os.IsNotExist(err) {
+		c.logger.Log("function", "CompileMain", "level", "info", "message", "no main.go, skipping binary build")
+		return nil
+	}
+
 	name := harness.GetProjectName()
 
 	c.logger.Log("info", "Compiling binary "+name)
