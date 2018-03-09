@@ -186,7 +186,8 @@ func (p *Project) readProjectFile() (*E2e, error) {
 	}
 	projectFile := filepath.Join(dir, p.cfg.Dir, "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
-		p.logger.Log("function", "readProjectFile", "level", "info", "message", "optional integration/project.yaml not found, continue build")
+		msg := fmt.Sprintf("optional %s not found, continue build", projectFile)
+		p.logger.Log("function", "readProjectFile", "level", "info", "message", msg)
 		return &E2e{}, nil
 	}
 
