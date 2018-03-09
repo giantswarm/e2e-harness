@@ -11,21 +11,34 @@ import (
 	"github.com/giantswarm/micrologger"
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/project"
 )
 
+type Config struct {
+	Logger micrologger.Logger
+
+	Dir           string
+	ImageTag      string
+	RemoteCluster bool
+}
+
 type Docker struct {
-	logger        micrologger.Logger
+	logger micrologger.Logger
+
+	dir           string
 	imageTag      string
 	remoteCluster bool
 }
 
-func New(logger micrologger.Logger, imageTag string, remoteCluster bool) *Docker {
-	return &Docker{
-		logger:        logger,
-		imageTag:      imageTag,
-		remoteCluster: remoteCluster,
+func New(config Config) *Docker {
+	d := &Docker{
+		logger: config.Logger,
+
+		dir:           config.Dir,
+		imageTag:      config.ImageTag,
+		remoteCluster: config.RemoteCluster,
 	}
+
+	return d
 }
 
 // RunPortForward executes a command in the e2e-harness container after
@@ -59,7 +72,7 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ..
 		return microerror.Mask(err)
 	}
 
-	e2eDir := filepath.Join(filepath.Dir(baseDir), project.DefaultDirectory)
+	e2eDir := filepath.Join(filepath.Dir(baseDir), d.dir)
 	baseArgs := []string{
 		"run",
 		"-v", fmt.Sprintf("%s:%s", filepath.Join(baseDir, "workdir"), "/workdir"),

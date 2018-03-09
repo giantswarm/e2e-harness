@@ -23,15 +23,17 @@ var (
 )
 
 var (
-	remoteCluster bool
-	name          string
+	setupCmdTestDir string
+	name            string
+	remoteCluster   bool
 )
 
 func init() {
 	RootCmd.AddCommand(SetupCmd)
 
-	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
+	SetupCmd.Flags().StringVar(&setupCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
+	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
 
 func runSetup(cmd *cobra.Command, args []string) error {
@@ -48,7 +50,19 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		e2eHarnessTag = "latest"
 	}
 
-	d := docker.New(logger, e2eHarnessTag, remoteCluster)
+	var d *docker.Docker
+	{
+		c := docker.Config{
+			Logger: logger,
+
+			Dir:           setupCmdTestDir,
+			ImageTag:      e2eHarnessTag,
+			RemoteCluster: remoteCluster,
+		}
+
+		d = docker.New(c)
+	}
+
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 	pCfg := &project.Config{

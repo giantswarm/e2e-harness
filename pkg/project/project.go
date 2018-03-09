@@ -42,6 +42,7 @@ type Test struct {
 }
 
 type Config struct {
+	Dir  string
 	Name string
 	Tag  string
 }
@@ -62,13 +63,16 @@ type Project struct {
 }
 
 func New(deps *Dependencies, cfg *Config) *Project {
-	return &Project{
+	p := &Project{
 		logger: deps.Logger,
 		runner: deps.Runner,
 		wait:   deps.Wait,
 		fs:     deps.Fs,
-		cfg:    cfg,
+
+		cfg: cfg,
 	}
+
+	return p
 }
 
 func (p *Project) CommonSetupSteps() error {
@@ -180,7 +184,7 @@ func (p *Project) readProjectFile() (*E2e, error) {
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	projectFile := filepath.Join(dir, DefaultDirectory, "project.yaml")
+	projectFile := filepath.Join(dir, p.cfg.Dir, "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
 		return nil, microerror.Mask(err)
 	}

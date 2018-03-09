@@ -24,13 +24,13 @@ var (
 )
 
 var (
-	testDir string
+	testCmdTestDir string
 )
 
 func init() {
 	RootCmd.AddCommand(TestCmd)
 
-	TestCmd.Flags().StringVar(&testDir, "test-dir", "integration", "Name of the directory containing executable tests.")
+	TestCmd.Flags().StringVar(&testCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 }
 
 func runTest(cmd *cobra.Command, args []string) error {
@@ -56,27 +56,45 @@ func runTest(cmd *cobra.Command, args []string) error {
 		e2eHarnessTag = "latest"
 	}
 
-	d := docker.New(logger, e2eHarnessTag, cfg.RemoteCluster)
+	var d *docker.Docker
+	{
+		c := docker.Config{
+			Logger: logger,
+
+			Dir:           testCmdTestDir,
+			ImageTag:      e2eHarnessTag,
+			RemoteCluster: cfg.RemoteCluster,
+		}
+
+		d = docker.New(c)
+	}
+
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
-	pCfg := &project.Config{
-		Name: projectName,
-		Tag:  projectTag,
+
+	var p *project.Project
+	{
+		pCfg := &project.Config{
+			Dir:  testCmdTestDir,
+			Name: projectName,
+			Tag:  projectTag,
+		}
+		pDeps := &project.Dependencies{
+			Logger: logger,
+			Runner: d,
+			Wait:   w,
+			Fs:     fs,
+		}
+
+		p = project.New(pDeps, pCfg)
 	}
-	pDeps := &project.Dependencies{
-		Logger: logger,
-		Runner: d,
-		Wait:   w,
-		Fs:     fs,
-	}
-	p := project.New(pDeps, pCfg)
 
 	var comp *compiler.Compiler
 	{
 		c := compiler.Config{
 			Logger: logger,
 
-			TestDir: testDir,
+			TestDir: testCmdTestDir,
 		}
 
 		comp = compiler.New(c)

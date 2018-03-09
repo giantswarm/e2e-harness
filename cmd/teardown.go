@@ -22,8 +22,14 @@ var (
 	}
 )
 
+var (
+	teardownCmdTestDir string
+)
+
 func init() {
 	RootCmd.AddCommand(TeardownCmd)
+
+	TeardownCmd.Flags().StringVar(&teardownCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 }
 
 func runTeardown(cmd *cobra.Command, args []string) error {
@@ -48,7 +54,18 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		e2eHarnessTag = "latest"
 	}
 
-	d := docker.New(logger, e2eHarnessTag, cfg.RemoteCluster)
+	var d *docker.Docker
+	{
+		c := docker.Config{
+			Logger: logger,
+
+			Dir:           teardownCmdTestDir,
+			ImageTag:      e2eHarnessTag,
+			RemoteCluster: cfg.RemoteCluster,
+		}
+
+		d = docker.New(c)
+	}
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 	pCfg := &project.Config{
