@@ -11,14 +11,26 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
-type Compiler struct {
-	logger micrologger.Logger
+type Config struct {
+	Logger micrologger.Logger
+
+	TestDir string
 }
 
-func New(logger micrologger.Logger) *Compiler {
-	return &Compiler{
-		logger: logger,
+type Compiler struct {
+	logger micrologger.Logger
+
+	testDir string
+}
+
+func New(config Config) *Compiler {
+	c := &Compiler{
+		logger: config.Logger,
+
+		testDir: config.TestDir,
 	}
+
+	return c
 }
 
 // CompileMain is a Task that builds the main binary.
@@ -46,15 +58,16 @@ func (c *Compiler) CompileTests() error {
 		return microerror.Mask(err)
 	}
 
-	name := harness.GetProjectName()
+	e2eBinary := harness.GetProjectName() + "-e2e"
+	e2eDir := filepath.Join(dir, c.testDir)
 
-	e2eBinary := name + "-e2e"
-	e2eDir := filepath.Join(dir, "integration")
 	c.logger.Log("info", "Compiling binary "+e2eBinary)
-	if err := c.compileTests(e2eBinary, e2eDir); err != nil {
+	err = c.compileTests(e2eBinary, e2eDir)
+	if err != nil {
 		c.logger.Log("info", "error compiling binary "+e2eBinary)
 		return microerror.Mask(err)
 	}
+
 	return nil
 }
 
