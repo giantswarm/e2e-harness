@@ -23,8 +23,14 @@ var (
 	}
 )
 
+var (
+	testDir string
+)
+
 func init() {
 	RootCmd.AddCommand(TestCmd)
+
+	TestCmd.Flags().StringVar(&testDir, "test-dir", "integration", "Name of the directory containing executable tests.")
 }
 
 func runTest(cmd *cobra.Command, args []string) error {
@@ -65,7 +71,16 @@ func runTest(cmd *cobra.Command, args []string) error {
 	}
 	p := project.New(pDeps, pCfg)
 
-	comp := compiler.New(logger)
+	var comp *compiler.Compiler
+	{
+		c := compiler.Config{
+			Logger: logger,
+
+			TestDir: testDir,
+		}
+
+		comp = compiler.New(c)
+	}
 
 	// tasks to run
 	bundle := []tasks.Task{

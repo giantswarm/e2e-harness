@@ -20,6 +20,9 @@ var (
 		Short: "setup e2e tests",
 		RunE:  runSetup,
 	}
+)
+
+var (
 	remoteCluster bool
 	name          string
 )
