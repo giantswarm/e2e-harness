@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -23,9 +24,9 @@ func init() {
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	logger, err := micrologger.New(micrologger.DefaultConfig())
+	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	projectName := harness.GetProjectName()

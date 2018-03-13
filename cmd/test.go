@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -34,9 +35,9 @@ func init() {
 }
 
 func runTest(cmd *cobra.Command, args []string) error {
-	logger, err := micrologger.New(micrologger.DefaultConfig())
+	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	projectTag := harness.GetProjectTag()
@@ -47,7 +48,7 @@ func runTest(cmd *cobra.Command, args []string) error {
 	h := harness.New(logger, fs, harness.Config{})
 	cfg, err := h.ReadConfig()
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	// use latest tag for consumer projects (not dog-fooding e2e-harness)
