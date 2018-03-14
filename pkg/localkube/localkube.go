@@ -1,6 +1,7 @@
 package localkube
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -11,19 +12,33 @@ import (
 )
 
 const (
-	minikubeDownloadURL = "https://github.com/kubernetes/minikube/releases/download/$MINIKUBE_VERSION/minikube-linux-amd64"
+	minikubeDownloadURLFormat = "https://github.com/kubernetes/minikube/releases/download/%s/minikube-linux-amd64"
 )
 
-type Localkube struct {
+type Config struct {
+	MinikubeVersion string
 }
 
-func New() *Localkube {
-	return &Localkube{}
+type Localkube struct {
+	minikubeVersion string
+}
+
+func New(config Config) (*Localkube, error) {
+	if config.MinikubeVersion == "" {
+		return nil, microerror.Maskf(invalidConfigError, "%T.MinikubeVersion must not be empty", config)
+	}
+
+	l := &Localkube{
+		minikubeVersion: config.MinikubeVersion,
+	}
+
+	return l, nil
 }
 
 func (l *Localkube) SetUp() error {
 	// download minikube binary.
-	if err := downloadFromURL(minikubeDownloadURL); err != nil {
+	err := downloadFromURL(fmt.Sprintf(minikubeDownloadURLFormat, l.minikubeVersion))
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -55,8 +70,6 @@ func (l *Localkube) runCmd(command string) error {
 }
 
 func downloadFromURL(url string) error {
-	url = os.ExpandEnv(url)
-
 	tokens := strings.Split(url, "/")
 	fileName := tokens[len(tokens)-1]
 	output, err := os.Create(fileName)
