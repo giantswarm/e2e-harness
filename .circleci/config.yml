@@ -27,8 +27,6 @@ jobs:
   e2eLocalTest:
     working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
     machine: true
-    environment:
-      MINIKUBE_VERSION: v0.25.0
     steps:
     - checkout
 
@@ -49,8 +47,6 @@ jobs:
   e2eLocalSubDirTest:
     working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
     machine: true
-    environment:
-      MINIKUBE_VERSION: v0.25.0
     steps:
     - checkout
 
