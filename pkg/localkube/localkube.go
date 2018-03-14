@@ -11,14 +11,27 @@ import (
 )
 
 const (
-	minikubeDownloadURL = "https://github.com/kubernetes/minikube/releases/download/$MINIKUBE_VERSION/minikube-linux-amd64"
+	minikubeDownloadURL = "https://github.com/kubernetes/minikube/releases/download/%s/minikube-linux-amd64"
 )
 
-type Localkube struct {
+type Config struct {
+	MinikubeVersion string
 }
 
-func New() *Localkube {
-	return &Localkube{}
+type Localkube struct {
+	minikubeVersion string
+}
+
+func New(config Config) (*Localkube, error) {
+	if config.MinikubeVersion == "" {
+		return nil, microerror.Maskf(invalidConfigError, "%T.MinikubeVersion must not be empty", config)
+	}
+
+	l := &Localkube{
+		minikubeVersion: config.MinikubeVersion,
+	}
+
+	return l, nil
 }
 
 func (l *Localkube) SetUp() error {
