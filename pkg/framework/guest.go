@@ -15,6 +15,12 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
+const (
+	// minimumNodesReady represents the minimun number of ready nodes in a guest
+	// cluster to be considered healthy.
+	minimumNodesReady = 3
+)
+
 type Guest struct {
 	k8sClient kubernetes.Interface
 }
@@ -58,40 +64,29 @@ func (g *Guest) WaitForAPIDown() error {
 	}
 
 	log.Printf("waiting for k8s API down\n")
-	return waitConstantFor(apiDown)
-}
-
-func (g *Guest) waitForAPIUp() error {
-	apiUp := func() error {
-		_, err := g.k8sClient.
-			CoreV1().
-			Services("default").
-			Get("kubernetes", metav1.GetOptions{})
-
-		if err != nil {
-			log.Printf("waiting for k8s API up: %v\n", err)
-			return microerror.Mask(err)
-		}
-		log.Println("k8s API up")
-		return nil
+	err := waitConstantFor(apiDown)
+	if err != nil {
+		return microerror.Mask(err)
 	}
 
-	return waitFor(apiUp)
+	return nil
 }
 
 func (g *Guest) WaitForGuestReady() error {
-	if err := g.initGuestClientset(); err != nil {
-		return microerror.Maskf(err, "unexpected error initializing guest clientset")
-	}
+	var err error
 
-	if err := g.waitForAPIUp(); err != nil {
+	err = g.waitForAPIUp()
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := g.WaitForNodesUp(minimumNodesReady); err != nil {
+	err = g.WaitForNodesUp(minimumNodesReady)
+	if err != nil {
 		return microerror.Mask(err)
 	}
+
 	log.Println("Guest cluster ready")
+
 	return nil
 }
 
@@ -123,6 +118,21 @@ func (g *Guest) WaitForNodesUp(numberOfNodes int) error {
 	}
 
 	return waitFor(nodesUp)
+}
+
+func (g *Guest) waitForAPIUp() error {
+	apiUp := func() error {
+		_, err := g.k8sClient.CoreV1().Services("default").Get("kubernetes", metav1.GetOptions{})
+		if err != nil {
+			log.Printf("waiting for k8s API up: %v\n", err)
+			return microerror.Mask(err)
+		}
+
+		log.Println("k8s API up")
+		return nil
+	}
+
+	return waitFor(apiUp)
 }
 
 func newGuestK8sClient(hostK8sClient kubernetes.Interface) (kubernetes.Interface, error) {

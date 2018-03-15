@@ -31,10 +31,6 @@ type PatchSpec struct {
 }
 
 const (
-	// minimumNodesReady represents the minimun number of ready nodes in a guest
-	// cluster to be considered healthy.
-	minimumNodesReady = 3
-
 	certOperatorValuesFile = "/tmp/cert-operator-values.yaml"
 	// certOperatorChartValues values required by cert-operator-chart, the environment
 	// variables will be expanded before writing the contents to a file.
@@ -243,22 +239,6 @@ func (h *Host) TearDown() {
 	h.k8sClient.CoreV1().
 		Namespaces().
 		Delete("giantswarm", &metav1.DeleteOptions{})
-}
-
-func (h *Host) WaitForGuestReady() error {
-	if err := h.initGuestClientset(); err != nil {
-		return microerror.Maskf(err, "unexpected error initializing guest clientset")
-	}
-
-	if err := h.waitForAPIUp(); err != nil {
-		return microerror.Mask(err)
-	}
-
-	if err := h.WaitForNodesUp(minimumNodesReady); err != nil {
-		return microerror.Mask(err)
-	}
-	log.Println("Guest cluster ready")
-	return nil
 }
 
 func (h *Host) WaitForPodLog(namespace, needle, podName string) error {
