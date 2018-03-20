@@ -134,7 +134,7 @@ func (h *Host) DeleteGuestCluster() error {
 	return h.WaitForPodLog("giantswarm", logEntry, operatorPodName)
 }
 
-func (h *Host) InstallAwsOperator(values string) error {
+func (h *Host) InstallAwsOperator(values string, b *backoff.ExponentialBackOff) error {
 	awsOperatorChartValuesEnv := os.ExpandEnv(values)
 
 	tmpfile, err := ioutil.TempFile("", "aws-operator-values")
@@ -151,7 +151,7 @@ func (h *Host) InstallAwsOperator(values string) error {
 		return HelmCmd("registry install quay.io/giantswarm/aws-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n aws-operator --values " + tmpfile.Name())
 	}
 	notify := NewNotify("aws-operator-chart install")
-	err = backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	err = backoff.RetryNotify(operation, b, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -159,7 +159,7 @@ func (h *Host) InstallAwsOperator(values string) error {
 	return waitFor(h.crd("awsconfig"))
 }
 
-func (h *Host) InstallCertOperator() error {
+func (h *Host) InstallCertOperator(b *backoff.ExponentialBackOff) error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
@@ -168,7 +168,7 @@ func (h *Host) InstallCertOperator() error {
 		return HelmCmd("registry install quay.io/giantswarm/cert-operator-chart:stable -- -n cert-operator --values " + certOperatorValuesFile)
 	}
 	notify := NewNotify("cert-operator-chart install")
-	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	err := backoff.RetryNotify(operation, b, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -176,12 +176,12 @@ func (h *Host) InstallCertOperator() error {
 	return waitFor(h.crd("certconfig"))
 }
 
-func (h *Host) InstallCertResource() error {
+func (h *Host) InstallCertResource(b *backoff.ExponentialBackOff) error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
 	}
 	notify := NewNotify("cert-resource-lab-chart install")
-	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	err := backoff.RetryNotify(operation, b, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -191,7 +191,7 @@ func (h *Host) InstallCertResource() error {
 	return waitFor(h.secret("default", secretName))
 }
 
-func (h *Host) InstallNodeOperator(values string) error {
+func (h *Host) InstallNodeOperator(values string, b *backoff.ExponentialBackOff) error {
 	var err error
 
 	nodeOperatorChartValuesEnv := os.ExpandEnv(values)
@@ -210,7 +210,7 @@ func (h *Host) InstallNodeOperator(values string) error {
 		return HelmCmd("registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
 	}
 	notify := NewNotify("node-operator-chart install")
-	err = backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	err = backoff.RetryNotify(operation, b, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -242,12 +242,12 @@ func (h *Host) PodName(namespace, labelSelector string) (string, error) {
 	return pod.Name, nil
 }
 
-func (h *Host) Setup() error {
+func (h *Host) Setup(b *backoff.ExponentialBackOff) error {
 	if err := h.createGSNamespace(); err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := h.installVault(); err != nil {
+	if err := h.installVault(b); err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -352,12 +352,12 @@ func (h *Host) createGSNamespace() error {
 	return waitFor(activeNamespace)
 }
 
-func (h *Host) installVault() error {
+func (h *Host) installVault(b *backoff.ExponentialBackOff) error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault")
 	}
 	notify := NewNotify("vaultlab-chart install")
-	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	err := backoff.RetryNotify(operation, b, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
