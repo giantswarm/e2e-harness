@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
 	giantclientset "github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
@@ -145,7 +146,13 @@ func (h *Host) InstallAwsOperator(values string) error {
 	if _, err := tmpfile.Write([]byte(awsOperatorChartValuesEnv)); err != nil {
 		return microerror.Mask(err)
 	}
-	if err := runCmd("helm registry install quay.io/giantswarm/aws-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n aws-operator --values " + tmpfile.Name()); err != nil {
+
+	operation := func() error {
+		return HelmCmd("registry install quay.io/giantswarm/aws-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n aws-operator --values " + tmpfile.Name())
+	}
+	notify := NewNotify("aws-operator-chart install")
+	err = backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -157,7 +164,12 @@ func (h *Host) InstallCertOperator() error {
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
 	}
-	if err := runCmd("helm registry install quay.io/giantswarm/cert-operator-chart:stable -- -n cert-operator --values " + certOperatorValuesFile); err != nil {
+	operation := func() error {
+		return HelmCmd("registry install quay.io/giantswarm/cert-operator-chart:stable -- -n cert-operator --values " + certOperatorValuesFile)
+	}
+	notify := NewNotify("cert-operator-chart install")
+	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -165,7 +177,11 @@ func (h *Host) InstallCertOperator() error {
 }
 
 func (h *Host) InstallCertResource() error {
-	err := runCmd("helm registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
+	operation := func() error {
+		return HelmCmd("registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
+	}
+	notify := NewNotify("cert-resource-lab-chart install")
+	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -190,7 +206,11 @@ func (h *Host) InstallNodeOperator(values string) error {
 		return microerror.Mask(err)
 	}
 
-	err = runCmd("helm registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
+	operation := func() error {
+		return HelmCmd("registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
+	}
+	notify := NewNotify("node-operator-chart install")
+	err = backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -235,7 +255,7 @@ func (h *Host) Setup() error {
 }
 
 func (h *Host) Teardown() {
-	runCmd("helm delete vault --purge")
+	HelmCmd("delete vault --purge")
 	h.k8sClient.CoreV1().
 		Namespaces().
 		Delete("giantswarm", &metav1.DeleteOptions{})
@@ -333,7 +353,12 @@ func (h *Host) createGSNamespace() error {
 }
 
 func (h *Host) installVault() error {
-	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
+	operation := func() error {
+		return HelmCmd("registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault")
+	}
+	notify := NewNotify("vaultlab-chart install")
+	err := backoff.RetryNotify(operation, NewCustomExponentialBackoff(), notify)
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
