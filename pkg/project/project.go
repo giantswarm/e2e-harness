@@ -111,9 +111,6 @@ func (p *Project) CommonTearDownSteps() error {
 	p.logger.Log("info", "starting common teardown steps")
 	steps := []Step{
 		Step{
-			Run: "helm delete --purge sonobuoy-chart || true",
-		},
-		Step{
 			Run: "helm reset --force",
 		},
 		Step{
