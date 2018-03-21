@@ -62,12 +62,20 @@ Installation:
 )
 
 type Host struct {
+	backoff   *backoff.ExponentialBackOff
 	g8sClient *giantclientset.Clientset
 	k8sClient kubernetes.Interface
-	backoff   *backoff.ExponentialBackOff
 }
 
-func NewHost(b *backoff.ExponentialBackOff) (*Host, error) {
+type Config struct {
+	Backoff *backoff.ExponentialBackOff
+}
+
+func NewHost(c *Config) (*Host, error) {
+	if c.Backoff == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.Backoff must not be empty", c)
+	}
+
 	config, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -83,9 +91,9 @@ func NewHost(b *backoff.ExponentialBackOff) (*Host, error) {
 	}
 
 	h := &Host{
+		backoff:   c.Backoff,
 		g8sClient: g8sClient,
 		k8sClient: k8sClient,
-		backoff:   b,
 	}
 
 	return h, nil
