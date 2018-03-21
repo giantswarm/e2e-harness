@@ -73,7 +73,7 @@ type Config struct {
 
 func NewHost(c *Config) (*Host, error) {
 	if c.Backoff == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.Backoff must not be empty", c)
+		c.Backoff = newCustomExponentialBackoff()
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
@@ -160,7 +160,7 @@ func (h *Host) InstallAwsOperator(values string) error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/aws-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n aws-operator --values " + tmpfile.Name())
 	}
-	notify := NewNotify("aws-operator-chart install")
+	notify := newNotify("aws-operator-chart install")
 	err = backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
@@ -177,7 +177,7 @@ func (h *Host) InstallCertOperator() error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/cert-operator-chart:stable -- -n cert-operator --values " + certOperatorValuesFile)
 	}
-	notify := NewNotify("cert-operator-chart install")
+	notify := newNotify("cert-operator-chart install")
 	err := backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
@@ -190,7 +190,7 @@ func (h *Host) InstallCertResource() error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
 	}
-	notify := NewNotify("cert-resource-lab-chart install")
+	notify := newNotify("cert-resource-lab-chart install")
 	err := backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
@@ -219,7 +219,7 @@ func (h *Host) InstallNodeOperator(values string) error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
 	}
-	notify := NewNotify("node-operator-chart install")
+	notify := newNotify("node-operator-chart install")
 	err = backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
@@ -366,7 +366,7 @@ func (h *Host) installVault() error {
 	operation := func() error {
 		return HelmCmd("registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault")
 	}
-	notify := NewNotify("vaultlab-chart install")
+	notify := newNotify("vaultlab-chart install")
 	err := backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)

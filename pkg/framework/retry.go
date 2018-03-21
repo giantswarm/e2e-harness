@@ -10,10 +10,10 @@ import (
 
 const maxElapsedTime = 2 * time.Minute
 
-// NewCustomExponentialBackoff returns pointer to a backoff.ExponentialBackOff,
+// newCustomExponentialBackoff returns pointer to a backoff.ExponentialBackOff,
 // initialized with custom values. At the moment, we only override the
 // maxElapsedTime.
-func NewCustomExponentialBackoff() *backoff.ExponentialBackOff {
+func newCustomExponentialBackoff() *backoff.ExponentialBackOff {
 	b := &backoff.ExponentialBackOff{
 		InitialInterval:     backoff.DefaultInitialInterval,
 		RandomizationFactor: backoff.DefaultRandomizationFactor,
@@ -28,7 +28,7 @@ func NewCustomExponentialBackoff() *backoff.ExponentialBackOff {
 	return b
 }
 
-func NewNotify(operationName string) func(error, time.Duration) {
+func newNotify(operationName string) func(error, time.Duration) {
 	return func(err error, delay time.Duration) {
 		log.Printf(fmt.Sprintf("%s failed, retrying with delay %.0fm%.0fs: '%#v'", operationName, delay.Minutes(), delay.Seconds(), err))
 	}
