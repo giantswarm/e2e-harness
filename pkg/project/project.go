@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -102,12 +101,16 @@ func (p *Project) CommonSetupSteps() error {
 
 	newNotify := func(operationName string) func(error, time.Duration) {
 		return func(err error, delay time.Duration) {
-			log.Printf(fmt.Sprintf("%s failed, retrying with delay %.0fm%.0fs: '%#v'", operationName, delay.Minutes(), delay.Seconds(), err))
+			p.logger.Log(fmt.Sprintf("%q failed, retrying with delay %.0fm%.0fs: '%#v'", operationName, delay.Minutes(), delay.Seconds(), err))
 		}
 	}
 	for _, s := range steps {
 		operation := func() error {
-			return p.RunStep(s)
+			err := p.RunStep(s)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+			return nil
 		}
 		bo := backoff.NewExponentialBackOff()
 		err := backoff.RetryNotify(operation, bo, newNotify(s.Run))
