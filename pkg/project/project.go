@@ -101,7 +101,7 @@ func (p *Project) CommonSetupSteps() error {
 
 	newNotify := func(operationName string) func(error, time.Duration) {
 		return func(err error, delay time.Duration) {
-			p.logger.Log(fmt.Sprintf("%q failed, retrying with delay %.0fm%.0fs: '%#v'", operationName, delay.Minutes(), delay.Seconds(), err))
+			p.logger.Log(fmt.Sprintf("%q failed, retrying with delay %s: '%#v'", operationName, delay, err))
 		}
 	}
 	for _, s := range steps {
