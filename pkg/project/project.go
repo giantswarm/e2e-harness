@@ -150,9 +150,9 @@ func (p *Project) CommonTearDownSteps() error {
 func (p *Project) Test() error {
 	p.logger.Log("info", "started tests")
 
-	// ./e2e is mounted in /e2e in the test container, and the binary with the e2e
-	// tests is named <project_name>-e2e so the final location in the test container
-	// is /e2e/<project_name>-e2e
+	// --test-dir is mounted in /e2e in the test container, and the binary with
+	// the e2e tests is named <project_name>-e2e so the final location in the
+	// test container is /e2e/<project_name>-e2e
 	name := harness.GetProjectName()
 	binaryPath := fmt.Sprintf("/e2e/%s-e2e", name)
 
@@ -161,7 +161,7 @@ func (p *Project) Test() error {
 		return microerror.Mask(err)
 	}
 
-	if err := p.runner.RunPortForward(os.Stdout, binaryPath, e2e.Test.Env...); err != nil {
+	if err := p.runner.RunPortForward(os.Stdout, binaryPath+" -test.v", e2e.Test.Env...); err != nil {
 		return microerror.Mask(err)
 	}
 
