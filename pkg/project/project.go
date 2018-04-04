@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -98,8 +99,22 @@ func (p *Project) CommonSetupSteps() error {
 			},
 		}}
 
+	newNotify := func(operationName string) func(error, time.Duration) {
+		return func(err error, delay time.Duration) {
+			p.logger.Log(fmt.Sprintf("%q failed, retrying with delay %s: '%#v'", operationName, delay, err))
+		}
+	}
 	for _, s := range steps {
-		if err := p.RunStep(s); err != nil {
+		operation := func() error {
+			err := p.RunStep(s)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+			return nil
+		}
+		bo := backoff.NewExponentialBackOff()
+		err := backoff.RetryNotify(operation, bo, newNotify(s.Run))
+		if err != nil {
 			return microerror.Mask(err)
 		}
 	}
