@@ -144,46 +144,51 @@ func (h *Host) DeleteGuestCluster() error {
 	return h.WaitForPodLog("giantswarm", logEntry, operatorPodName)
 }
 
-func (h *Host) InstallAwsOperator(values string) error {
-	awsOperatorChartValuesEnv := os.ExpandEnv(values)
+func (h *Host) InstallStableOperator(name, cr, values string) error {
+	err := h.installOperator(name, cr, values, ":stable")
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	return nil
+}
 
-	tmpfile, err := ioutil.TempFile("", "aws-operator-values")
+func (h *Host) InstallBranchOperator(name, cr, values string) error {
+	err := h.installOperator(name, cr, values, "@1.0.0-${CIRCLE_SHA1}")
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	return nil
+}
+
+func (h *Host) installOperator(name, cr, values, version string) error {
+	chartValuesEnv := os.ExpandEnv(values)
+
+	tmpfile, err := ioutil.TempFile("", name+"-values")
 	if err != nil {
 		return microerror.Mask(err)
 	}
 	defer os.Remove(tmpfile.Name())
 
-	if _, err := tmpfile.Write([]byte(awsOperatorChartValuesEnv)); err != nil {
+	if _, err := tmpfile.Write([]byte(chartValuesEnv)); err != nil {
 		return microerror.Mask(err)
 	}
 
+	cmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s-chart%[2]s -- -n %[1]s --values %[3]s", name, version, tmpfile.Name())
 	operation := func() error {
-		return HelmCmd("registry install quay.io/giantswarm/aws-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n aws-operator --values " + tmpfile.Name())
+		return HelmCmd(cmd)
 	}
-	notify := newNotify("aws-operator-chart install")
+	notify := newNotify(name + "-chart install")
 	err = backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(h.crd("awsconfig"))
-}
-
-func (h *Host) InstallCertOperator() error {
-	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
-	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
-		return microerror.Mask(err)
-	}
-	operation := func() error {
-		return HelmCmd("registry install quay.io/giantswarm/cert-operator-chart:stable -- -n cert-operator --values " + certOperatorValuesFile)
-	}
-	notify := newNotify("cert-operator-chart install")
-	err := backoff.RetryNotify(operation, h.backoff, notify)
+	err = waitFor(h.crd(cr))
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(h.crd("certconfig"))
+	return nil
 }
 
 func (h *Host) InstallCertResource() error {
@@ -199,38 +204,6 @@ func (h *Host) InstallCertResource() error {
 	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
 	log.Printf("waiting for secret %v\n", secretName)
 	return waitFor(h.secret("default", secretName))
-}
-
-func (h *Host) InstallNodeOperator(values string) error {
-	var err error
-
-	nodeOperatorChartValuesEnv := os.ExpandEnv(values)
-
-	tmpfile, err := ioutil.TempFile("", "node-operator-values")
-	if err != nil {
-		return microerror.Mask(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	if _, err := tmpfile.Write([]byte(nodeOperatorChartValuesEnv)); err != nil {
-		return microerror.Mask(err)
-	}
-
-	operation := func() error {
-		return HelmCmd("registry install quay.io/giantswarm/node-operator-chart:stable -- -n node-operator --values " + tmpfile.Name())
-	}
-	notify := newNotify("node-operator-chart install")
-	err = backoff.RetryNotify(operation, h.backoff, notify)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	err = waitFor(h.crd("nodeconfig"))
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	return nil
 }
 
 func (h *Host) PodName(namespace, labelSelector string) (string, error) {
