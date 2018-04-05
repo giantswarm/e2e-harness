@@ -115,7 +115,7 @@ func (h *Host) DeleteGuestCluster() error {
 }
 
 func (h *Host) InstallStableOperator(name, cr, values string) error {
-	err := h.installOperator(name, cr, values, ":stable")
+	err := h.InstallOperator(name, cr, values, ":stable")
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -123,14 +123,14 @@ func (h *Host) InstallStableOperator(name, cr, values string) error {
 }
 
 func (h *Host) InstallBranchOperator(name, cr, values string) error {
-	err := h.installOperator(name, cr, values, "@1.0.0-${CIRCLE_SHA1}")
+	err := h.InstallOperator(name, cr, values, "@1.0.0-${CIRCLE_SHA1}")
 	if err != nil {
 		return microerror.Mask(err)
 	}
 	return nil
 }
 
-func (h *Host) installOperator(name, cr, values, version string) error {
+func (h *Host) InstallOperator(name, cr, values, version string) error {
 	chartValuesEnv := os.ExpandEnv(values)
 
 	tmpfile, err := ioutil.TempFile("", name+"-values")
