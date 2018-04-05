@@ -253,7 +253,7 @@ func (h *Host) PodName(namespace, labelSelector string) (string, error) {
 }
 
 func (h *Host) Setup() error {
-	if err := h.createGSNamespace(); err != nil {
+	if err := h.CreateNamespace("giantswarm"); err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -321,18 +321,18 @@ func (h *Host) crd(crdName string) func() error {
 	}
 }
 
-func (h *Host) createGSNamespace() error {
+func (h *Host) CreateNamespace(ns string) error {
 	// check if the namespace already exists
 	_, err := h.k8sClient.CoreV1().
 		Namespaces().
-		Get("giantswarm", metav1.GetOptions{})
+		Get(ns, metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
 
 	namespace := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "giantswarm",
+			Name: ns,
 		},
 	}
 	_, err = h.k8sClient.CoreV1().
@@ -345,7 +345,7 @@ func (h *Host) createGSNamespace() error {
 	activeNamespace := func() error {
 		ns, err := h.k8sClient.CoreV1().
 			Namespaces().
-			Get("giantswarm", metav1.GetOptions{})
+			Get(ns, metav1.GetOptions{})
 
 		if err != nil {
 			return microerror.Mask(err)
