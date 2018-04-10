@@ -13,7 +13,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
-	giantclientset "github.com/giantswarm/apiextensions/pkg/clientset/versioned"
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +37,7 @@ type HostConfig struct {
 
 type Host struct {
 	backoff   *backoff.ExponentialBackOff
-	g8sClient *giantclientset.Clientset
+	g8sClient *versioned.Clientset
 	k8sClient kubernetes.Interface
 }
 
@@ -51,7 +51,7 @@ func NewHost(c HostConfig) (*Host, error) {
 		return nil, microerror.Mask(err)
 	}
 
-	g8sClient, err := giantclientset.NewForConfig(config)
+	g8sClient, err := versioned.NewForConfig(config)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -172,6 +172,11 @@ func (h *Host) InstallCertResource() error {
 	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
 	log.Printf("waiting for secret %v\n", secretName)
 	return waitFor(h.secret("default", secretName))
+}
+
+// K8sClient returns the host cluster framework's Kubernetes client.
+func (h *Host) K8sClient() kubernetes.Interface {
+	return h.k8sClient
 }
 
 func (h *Host) PodName(namespace, labelSelector string) (string, error) {

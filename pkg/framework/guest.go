@@ -33,6 +33,13 @@ func NewGuest() (*Guest, error) {
 	return g, nil
 }
 
+// K8sClient returns the guest cluster framework's Kubernetes client. The client
+// being returned is properly configured ones Guest.Setup() got executed
+// successfully.
+func (g *Guest) K8sClient() kubernetes.Interface {
+	return g.k8sClient
+}
+
 // Setup provides a separate initialization step because of the nature of the
 // host/guest cluster design. We have to setup things in different stages.
 // Constructing the frameworks can be done right away but setting them up can
