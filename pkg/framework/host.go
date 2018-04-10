@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -36,9 +37,10 @@ type HostConfig struct {
 }
 
 type Host struct {
-	backoff   *backoff.ExponentialBackOff
-	g8sClient *versioned.Clientset
-	k8sClient kubernetes.Interface
+	backoff    *backoff.ExponentialBackOff
+	g8sClient  *versioned.Clientset
+	k8sClient  kubernetes.Interface
+	restConfig *rest.Config
 }
 
 func NewHost(c HostConfig) (*Host, error) {
@@ -46,24 +48,25 @@ func NewHost(c HostConfig) (*Host, error) {
 		c.Backoff = newCustomExponentialBackoff()
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
+	restConfig, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	g8sClient, err := versioned.NewForConfig(config)
+	g8sClient, err := versioned.NewForConfig(restConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	k8sClient, err := kubernetes.NewForConfig(config)
+	k8sClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
 	h := &Host{
-		backoff:   c.Backoff,
-		g8sClient: g8sClient,
-		k8sClient: k8sClient,
+		backoff:    c.Backoff,
+		g8sClient:  g8sClient,
+		k8sClient:  k8sClient,
+		restConfig: restConfig,
 	}
 
 	return h, nil
@@ -196,6 +199,11 @@ func (h *Host) PodName(namespace, labelSelector string) (string, error) {
 	}
 	pod := pods.Items[0]
 	return pod.Name, nil
+}
+
+// RestConfig returns the host cluster framework's rest config.
+func (h *Host) RestConfig() *rest.Config {
+	return h.restConfig
 }
 
 func (h *Host) Setup() error {
