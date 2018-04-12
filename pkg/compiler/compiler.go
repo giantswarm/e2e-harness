@@ -99,13 +99,6 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 // provided name. If the binary already exists and is executable the build
 // is skipped
 func (c *Compiler) compileTests(binaryName, path string) error {
-	// do not build if binary is already there
-	binPath := filepath.Join(path, binaryName)
-	if executebleExists(binPath) {
-		c.logger.Log("function", "compileTests", "level", "info", "message", "test binary exists, not building")
-		return nil
-	}
-
 	cmd := exec.Command("go", "test", "-c", "-o", binaryName, "-tags", "k8srequired", ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
