@@ -162,7 +162,7 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	return nil
 }
 
-func (h *Host) InstallResource(name, values string) error {
+func (h *Host) InstallResource(name, values string, conditions ...func() error) error {
 	chartValuesEnv := os.ExpandEnv(values)
 
 	tmpfile, err := ioutil.TempFile("", name+"-values")
@@ -183,6 +183,13 @@ func (h *Host) InstallResource(name, values string) error {
 	err = backoff.RetryNotify(operation, h.backoff, notify)
 	if err != nil {
 		return microerror.Mask(err)
+	}
+
+	for _, c := range conditions {
+		err = waitFor(c)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 
 	return nil
