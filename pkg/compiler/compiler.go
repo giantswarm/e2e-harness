@@ -14,20 +14,23 @@ import (
 type Config struct {
 	Logger micrologger.Logger
 
-	TestDir string
+	RemoteCluster bool
+	TestDir       string
 }
 
 type Compiler struct {
 	logger micrologger.Logger
 
-	testDir string
+	remoteCluster bool
+	testDir       string
 }
 
 func New(config Config) *Compiler {
 	c := &Compiler{
 		logger: config.Logger,
 
-		testDir: config.TestDir,
+		remoteCluster: config.RemoteCluster,
+		testDir:       config.TestDir,
 	}
 
 	return c
@@ -83,7 +86,7 @@ func (c *Compiler) CompileTests() error {
 func (c *Compiler) compileMain(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
-	if executebleExists(binPath) {
+	if executebleExists(binPath) && c.remoteCluster {
 		c.logger.Log("function", "compileMain", "level", "info", "message", "main binary exists, not building")
 		return nil
 	}
@@ -101,7 +104,7 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 func (c *Compiler) compileTests(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
-	if executebleExists(binPath) {
+	if executebleExists(binPath) && c.remoteCluster {
 		c.logger.Log("function", "compileTests", "level", "info", "message", "test binary exists, not building")
 		return nil
 	}

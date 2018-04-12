@@ -95,7 +95,8 @@ func runTest(cmd *cobra.Command, args []string) error {
 		c := compiler.Config{
 			Logger: logger,
 
-			TestDir: testCmdTestDir,
+			RemoteCluster: cfg.RemoteCluster,
+			TestDir:       testCmdTestDir,
 		}
 
 		comp = compiler.New(c)
