@@ -14,23 +14,20 @@ import (
 type Config struct {
 	Logger micrologger.Logger
 
-	RemoteCluster bool
-	TestDir       string
+	TestDir string
 }
 
 type Compiler struct {
 	logger micrologger.Logger
 
-	remoteCluster bool
-	testDir       string
+	testDir string
 }
 
 func New(config Config) *Compiler {
 	c := &Compiler{
 		logger: config.Logger,
 
-		remoteCluster: config.RemoteCluster,
-		testDir:       config.TestDir,
+		testDir: config.TestDir,
 	}
 
 	return c
@@ -86,7 +83,7 @@ func (c *Compiler) CompileTests() error {
 func (c *Compiler) compileMain(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
-	if executebleExists(binPath) && c.remoteCluster {
+	if executebleExists(binPath) {
 		c.logger.Log("function", "compileMain", "level", "info", "message", "main binary exists, not building")
 		return nil
 	}
@@ -102,13 +99,6 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 // provided name. If the binary already exists and is executable the build
 // is skipped
 func (c *Compiler) compileTests(binaryName, path string) error {
-	// do not build if binary is already there
-	binPath := filepath.Join(path, binaryName)
-	if executebleExists(binPath) && c.remoteCluster {
-		c.logger.Log("function", "compileTests", "level", "info", "message", "test binary exists, not building")
-		return nil
-	}
-
 	cmd := exec.Command("go", "test", "-c", "-o", binaryName, "-tags", "k8srequired", ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux")
 	cmd.Dir = path
