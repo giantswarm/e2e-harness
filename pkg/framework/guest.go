@@ -1,12 +1,12 @@
 package framework
 
 import (
-	"log"
 	"os"
 	"time"
 
 	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -22,13 +22,25 @@ const (
 	minimumNodesReady = 3
 )
 
+type GuestConfig struct {
+	Logger micrologger.Logger
+}
+
 type Guest struct {
+	logger micrologger.Logger
+
 	k8sClient  kubernetes.Interface
 	restConfig *rest.Config
 }
 
-func NewGuest() (*Guest, error) {
+func NewGuest(config GuestConfig) (*Guest, error) {
+	if config.Logger == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
+	}
+
 	g := &Guest{
+		logger: config.Logger,
+
 		k8sClient:  nil,
 		restConfig: nil,
 	}
@@ -108,7 +120,7 @@ func (g *Guest) Setup() error {
 func (g *Guest) WaitForAPIDown() error {
 	time.Sleep(1 * time.Second)
 
-	log.Println("level", "debug", "message", "waiting for k8s API to be down")
+	g.logger.Log("level", "debug", "message", "waiting for k8s API to be down")
 
 	o := func() error {
 		_, err := g.k8sClient.CoreV1().Services("default").Get("kubernetes", metav1.GetOptions{})
@@ -120,7 +132,7 @@ func (g *Guest) WaitForAPIDown() error {
 	}
 	b := newExponentialBackoff(ShortMaxWait, ShortMaxInterval)
 	n := func(err error, delay time.Duration) {
-		log.Println("level", "debug", "message", err.Error())
+		g.logger.Log("level", "debug", "message", err.Error())
 	}
 
 	err := backoff.RetryNotify(o, b, n)
@@ -128,13 +140,13 @@ func (g *Guest) WaitForAPIDown() error {
 		return microerror.Mask(err)
 	}
 
-	log.Println("level", "debug", "message", "k8s API is down")
+	g.logger.Log("level", "debug", "message", "k8s API is down")
 
 	return nil
 }
 
 func (g *Guest) WaitForAPIUp() error {
-	log.Println("level", "debug", "message", "waiting for k8s API to be up")
+	g.logger.Log("level", "debug", "message", "waiting for k8s API to be up")
 
 	o := func() error {
 		_, err := g.k8sClient.CoreV1().Services("default").Get("kubernetes", metav1.GetOptions{})
@@ -146,7 +158,7 @@ func (g *Guest) WaitForAPIUp() error {
 	}
 	b := newExponentialBackoff(LongMaxWait, LongMaxInterval)
 	n := func(err error, delay time.Duration) {
-		log.Println("level", "debug", "message", err.Error())
+		g.logger.Log("level", "debug", "message", err.Error())
 	}
 
 	err := backoff.RetryNotify(o, b, n)
@@ -154,7 +166,7 @@ func (g *Guest) WaitForAPIUp() error {
 		return microerror.Mask(err)
 	}
 
-	log.Println("level", "debug", "message", "k8s API is up")
+	g.logger.Log("level", "debug", "message", "k8s API is up")
 
 	return nil
 }
@@ -176,7 +188,7 @@ func (g *Guest) WaitForGuestReady() error {
 }
 
 func (g *Guest) WaitForNodesUp(numberOfNodes int) error {
-	log.Println("level", "debug", "message", "waiting for k8s nodes to be up")
+	g.logger.Log("level", "debug", "message", "waiting for k8s nodes to be up")
 
 	o := func() error {
 		nodes, err := g.k8sClient.CoreV1().Nodes().List(metav1.ListOptions{})
@@ -200,7 +212,7 @@ func (g *Guest) WaitForNodesUp(numberOfNodes int) error {
 	}
 	b := newExponentialBackoff(LongMaxWait, LongMaxInterval)
 	n := func(err error, delay time.Duration) {
-		log.Println("level", "debug", "message", err.Error())
+		g.logger.Log("level", "debug", "message", err.Error())
 	}
 
 	err := backoff.RetryNotify(o, b, n)
@@ -208,7 +220,7 @@ func (g *Guest) WaitForNodesUp(numberOfNodes int) error {
 		return microerror.Mask(err)
 	}
 
-	log.Println("level", "debug", "message", "k8s nodes are up")
+	g.logger.Log("level", "debug", "message", "k8s nodes are up")
 
 	return nil
 }
