@@ -84,7 +84,7 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 
 func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) error {
 	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
-		fmt.Println("error building image", imageName)
+		m.logger.Log("function", "buildImage", "level", "error", "message", fmt.Sprintf("could not build image %s: %v", imageName, err))
 		return microerror.Mask(err)
 	}
 	return nil
