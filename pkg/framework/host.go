@@ -175,9 +175,20 @@ func (h *Host) InstallResource(name, values string, conditions ...func() error) 
 		return microerror.Mask(err)
 	}
 
-	cmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s -- -n %[1]s --values %[2]s", name, tmpfile.Name())
+	installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s -- -n %[1]s --values %[2]s", name, tmpfile.Name())
+	deleteCmd := fmt.Sprintf("delete --purge %s", name)
 	operation := func() error {
-		return HelmCmd(cmd)
+		// NOTE we ignore errors here because we cannot get really useful error
+		// handling done. This here should anyway only be a quick fix until we use
+		// the helm client lib. Then error handling will be better.
+		HelmCmd(deleteCmd)
+
+		err := HelmCmd(installCmd)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		return nil
 	}
 	notify := newNotify(name + " install")
 	err = backoff.RetryNotify(operation, h.backoff, notify)
