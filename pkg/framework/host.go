@@ -132,34 +132,8 @@ func (h *Host) InstallBranchOperator(name, cr, values string) error {
 }
 
 func (h *Host) InstallOperator(name, cr, values, version string) error {
-	chartValuesEnv := os.ExpandEnv(values)
-
-	tmpfile, err := ioutil.TempFile("", name+"-values")
-	if err != nil {
-		return microerror.Mask(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	if _, err := tmpfile.Write([]byte(chartValuesEnv)); err != nil {
-		return microerror.Mask(err)
-	}
-
-	cmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s-chart%[2]s -- -n %[1]s --values %[3]s", name, version, tmpfile.Name())
-	operation := func() error {
-		return HelmCmd(cmd)
-	}
-	notify := newNotify(name + "-chart install")
-	err = backoff.RetryNotify(operation, h.backoff, notify)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	err = waitFor(h.crd(cr))
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	return nil
+	chartName := fmt.Sprintf("%s-chart%s", name, version)
+	return h.InstallResource(chartName, values, h.crd(cr))
 }
 
 func (h *Host) InstallResource(name, values string, conditions ...func() error) error {
