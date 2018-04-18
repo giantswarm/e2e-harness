@@ -207,28 +207,60 @@ func (h *Host) InstallResource(name, values string, conditions ...func() error) 
 }
 
 func (h *Host) InstallCertResource() error {
-	operation := func() error {
-		// NOTE we ignore errors here because we cannot get really useful error
-		// handling done. This here should anyway only be a quick fix until we use
-		// the helm client lib. Then error handling will be better.
-		HelmCmd("delete --purge cert-resource-lab")
+	{
+		log.Println("level", "debug", "message", "installing cert resource chart")
 
-		err := HelmCmd("registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
+		o := func() error {
+			// NOTE we ignore errors here because we cannot get really useful error
+			// handling done. This here should anyway only be a quick fix until we use
+			// the helm client lib. Then error handling will be better.
+			HelmCmd("delete --purge cert-resource-lab")
+
+			err := HelmCmd("registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN_GUEST} --set clusterName=${CLUSTER_NAME}")
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			return nil
+		}
+		b := NewExponentialBackoff(ShortMaxWait, ShortMaxInterval)
+		n := newNotify("cert-resource-lab-chart install")
+		err := backoff.RetryNotify(o, b, n)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		return nil
-	}
-	notify := newNotify("cert-resource-lab-chart install")
-	err := backoff.RetryNotify(operation, h.backoff, notify)
-	if err != nil {
-		return microerror.Mask(err)
+		log.Println("level", "debug", "message", "installed cert resource chart")
 	}
 
-	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
-	log.Printf("waiting for secret %v\n", secretName)
-	return waitFor(h.secret("default", secretName))
+	{
+		log.Println("level", "debug", "message", "waiting for k8s secret to be there")
+
+		o := func() error {
+			n := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
+			_, err := h.k8sClient.CoreV1().Secrets("default").Get(n, metav1.GetOptions{})
+			if err != nil {
+				// TODO remove this when not needed for debugging anymore
+				fmt.Printf("%#v\n", err)
+				return microerror.Maskf(waitError, "k8s secret is still missing")
+			}
+
+			return nil
+		}
+		b := NewExponentialBackoff(ShortMaxWait, ShortMaxInterval)
+		n := func(err error, delay time.Duration) {
+			log.Println("level", "debug", "message", err.Error())
+		}
+
+		err := backoff.RetryNotify(o, b, n)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		log.Println("level", "debug", "message", "k8s secret is there")
+	}
+
+	return nil
 }
 
 // K8sClient returns the host cluster framework's Kubernetes client.
