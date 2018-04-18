@@ -132,11 +132,11 @@ func (h *Host) InstallBranchOperator(name, cr, values string) error {
 }
 
 func (h *Host) InstallOperator(name, cr, values, version string) error {
-	chartName := fmt.Sprintf("%s-chart%s", name, version)
-	return h.InstallResource(chartName, values, h.crd(cr))
+	chartName := fmt.Sprintf("%s-chart", name)
+	return h.InstallResource(chartName, version, values, h.crd(cr))
 }
 
-func (h *Host) InstallResource(name, values string, conditions ...func() error) error {
+func (h *Host) InstallResource(name, version, values string, conditions ...func() error) error {
 	chartValuesEnv := os.ExpandEnv(values)
 
 	tmpfile, err := ioutil.TempFile("", name+"-values")
@@ -149,7 +149,7 @@ func (h *Host) InstallResource(name, values string, conditions ...func() error) 
 		return microerror.Mask(err)
 	}
 
-	installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s -- -n %[1]s --values %[2]s", name, tmpfile.Name())
+	installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s%[2]s -- -n %[1]s --values %[3]s", name, version, tmpfile.Name())
 	deleteCmd := fmt.Sprintf("delete --purge %s", name)
 	operation := func() error {
 		// NOTE we ignore errors here because we cannot get really useful error
