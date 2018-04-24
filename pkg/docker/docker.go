@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -82,6 +83,14 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ..
 		"-e", "KUBECONFIG=" + harness.DefaultKubeConfig,
 		"--dns", "1.1.1.1",
 		"--entrypoint", entrypoint,
+		"--cap-add", "NET_ADMIN",
+	}
+
+	// add-host entries, the ADD_HOSTS env var will look like:
+	// host1:ip1,host2:ip2...
+	addHostEntries := strings.Split(os.Getenv("ADD_HOSTS"), ",")
+	for _, entry := range addHostEntries {
+		baseArgs = append(baseArgs, "--add-host", entry)
 	}
 
 	// add environment variables
