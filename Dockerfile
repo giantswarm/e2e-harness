@@ -16,7 +16,9 @@ RUN apk -Uuv add --update --no-cache \
       less=520-r0 \
       libffi-dev=3.2.1-r4 \
       openssh-client=7.5_p1-r8 \
-      openssl=1.0.2o-r0
+      openssl=1.0.2o-r0 \
+      sudo=1.8.21_p2-r1 \
+      iptables=1.6.1-r1
 
 ENV KUBECTL_VERSION=v1.10.1
 ENV HELM_VERSION=v2.8.2
@@ -35,6 +37,8 @@ RUN wget https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-lin
 RUN wget https://github.com/giantswarm/shipyard/releases/download/${SHIPYARD_VERSION}/shipyard && \
   chmod a+x ./shipyard && \
   mv ./shipyard /usr/local/bin
+
+RUN echo '%e2e-harness ALL=(root) NOPASSWD: /sbin/iptables' | tee -a /etc/sudoers.d/e2e-harness
 
 USER e2e-harness
 
