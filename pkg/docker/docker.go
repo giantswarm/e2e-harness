@@ -90,7 +90,9 @@ func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ..
 	// host1:ip1,host2:ip2...
 	addHostEntries := strings.Split(os.Getenv("ADD_HOSTS"), ",")
 	for _, entry := range addHostEntries {
-		baseArgs = append(baseArgs, "--add-host", entry)
+		if entry != "" {
+			baseArgs = append(baseArgs, "--add-host", entry)
+		}
 	}
 
 	// add environment variables
