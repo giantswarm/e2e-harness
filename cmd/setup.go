@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -19,7 +22,7 @@ var (
 	SetupCmd = &cobra.Command{
 		Use:   "setup",
 		Short: "setup e2e tests",
-		RunE:  runSetup,
+		Run:   runSetup,
 	}
 )
 
@@ -37,7 +40,20 @@ func init() {
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
 
-func runSetup(cmd *cobra.Command, args []string) error {
+func runSetup(cmd *cobra.Command, args []string) {
+	logger, err := micrologger.New(micrologger.Config{})
+	if err != nil {
+		panic(fmt.Sprintf("%#v", err))
+	}
+
+	err = runSetupError(cmd, args)
+	if err != nil {
+		logger.Log("level", "error", "message", "exiting with status 1 due to error", "stack", fmt.Sprintf("%#v", err))
+		os.Exit(1)
+	}
+}
+
+func runSetupError(cmd *cobra.Command, args []string) error {
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -92,5 +108,5 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		p.CommonSetupSteps,
 	}
 
-	return tasks.Run(bundle)
+	return microerror.Mask(tasks.Run(bundle))
 }
