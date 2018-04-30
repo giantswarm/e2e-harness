@@ -126,9 +126,6 @@ func (p *Project) CommonTearDownSteps() error {
 			Run: "helm reset --force",
 		},
 		Step{
-			Run: "kubectl delete clusterrolebinding permissive-binding",
-		},
-		Step{
 			Run: "kubectl -n kube-system delete sa tiller",
 		},
 		Step{
