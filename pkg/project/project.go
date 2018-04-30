@@ -83,9 +83,6 @@ func (p *Project) CommonSetupSteps() error {
 			Run: "kubectl config use-context minikube",
 		},
 		Step{
-			Run: "kubectl create clusterrolebinding permissive-binding --clusterrole cluster-admin --group=system:serviceaccounts",
-		},
-		Step{
 			Run: "kubectl -n kube-system create sa tiller",
 		},
 		Step{
@@ -127,9 +124,6 @@ func (p *Project) CommonTearDownSteps() error {
 	steps := []Step{
 		Step{
 			Run: "helm reset --force",
-		},
-		Step{
-			Run: "kubectl delete clusterrolebinding permissive-binding",
 		},
 		Step{
 			Run: "kubectl -n kube-system delete sa tiller",
