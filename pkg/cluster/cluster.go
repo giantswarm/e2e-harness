@@ -87,6 +87,9 @@ func (c *Cluster) copyMinikubeAssets(homeDir string) error {
 
 	// copy minikube directory
 	walkFn := func(path string, info os.FileInfo, err error) error {
+		if strings.Contains(path, ".minikube/machines/") {
+			return nil
+		}
 		if strings.HasSuffix(path, "/tty") {
 			return nil
 		}
