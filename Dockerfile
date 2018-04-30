@@ -12,7 +12,7 @@ RUN apk -Uuv add --update --no-cache \
       bash=4.4.19-r1 \
       build-base=0.5-r0 \
       git=2.15.0-r1 \
-      jq=1.5-r4 \
+      jq=1.5-r5 \
       less=520-r0 \
       libffi-dev=3.2.1-r4 \
       openssh-client=7.5_p1-r8 \
