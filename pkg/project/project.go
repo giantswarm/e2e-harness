@@ -83,9 +83,6 @@ func (p *Project) CommonSetupSteps() error {
 			Run: "kubectl config use-context minikube",
 		},
 		Step{
-			Run: "kubectl create clusterrolebinding permissive-binding --clusterrole cluster-admin --group=system:serviceaccounts",
-		},
-		Step{
 			Run: "kubectl -n kube-system create sa tiller",
 		},
 		Step{
