@@ -43,10 +43,6 @@
   name = "github.com/giantswarm/versionbundle"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/spf13/afero"
-
-[[constraint]]
   version = "v0.0.1"
   name = "github.com/spf13/cobra"
 
