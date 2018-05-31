@@ -11,7 +11,7 @@ RUN chown -R e2e-harness:e2e-harness ${WORKDIR} ${HOME}
 RUN apk -Uuv add --update --no-cache \
       bash=4.4.19-r1 \
       build-base=0.5-r0 \
-      git=2.15.0-r1 \
+      git=2.15.2-r0 \
       jq=1.5-r5 \
       less=520-r0 \
       libffi-dev=3.2.1-r4 \

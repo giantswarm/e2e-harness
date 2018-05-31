@@ -66,6 +66,13 @@
   name = "k8s.io/client-go"
   version = "kubernetes-1.9.3"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/google/go-github"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"
 
 
 [prune]
