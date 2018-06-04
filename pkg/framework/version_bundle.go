@@ -6,6 +6,7 @@ import (
 	"log"
 	"sort"
 
+	"github.com/blang/semver"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/versionbundle"
 	"github.com/google/go-github/github"
@@ -18,11 +19,15 @@ const (
 	defaultRepo  = "installations"
 )
 
-type SortReleasesByTime []versionbundle.IndexRelease
+type SortReleasesBySemver []versionbundle.IndexRelease
 
-func (b SortReleasesByTime) Len() int           { return len(b) }
-func (b SortReleasesByTime) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b SortReleasesByTime) Less(i, j int) bool { return b[i].Date.UnixNano() < b[j].Date.UnixNano() }
+func (b SortReleasesBySemver) Len() int      { return len(b) }
+func (b SortReleasesBySemver) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+func (b SortReleasesBySemver) Less(i, j int) bool {
+	v1, _ := semver.Make(b[i].Version)
+	v2, _ := semver.Make(b[j].Version)
+	return v1.LT(v2)
+}
 
 type VBVParams struct {
 	Component string
@@ -102,7 +107,7 @@ func extractReleaseVersion(content, vType, component string) (string, error) {
 		return "", microerror.Mask(err)
 	}
 
-	sortedReleases := SortReleasesByTime(indexReleases)
+	sortedReleases := SortReleasesBySemver(indexReleases)
 	sort.Sort(sort.Reverse(sortedReleases))
 	for _, ir := range sortedReleases {
 		if vType == "wip" && !ir.Active || vType == "current" && ir.Active {
