@@ -14,12 +14,6 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/blang/semver"
-  packages = ["."]
-  revision = "c5e971dbed7850a93c23aa6ff69db5771d8e23b3"
-
-[[projects]]
   name = "github.com/cenkalti/backoff"
   packages = ["."]
   revision = "61153c768f31ee5f130071d08fc82b85208528de"
@@ -81,7 +75,7 @@
   branch = "master"
   name = "github.com/giantswarm/versionbundle"
   packages = ["."]
-  revision = "da2469c864842ff01892ad70b1f99b247b0a2aef"
+  revision = "ced7dcda00b1f700cac9ab4d5c73bd6fac05ee9d"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -538,6 +532,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3dbb8a007d0ec610e3afd11c47f0e028559f0b5e05b8b94d8ebc3d63eeebe531"
+  inputs-digest = "1612f419aa75d30c2ead332163157ae9ed8a21fddd8257c9f37f7e8679beaf0f"
   solver-name = "gps-cdcl"
   solver-version = 1

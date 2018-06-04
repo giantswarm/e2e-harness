@@ -70,10 +70,6 @@
   branch = "master"
   name = "golang.org/x/oauth2"
 
-[[constraint]]
-  branch = "master"
-  name = "github.com/blang/semver"
-
 
 [prune]
   go-tests = true
