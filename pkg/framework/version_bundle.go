@@ -96,7 +96,7 @@ func extractReleaseVersion(content, vType, component string) (string, error) {
 		return "", microerror.Mask(err)
 	}
 
-	sortedReleases := versionbundle.SortReleasesByVersion(indexReleases)
+	sortedReleases := versionbundle.SortIndexReleasesByVersion(indexReleases)
 	sort.Sort(sort.Reverse(sortedReleases))
 	for _, ir := range sortedReleases {
 		if vType == "wip" && !ir.Active || vType == "current" && ir.Active {
