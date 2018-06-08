@@ -3,10 +3,10 @@ package framework
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/versionbundle"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -25,12 +25,18 @@ type VBVParams struct {
 	VType     string
 }
 
+var logger micrologger.Logger
+
+func init() {
+	logger, _ = micrologger.New(micrologger.Config{})
+}
+
 func GetVersionBundleVersion(params *VBVParams) (string, error) {
 	err := checkType(params.VType)
 	if err != nil {
 		return "", microerror.Mask(err)
 	}
-	log.Printf("Tested version %q", params.VType)
+	logger.Log("level", "debug", "message", fmt.Sprintf("Tested version %q", params.VType))
 
 	content, err := getContent(params.Provider, params.Token)
 	if err != nil {
@@ -42,25 +48,25 @@ func GetVersionBundleVersion(params *VBVParams) (string, error) {
 		return "", microerror.Mask(err)
 	}
 
-	log.Printf("Version Bundle Version %q", output)
+	logger.Log("level", "debug", fmt.Sprintf("Version Bundle Version %q", output))
 	return output, nil
 }
 
 func GetAuthorities(params *VBVParams) ([]versionbundle.Authority, error) {
 	err := checkType(params.VType)
 	if err != nil {
-		return []versionbundle.Authority{}, microerror.Mask(err)
+		return nil, microerror.Mask(err)
 	}
-	log.Printf("Tested version %q", params.VType)
+	logger.Log("level", "debug", "message", fmt.Sprintf("Tested version %q", params.VType))
 
 	content, err := getContent(params.Provider, params.Token)
 	if err != nil {
-		return []versionbundle.Authority{}, microerror.Mask(err)
+		return nil, microerror.Mask(err)
 	}
 
 	authorities, err := extractAuthorities(content, params.VType)
 	if err != nil {
-		return []versionbundle.Authority{}, microerror.Mask(err)
+		return nil, microerror.Mask(err)
 	}
 	return authorities, nil
 }
@@ -118,7 +124,7 @@ func extractReleaseVersion(content, vType, component string) (string, error) {
 			return a.Version, nil
 		}
 	}
-	return "", nil
+	return "", microerror.Mask(notFoundError)
 }
 
 func extractAuthorities(content, vType string) ([]versionbundle.Authority, error) {
@@ -126,7 +132,7 @@ func extractAuthorities(content, vType string) ([]versionbundle.Authority, error
 
 	err := yaml.Unmarshal([]byte(content), &indexReleases)
 	if err != nil {
-		return []versionbundle.Authority{}, microerror.Mask(err)
+		return nil, microerror.Mask(err)
 	}
 
 	sortedReleases := versionbundle.SortIndexReleasesByVersion(indexReleases)
@@ -136,5 +142,5 @@ func extractAuthorities(content, vType string) ([]versionbundle.Authority, error
 			return ir.Authorities, nil
 		}
 	}
-	return []versionbundle.Authority{}, nil
+	return nil, microerror.Mask(notFoundError)
 }
