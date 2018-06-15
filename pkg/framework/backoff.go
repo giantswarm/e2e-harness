@@ -30,3 +30,42 @@ func NewExponentialBackoff(maxWait, maxInterval time.Duration) *backoff.Exponent
 
 	return b
 }
+
+func NewConstantBackoff(maxWait, maxInterval time.Duration) backoff.BackOff {
+	b := WithMaxElapsedTime(backoff.NewConstantBackOff(maxInterval), maxWait)
+
+	b.Reset()
+
+	return b
+}
+
+func WithMaxElapsedTime(b backoff.BackOff, d time.Duration) *BackOffMaxElapsedTime {
+	return &BackOffMaxElapsedTime{
+		delegate:   b,
+		maxElapsed: d,
+		start:      time.Time{},
+	}
+}
+
+type BackOffMaxElapsedTime struct {
+	delegate   backoff.BackOff
+	maxElapsed time.Duration
+	start      time.Time
+}
+
+func (b *BackOffMaxElapsedTime) NextBackOff() time.Duration {
+	if b.start.IsZero() {
+		b.start = time.Now()
+	}
+
+	if time.Now().After(b.start.Add(b.maxElapsed)) {
+		return backoff.Stop
+	}
+
+	return b.delegate.NextBackOff()
+}
+
+func (b *BackOffMaxElapsedTime) Reset() {
+	b.start = time.Time{}
+	b.delegate.Reset()
+}
