@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	LongMaxWait  = 30 * time.Minute
+	LongMaxWait  = 40 * time.Minute
 	ShortMaxWait = 2 * time.Minute
 )
 
