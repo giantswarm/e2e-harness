@@ -29,6 +29,8 @@ import (
 type HostConfig struct {
 	Backoff *backoff.ExponentialBackOff
 	Logger  micrologger.Logger
+
+	ClusterID string
 }
 
 type Host struct {
@@ -38,6 +40,8 @@ type Host struct {
 	g8sClient  *versioned.Clientset
 	k8sClient  kubernetes.Interface
 	restConfig *rest.Config
+
+	clusterID string
 }
 
 func NewHost(c HostConfig) (*Host, error) {
@@ -48,11 +52,14 @@ func NewHost(c HostConfig) (*Host, error) {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", c)
 	}
 
+	if c.ClusterID == "" {
+		return nil, microerror.Maskf(invalidConfigError, "%T.ClusterID must not be empty", c)
+	}
+
 	restConfig, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-
 	g8sClient, err := versioned.NewForConfig(restConfig)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -146,7 +153,7 @@ func (h *Host) CreateNamespace(ns string) error {
 }
 
 func (h *Host) DeleteGuestCluster(name, cr, logEntry string) error {
-	if err := runCmd(fmt.Sprintf("kubectl delete %s ${CLUSTER_NAME}", cr)); err != nil {
+	if err := runCmd(fmt.Sprintf("kubectl delete %s %s", cr, h.clusterID)); err != nil {
 		return microerror.Mask(err)
 	}
 
@@ -257,7 +264,8 @@ func (h *Host) InstallCertResource() error {
 			// the helm client lib. Then error handling will be better.
 			HelmCmd("delete --purge cert-config-e2e")
 
-			err := HelmCmd("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=${CLUSTER_NAME}")
+			cmdStr := fmt.Sprintf("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=%s", h.clusterID)
+			err := HelmCmd(cmdStr)
 			if err != nil {
 				return microerror.Mask(err)
 			}
@@ -278,7 +286,7 @@ func (h *Host) InstallCertResource() error {
 		h.logger.Log("level", "debug", "message", "waiting for k8s secret to be there")
 
 		o := func() error {
-			n := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
+			n := fmt.Sprintf("%s-api", h.clusterID)
 			_, err := h.k8sClient.CoreV1().Secrets("default").Get(n, metav1.GetOptions{})
 			if err != nil {
 				// TODO remove this when not needed for debugging anymore
