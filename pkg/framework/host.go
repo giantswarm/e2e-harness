@@ -25,13 +25,6 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
-// PatchSpec is a generic patch type to update objects with JSONPatchType operations.
-type PatchSpec struct {
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value"`
-}
-
 type HostConfig struct {
 	Backoff *backoff.ExponentialBackOff
 }
