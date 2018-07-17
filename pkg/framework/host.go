@@ -53,8 +53,8 @@ func NewHost(c HostConfig) (*Host, error) {
 		c.Backoff = newCustomExponentialBackoff()
 	}
 
-	if config.ClusterID == "" {
-		return nil, microerror.Maskf(invalidConfigError, "%T.ClusterID must not be empty", config)
+	if c.ClusterID == "" {
+		return nil, microerror.Maskf(invalidConfigError, "%T.ClusterID must not be empty", c)
 	}
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
