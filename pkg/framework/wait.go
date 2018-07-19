@@ -11,7 +11,7 @@ const (
 	defaultTimeout = 1800
 )
 
-func waitFor(f func() error) error {
+func WaitFor(f func() error) error {
 	return baseWait(backoff.NewExponentialBackOff(), f)
 }
 

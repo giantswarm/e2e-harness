@@ -151,7 +151,7 @@ func (h *Host) CreateNamespace(ns string) error {
 		return nil
 	}
 
-	return waitFor(activeNamespace)
+	return WaitFor(activeNamespace)
 }
 
 func (h *Host) DeleteGuestCluster(name, cr, logEntry string) error {
@@ -247,7 +247,7 @@ func (h *Host) InstallResource(name, values, version string, conditions ...func(
 	}
 
 	for _, c := range conditions {
-		err = waitFor(c)
+		err = WaitFor(c)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -432,7 +432,7 @@ func (h *Host) installVault() error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(h.runningPod("default", "app=vault"))
+	return WaitFor(h.runningPod("default", "app=vault"))
 }
 
 func (h *Host) runningPod(namespace, labelSelector string) func() error {
