@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/apprclient"
+	"github.com/giantswarm/e2e-harness/pkg/framework"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"k8s.io/helm/pkg/helm"
-
-	"github.com/giantswarm/e2e-harness/pkg/framework"
 )
 
 type ResourceConfig struct {
@@ -58,7 +58,7 @@ func (r *Resource) InstallResource(name, values, version string, conditions ...f
 	}
 
 	for _, c := range conditions {
-		err = framework.WaitFor(c)
+		err = backoff.Retry(c, framework.NewExponentialBackoff(framework.ShortMaxWait, framework.ShortMaxInterval))
 		if err != nil {
 			return microerror.Mask(err)
 		}
