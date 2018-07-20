@@ -46,7 +46,7 @@ type Host struct {
 
 func NewHost(c HostConfig) (*Host, error) {
 	if c.Backoff == nil {
-		c.Backoff = newCustomExponentialBackoff()
+		c.Backoff = NewExponentialBackoff(ShortMaxWait, backoff.DefaultMaxInterval)
 	}
 	if c.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", c)
