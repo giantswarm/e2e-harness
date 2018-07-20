@@ -10,6 +10,7 @@ import (
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/spf13/afero"
 	"k8s.io/helm/pkg/helm"
 )
 
@@ -34,7 +35,22 @@ func New(config ResourceConfig) (*Resource, error) {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
 	if config.ApprClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.ApprClient must not be empty", config)
+		config.Logger.Log("level", "warning", "message", fmt.Sprintf("%T.ApprClient is empty, using default", config))
+
+		c := apprclient.Config{
+			Fs:     afero.NewOsFs(),
+			Logger: config.Logger,
+
+			Address:      "https://quay.io",
+			Organization: "giantswarm",
+		}
+
+		a, err := apprclient.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		config.ApprClient = a
 	}
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
