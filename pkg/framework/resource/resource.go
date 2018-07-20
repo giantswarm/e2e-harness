@@ -14,15 +14,19 @@ import (
 )
 
 type ResourceConfig struct {
-	Logger     micrologger.Logger
 	ApprClient *apprclient.Client
 	HelmClient *helmclient.Client
+	Logger     micrologger.Logger
+
+	Namespace string
 }
 
 type Resource struct {
-	logger     micrologger.Logger
 	apprClient *apprclient.Client
 	helmClient *helmclient.Client
+	logger     micrologger.Logger
+
+	namespace string
 }
 
 func New(config ResourceConfig) (*Resource, error) {
@@ -35,10 +39,15 @@ func New(config ResourceConfig) (*Resource, error) {
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
+	if config.Namespace == "" {
+		config.Namespace = "giantswarm"
+	}
 	c := &Resource{
 		apprClient: config.ApprClient,
 		helmClient: config.HelmClient,
 		logger:     config.Logger,
+
+		namespace: config.Namespace,
 	}
 
 	return c, nil
@@ -52,7 +61,7 @@ func (r *Resource) InstallResource(name, values, version string, conditions ...f
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	err = r.helmClient.InstallFromTarball(tarball, "giantswarm", helm.ReleaseName(name), helm.ValueOverrides([]byte(chartValuesEnv)), helm.InstallWait(true))
+	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(chartValuesEnv)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
 	}
