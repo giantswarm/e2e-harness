@@ -35,7 +35,9 @@ func New(config ResourceConfig) (*Resource, error) {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
 	if config.ApprClient == nil {
-		config.Logger.Log("level", "warning", "message", fmt.Sprintf("%T.ApprClient is empty, using default", config))
+		config.Logger.Log("level", "debug", "message", fmt.Sprintf("%T.ApprClient is empty", config))
+
+		config.Logger.Log("level", "debug", "message", fmt.Sprintf("using default for %T.ApprClient", config))
 
 		c := apprclient.Config{
 			Fs:     afero.NewOsFs(),
