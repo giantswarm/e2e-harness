@@ -75,7 +75,7 @@ func (r *Resource) InstallResource(name, values, version string, conditions ...f
 	chartValuesEnv := os.ExpandEnv(values)
 	chartname := fmt.Sprintf("%s-chart", name)
 
-	tarball, err := r.apprClient.PullChartTarballFromRelease(chartname, version)
+	tarball, err := r.apprClient.PullChartTarball(chartname, version)
 	if err != nil {
 		return microerror.Mask(err)
 	}
