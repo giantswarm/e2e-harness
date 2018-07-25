@@ -55,7 +55,7 @@ RBAC enabled before running e2e-harness:
 $ minikube start --extra-config=apiserver.Authorization.Mode=RBAC
 ```
 
-* Remote: as stated above e2e-harness uses [shipyard](https://giathub.com/giantswarm/shipyard)
+* Remote: as stated above e2e-harness uses [shipyard](https://github.com/giantswarm/shipyard)
 for setting up the remote cluster. shipyard currently only supports AWS as the
 backend engine, so the common environment variables for granting access to AWS
 are required too (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`).

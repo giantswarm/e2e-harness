@@ -24,6 +24,15 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+ "k8s.io/apiserver/pkg/endpoints/request"
+]
+
+# Fix:
+#   vendor/k8s.io/kubernetes/pkg/util/parsers/parsers.go:36:16: undefined: reference.ParseNormalizedNamed
+[[override]]
+  name = "github.com/docker/distribution"
+  branch = "master"
 
 
 [[constraint]]
@@ -43,10 +52,6 @@
   name = "github.com/giantswarm/versionbundle"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/spf13/afero"
-
-[[constraint]]
   version = "v0.0.1"
   name = "github.com/spf13/cobra"
 
@@ -56,15 +61,27 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.10.4"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.10.4"
+
+[[constraint]]
+  name = "k8s.io/apiserver"
+  version = "kubernetes-1.10.4"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.9.3"
+  version = "kubernetes-1.10.4"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/google/go-github"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"
 
 
 
