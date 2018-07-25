@@ -4,8 +4,10 @@ package integration
 
 import (
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/giantswarm/e2e-harness/pkg/framework"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,5 +33,35 @@ func TestEnvVars(t *testing.T) {
 
 	if expected != actual {
 		t.Errorf("unexpected value for EXPECTED_KEY, expected %q, got %q", expected, actual)
+	}
+}
+
+func TestVersionBundles(t *testing.T) {
+	token := os.Getenv("GITHUB_BOT_TOKEN")
+
+	params := &framework.VBVParams{
+		VType:     "wip",
+		Token:     token,
+		Provider:  "aws",
+		Component: "aws-operator",
+	}
+
+	wipVersion, err := framework.GetVersionBundleVersion(params)
+	if err != nil {
+		t.Errorf("failed getting index file content for wip: %v", err)
+	}
+	wipItems := strings.Split(wipVersion, ".")
+	if len(wipItems) != 3 {
+		t.Errorf("WIP version bundle version doesn't look like semver: %v", wipVersion)
+	}
+
+	params.VType = "current"
+	currentVersion, err := framework.GetVersionBundleVersion(params)
+	if err != nil {
+		t.Errorf("failed getting index file content for current: %v", err)
+	}
+	currentItems := strings.Split(currentVersion, ".")
+	if len(currentItems) != 3 {
+		t.Errorf("Current version bundle version doesn't look like semver: %v", currentVersion)
 	}
 }

@@ -82,8 +82,13 @@ func (p *Project) CommonSetupSteps() error {
 		Step{
 			Run: "kubectl config use-context minikube",
 		},
+		// Fix kube-dns RBAC issues.
+		// Allow kube-dns and other kube-system services full access to the API.
+		// See:
+		// * https://github.com/kubernetes/minikube/issues/1734
+		// * https://github.com/kubernetes/minikube/issues/1722
 		Step{
-			Run: "kubectl create clusterrolebinding permissive-binding --clusterrole cluster-admin --group=system:serviceaccounts",
+			Run: "kubectl create clusterrolebinding cluster-admin:kube-system --clusterrole=cluster-admin --serviceaccount=kube-system:default",
 		},
 		Step{
 			Run: "kubectl -n kube-system create sa tiller",
@@ -127,9 +132,6 @@ func (p *Project) CommonTearDownSteps() error {
 	steps := []Step{
 		Step{
 			Run: "helm reset --force",
-		},
-		Step{
-			Run: "kubectl delete clusterrolebinding permissive-binding",
 		},
 		Step{
 			Run: "kubectl -n kube-system delete sa tiller",

@@ -20,6 +20,8 @@ import (
 //         kind: AzureConfig
 //         plural: azureconfigs
 //         singular: azureconfig
+//       subresources:
+//         status: {}
 //
 func NewAzureConfigCRD() *apiextensionsv1beta1.CustomResourceDefinition {
 	return &apiextensionsv1beta1.CustomResourceDefinition{
@@ -39,18 +41,21 @@ func NewAzureConfigCRD() *apiextensionsv1beta1.CustomResourceDefinition {
 				Plural:   "azureconfigs",
 				Singular: "azureconfig",
 			},
+			Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
+				Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
+			},
 		},
 	}
 }
 
 // +genclient
-// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AzureConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              AzureConfigSpec `json:"spec"`
+	Spec              AzureConfigSpec   `json:"spec"`
+	Status            AzureConfigStatus `json:"status" yaml:"status"`
 }
 
 type AzureConfigSpec struct {
@@ -60,11 +65,9 @@ type AzureConfigSpec struct {
 }
 
 type AzureConfigSpecAzure struct {
-	DNSZones    AzureConfigSpecAzureDNSZones    `json:"dnsZones" yaml:"dnsZones"`
-	HostCluster AzureConfigSpecAzureHostCluster `json:"hostCluster" yaml:"hostCluster"`
-	// Location is the region for the resource group.
-	Location       string                             `json:"location" yaml:"location"`
-	VirtualNetwork AzureConfigSpecAzureVirtualNetwork `json:"virtualNetwork" yaml:"virtualNetwork"`
+	CredentialSecret CredentialSecret                   `json:"credentialSecret" yaml:"credentialSecret"`
+	DNSZones         AzureConfigSpecAzureDNSZones       `json:"dnsZones" yaml:"dnsZones"`
+	VirtualNetwork   AzureConfigSpecAzureVirtualNetwork `json:"virtualNetwork" yaml:"virtualNetwork"`
 
 	Masters []AzureConfigSpecAzureNode `json:"masters" yaml:"masters"`
 	Workers []AzureConfigSpecAzureNode `json:"workers" yaml:"workers"`
@@ -88,21 +91,11 @@ type AzureConfigSpecAzureDNSZonesDNSZone struct {
 	Name string `json:"name" yaml:"name"`
 }
 
-type AzureConfigSpecAzureHostCluster struct {
-	// CIDR is the CIDR of the host cluster Virtual Network. This is going
-	// to be used by the Guest Cluster to allow SSH traffic from that CIDR.
-	CIDR string `json:"cidr" yaml:"cidr"`
-	// ResourceGroup is the resource group name of the host cluster. It is
-	// used to determine DNS hosted zone to put NS records in.
-	ResourceGroup string `json:"resourceGroup" yaml:"resourceGroup"`
-	// VirtualNetwork is the name of the host cluster virtual network.
-	VirtualNetwork string `json:"virtualNetwork" yaml:"virtualNetwork"`
-}
-
 type AzureConfigSpecAzureVirtualNetwork struct {
 	// CIDR is the CIDR for the Virtual Network.
 	CIDR string `json:"cidr" yaml:"cidr"`
 
+	// TODO: remove Master, Worker and Calico subnet cidr after azure-operator v2 is deleted.
 	// MasterSubnetCIDR is the CIDR for the master subnet.
 	MasterSubnetCIDR string `json:"masterSubnetCIDR" yaml:"masterSubnetCIDR"`
 	// WorkerSubnetCIDR is the CIDR for the worker subnet.
@@ -120,6 +113,10 @@ type AzureConfigSpecAzureNode struct {
 
 type AzureConfigSpecVersionBundle struct {
 	Version string `json:"version" yaml:"version"`
+}
+
+type AzureConfigStatus struct {
+	Cluster StatusCluster `json:"cluster" yaml:"cluster"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
