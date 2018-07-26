@@ -45,6 +45,10 @@ var (
 	setupCmdTestDir string
 	name            string
 	existingCluster bool
+	k8sApiUrl       string
+	k8sCert         string
+	k8sCertCA       string
+	k8sCertKey      string
 	remoteCluster   bool
 )
 
@@ -53,8 +57,12 @@ func init() {
 
 	SetupCmd.Flags().StringVar(&setupCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
-	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 	SetupCmd.Flags().BoolVar(&existingCluster, "existing", false, "can be used with --remote=true to use already existing cluster")
+	SetupCmd.Flags().StringVar(&k8sApiUrl, "k8s-api-url", "", "k8s api url for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCert, "k8s-cert", "", "k8s cert for auth for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-cert-ca", "", "k8s cert ca for auth for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCertKey, "k8s-cert-key", "", "k8s cert key for auth for existing cluster")
+	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
 
 func runSetup(cmd *cobra.Command, args []string) {
@@ -76,25 +84,21 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		return microerror.Mask(err)
 	}
 
-	k8sApiUrl := os.Getenv(EnvVarK8sApiUrl)
-	k8sCert := os.Getenv(EnvVarK8sCert)
-	k8sCertCA := os.Getenv(EnvVarK8sCertCA)
-	k8sCertPrivate := os.Getenv(EnvVarK8sCertPrivate)
 	if existingCluster {
 		if k8sApiUrl == "" {
-			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sApiUrl))
+			return microerror.Maskf(invalidConfigError, "flag --k8s-api-url must not be empty")
 		}
 
 		if k8sCert == "" {
-			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCertCA))
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert must not be empty")
 		}
 
 		if k8sCertCA == "" {
-			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCert))
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert-ca must not be empty")
 		}
 
-		if k8sCertPrivate == "" {
-			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCertPrivate))
+		if k8sCertKey == "" {
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert-key  must not be empty")
 		}
 	}
 	projectTag := harness.GetProjectTag()
@@ -137,15 +141,19 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		RemoteCluster:   remoteCluster,
 	}
 	h := harness.New(logger, fs, hCfg)
-	c := cluster.New(logger,
-		fs,
-		d,
-		existingCluster,
-		remoteCluster,
-		k8sApiUrl,
-		k8sCert,
-		k8sCertCA,
-		k8sCertPrivate)
+
+	clusterCfg := cluster.Config{
+		Logger:          logger,
+		Fs:              fs,
+		ExistingCluster: existingCluster,
+		RemoteCluster:   remoteCluster,
+		K8sApiUrl:       k8sApiUrl,
+		K8sCert:         k8sCert,
+		K8sCertCA:       k8sCertCA,
+		K8sCertKey:      k8sCertKey,
+	}
+
+	c := cluster.New(clusterCfg)
 
 	// tasks to run
 	bundle := []tasks.Task{

@@ -16,31 +16,44 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/runner"
 )
 
+type Config struct {
+	Logger micrologger.Logger
+	Runner runner.Runner
+	Fs     afero.Fs
+
+	ExistingCluster bool
+	K8sApiUrl       string
+	K8sCert         string
+	K8sCertCA       string
+	K8sCertKey      string
+	RemoteCluster   bool
+}
+
 type Cluster struct {
-	logger        micrologger.Logger
-	runner        runner.Runner
-	fs            afero.Fs
-	remoteCluster bool
+	logger micrologger.Logger
+	runner runner.Runner
+	fs     afero.Fs
 
 	existingCluster bool
 	k8sApiUrl       string
 	k8sCert         string
 	k8sCertCA       string
-	k8sCertPrivate  string
+	k8sCertKey      string
+	remoteCluster   bool
 }
 
-func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, existingCluster, remoteCluster bool, k8sApiUrl, k8sCert, k8sCertCA, k8sCertPrivate string) *Cluster {
+func New(cfg Config) *Cluster {
 	return &Cluster{
-		logger:        logger,
-		runner:        runner,
-		fs:            fs,
-		remoteCluster: remoteCluster,
+		logger: cfg.Logger,
+		runner: cfg.Runner,
+		fs:     cfg.Fs,
 
-		existingCluster: existingCluster,
-		k8sApiUrl:       k8sApiUrl,
-		k8sCert:         k8sCert,
-		k8sCertCA:       k8sCertCA,
-		k8sCertPrivate:  k8sCertPrivate,
+		existingCluster: cfg.ExistingCluster,
+		k8sApiUrl:       cfg.K8sApiUrl,
+		k8sCert:         cfg.K8sCert,
+		k8sCertCA:       cfg.K8sCertCA,
+		k8sCertKey:      cfg.K8sCertKey,
+		remoteCluster:   cfg.RemoteCluster,
 	}
 }
 
@@ -58,7 +71,7 @@ func (c *Cluster) Create() error {
 		if err != nil {
 			return microerror.Mask(err)
 		}
-		c.logger.Log("info", "Created kubeconfig minikube assets accessible for the test container")
+		c.logger.Log("info", fmt.Sprintf("Created kubeconfig for remote existing cluster %s", c.k8sApiUrl))
 		return nil
 	}
 	if c.remoteCluster {
@@ -260,7 +273,7 @@ preferences: {}
 // createKubeconfig is creating kubeconfig from url and tls assets values for existing cluster
 func (c *Cluster) createKubeconfig(filePath string) error {
 	// fill template with values
-	kubeConfigContent := fmt.Sprintf(kubeConfigTmpl, c.k8sApiUrl, c.k8sCertCA, c.k8sCert, c.k8sCertPrivate)
+	kubeConfigContent := fmt.Sprintf(kubeConfigTmpl, c.k8sApiUrl, c.k8sCertCA, c.k8sCert, c.k8sCertKey)
 	// create file
 	f, err := c.fs.Create(filePath)
 	if err != nil {
