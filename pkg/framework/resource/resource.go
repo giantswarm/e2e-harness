@@ -2,7 +2,6 @@ package resource
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -97,20 +96,20 @@ func (r *Resource) InstallResource(name, values, channel string, conditions ...f
 	return nil
 }
 
-func (r *Resource) WaitForStatus(gsHelmClient *helmclient.Client, release string, status string) error {
+func (r *Resource) WaitForStatus(release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 		if rc.Status != status {
-			return microerror.Maskf(releaseStatusNotMatchingError, "waiting for %q, current %q", status, rc.Status)
+			return microerror.Maskf(releaseStatusNotMatchingError, "waiting for '%s', current '%s'", status, rc.Status)
 		}
 		return nil
 	}
 
 	notify := func(err error, t time.Duration) {
-		log.Printf("getting release status %s: %v", t, err)
+		r.logger.Log("level", "debug", "message", fmt.Sprintf("failed to get release status '%s': retrying in %s", status, t), "stack", fmt.Sprintf("%v", err))
 	}
 
 	b := framework.NewExponentialBackoff(framework.ShortMaxWait, framework.LongMaxInterval)
@@ -121,20 +120,20 @@ func (r *Resource) WaitForStatus(gsHelmClient *helmclient.Client, release string
 	return nil
 }
 
-func (r *Resource) WaitForVersion(gsHelmClient *helmclient.Client, release string, version string) error {
+func (r *Resource) WaitForVersion(release string, version string) error {
 	operation := func() error {
-		rh, err := gsHelmClient.GetReleaseHistory(release)
+		rh, err := r.helmClient.GetReleaseHistory(release)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 		if rh.Version != version {
-			return microerror.Maskf(releaseVersionNotMatchingError, "waiting for %q, current %q", version, rh.Version)
+			return microerror.Maskf(releaseVersionNotMatchingError, "waiting for '%s', current '%s'", version, rh.Version)
 		}
 		return nil
 	}
 
 	notify := func(err error, t time.Duration) {
-		log.Printf("getting release version %s: %v", t, err)
+		r.logger.Log("level", "debug", "message", fmt.Sprintf("failed to get release version '%s': retrying in %s", version, t), "stack", fmt.Sprintf("%v", err))
 	}
 
 	b := framework.NewExponentialBackoff(framework.ShortMaxWait, framework.LongMaxInterval)
