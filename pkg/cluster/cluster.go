@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -11,7 +12,6 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 
-	"fmt"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/e2e-harness/pkg/runner"
 )
@@ -257,20 +257,17 @@ current-context: giantswarm-e2e
 preferences: {}
 `
 
-// create kubeconfig from env values for existing cluster
+// createKubeconfig is creating kubeconfig from url and tls assets values for existing cluster
 func (c *Cluster) createKubeconfig(filePath string) error {
-
 	// fill template with values
-	kubeConfigContet := fmt.Sprintf(kubeConfigTmpl, c.k8sApiUrl, c.k8sCertCA, c.k8sCert, c.k8sCertPrivate)
-
-	var aferoFs = afero.NewOsFs()
-
-	f, err := aferoFs.Create(filePath)
+	kubeConfigContent := fmt.Sprintf(kubeConfigTmpl, c.k8sApiUrl, c.k8sCertCA, c.k8sCert, c.k8sCertPrivate)
+	// create file
+	f, err := c.fs.Create(filePath)
 	if err != nil {
 		return microerror.Maskf(err, fmt.Sprintf("Failed to create kubeconfig %s", filePath))
 	}
-
-	_, err = f.WriteString(kubeConfigContet)
+	// write kubeconfig to file
+	_, err = f.WriteString(kubeConfigContent)
 	if err != nil {
 		return microerror.Maskf(err, fmt.Sprintf("Failed to write content of kubeconfig %s", filePath))
 	}
