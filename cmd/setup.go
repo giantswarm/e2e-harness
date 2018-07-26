@@ -97,7 +97,8 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 	}
 	p := project.New(pDeps, pCfg)
 	hCfg := harness.Config{
-		RemoteCluster: remoteCluster,
+		ExistingCluster: existingCluster,
+		RemoteCluster:   remoteCluster,
 	}
 	h := harness.New(logger, fs, hCfg)
 	c := cluster.New(logger, fs, d, existingCluster, remoteCluster)
