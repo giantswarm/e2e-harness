@@ -8,12 +8,13 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/apprclient"
-	"github.com/giantswarm/e2e-harness/pkg/framework"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"k8s.io/helm/pkg/helm"
+
+	"github.com/giantswarm/e2e-harness/pkg/framework"
 )
 
 type ResourceConfig struct {
