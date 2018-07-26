@@ -11,25 +11,36 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 
+	"fmt"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/e2e-harness/pkg/runner"
 )
 
 type Cluster struct {
-	logger          micrologger.Logger
-	runner          runner.Runner
-	fs              afero.Fs
+	logger        micrologger.Logger
+	runner        runner.Runner
+	fs            afero.Fs
+	remoteCluster bool
+
 	existingCluster bool
-	remoteCluster   bool
+	k8sApiUrl       string
+	k8sCert         string
+	k8sCertCA       string
+	k8sCertPrivate  string
 }
 
-func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, existingCluster bool, remoteCluster bool) *Cluster {
+func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, existingCluster, remoteCluster bool, k8sApiUrl, k8sCert, k8sCertCA, k8sCertPrivate string) *Cluster {
 	return &Cluster{
-		logger:          logger,
-		runner:          runner,
-		fs:              fs,
+		logger:        logger,
+		runner:        runner,
+		fs:            fs,
+		remoteCluster: remoteCluster,
+
 		existingCluster: existingCluster,
-		remoteCluster:   remoteCluster,
+		k8sApiUrl:       k8sApiUrl,
+		k8sCert:         k8sCert,
+		k8sCertCA:       k8sCertCA,
+		k8sCertPrivate:  k8sCertPrivate,
 	}
 }
 
@@ -38,6 +49,16 @@ func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, existingC
 // later access to it
 func (c *Cluster) Create() error {
 	if c.existingCluster {
+		kubeconfigFilePath, err := getKubeConfigPath()
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		err = c.createKubeconfig(kubeconfigFilePath)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		c.logger.Log("info", "Created kubeconfig minikube assets accessible for the test container")
 		return nil
 	}
 	if c.remoteCluster {
@@ -114,7 +135,7 @@ func (c *Cluster) copyMinikubeAssets(homeDir string) error {
 
 	// copy kube config (assumes the current context is minukube)
 	origKubeCfg := filepath.Join(homeDir, ".kube", "config")
-	targetKubeCfg, err := getMinikubeConfigPath()
+	targetKubeCfg, err := getKubeConfigPath()
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -141,7 +162,7 @@ func (c *Cluster) setupMinikubeConfig(homeDir string) error {
 
 	// path is the actual location of the k8s config file that will be used from the
 	// test container
-	path, err := getMinikubeConfigPath()
+	path, err := getKubeConfigPath()
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -177,10 +198,10 @@ func (c *Cluster) setupMinikubeConfig(homeDir string) error {
 	return nil
 }
 
-// getMinikubeConfigPath returns the actual path of the k8s config file that
+// getKubeConfigPath returns the actual path of the k8s config file that
 // will be used by the test container (path from the point of view of the
 // executing e2e-harness binary, not the test container).
-func getMinikubeConfigPath() (string, error) {
+func getKubeConfigPath() (string, error) {
 	baseDir, err := harness.BaseDir()
 	if err != nil {
 		return "", err
@@ -212,4 +233,47 @@ func (c *Cluster) copyFile(orig, dst string) error {
 	err = out.Sync()
 
 	return microerror.Mask(err)
+}
+
+const kubeConfigTmpl string = `
+apiVersion: v1
+kind: Config
+clusters:
+- name: giantswarm-e2e
+  cluster:
+    server: %s
+    certificate-authority-data: %s
+users:
+- name: giantswarm-e2e-user
+  user:
+    client-certificate-data: %s
+    client-key-data: %s
+contexts:
+- name: giantswarm-e2e
+  context:
+    cluster: giantswarm-e2e
+    user: giantswarm-e2e-user
+current-context: giantswarm-e2e
+preferences: {}
+`
+
+// create kubeconfig from env values for existing cluster
+func (c *Cluster) createKubeconfig(filePath string) error {
+
+	// fill template with values
+	kubeConfigContet := fmt.Sprintf(kubeConfigTmpl, c.k8sApiUrl, c.k8sCertCA, c.k8sCert, c.k8sCertPrivate)
+
+	var aferoFs = afero.NewOsFs()
+
+	f, err := aferoFs.Create(filePath)
+	if err != nil {
+		return microerror.Maskf(err, fmt.Sprintf("Failed to create kubeconfig %s", filePath))
+	}
+
+	_, err = f.WriteString(kubeConfigContet)
+	if err != nil {
+		return microerror.Maskf(err, fmt.Sprintf("Failed to write content of kubeconfig %s", filePath))
+	}
+
+	return nil
 }

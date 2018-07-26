@@ -80,11 +80,19 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		Fs:     fs,
 	}
 	p := project.New(pDeps, pCfg)
-	c := cluster.New(logger, fs, d, cfg.ExistingCluster, cfg.RemoteCluster)
+	c := cluster.New(logger,
+		fs,
+		d,
+		cfg.ExistingCluster,
+		cfg.RemoteCluster,
+		"",
+		"",
+		"",
+		"")
 
 	bundle := []tasks.Task{}
 
-	if cfg.RemoteCluster {
+	if cfg.RemoteCluster && !cfg.ExistingCluster {
 		bundle = append(bundle, c.Delete)
 	} else {
 		bundle = append(bundle, p.CommonTearDownSteps)

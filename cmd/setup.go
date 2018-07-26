@@ -18,6 +18,21 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 )
 
+const (
+	// EnvVarK8sApiUrl is the process environment variable representing the
+	// k8s api url for testing cluster.
+	EnvVarK8sApiUrl = "K8S_API_URL"
+	// EnvVarK8sCert is the process environment variable representing the
+	// k8s kubeconfig cert value for testing cluster.
+	EnvVarK8sCert = "K8S_CERT_ENCODED"
+	// EnvVarK8sCert is the process environment variable representing the
+	// k8s kubeconfig ca cert value for testing cluster.
+	EnvVarK8sCertCA = "K8S_CERT_CA_ENCODED"
+	// EnvVarK8sCert is the process environment variable representing the
+	// k8s kubeconfig private key value for testing cluster.
+	EnvVarK8sCertPrivate = "K8S_CERT_PRIVATE_ENCODED"
+)
+
 var (
 	SetupCmd = &cobra.Command{
 		Use:   "setup",
@@ -61,6 +76,27 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		return microerror.Mask(err)
 	}
 
+	k8sApiUrl := os.Getenv(EnvVarK8sApiUrl)
+	k8sCert := os.Getenv(EnvVarK8sCert)
+	k8sCertCA := os.Getenv(EnvVarK8sCertCA)
+	k8sCertPrivate := os.Getenv(EnvVarK8sCertPrivate)
+	if existingCluster {
+		if k8sApiUrl == "" {
+			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sApiUrl))
+		}
+
+		if k8sCert == "" {
+			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCertCA))
+		}
+
+		if k8sCertCA == "" {
+			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCert))
+		}
+
+		if k8sCertPrivate == "" {
+			return microerror.Maskf(invalidConfigError, fmt.Sprintf("env var '%s' must not be empty", EnvVarK8sCertPrivate))
+		}
+	}
 	projectTag := harness.GetProjectTag()
 	projectName := harness.GetProjectName()
 	// use latest tag for consumer projects (not dog-fooding e2e-harness)
@@ -101,7 +137,15 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		RemoteCluster:   remoteCluster,
 	}
 	h := harness.New(logger, fs, hCfg)
-	c := cluster.New(logger, fs, d, existingCluster, remoteCluster)
+	c := cluster.New(logger,
+		fs,
+		d,
+		existingCluster,
+		remoteCluster,
+		k8sApiUrl,
+		k8sCert,
+		k8sCertCA,
+		k8sCertPrivate)
 
 	// tasks to run
 	bundle := []tasks.Task{
