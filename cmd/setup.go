@@ -29,6 +29,7 @@ var (
 var (
 	setupCmdTestDir string
 	name            string
+	existingCluster bool
 	remoteCluster   bool
 )
 
@@ -38,7 +39,7 @@ func init() {
 	SetupCmd.Flags().StringVar(&setupCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
-	SetupCmd.Flags().BoolVar(&remoteCluster, "existing", false, "can be used with --remote=true to use already existing cluster")
+	SetupCmd.Flags().BoolVar(&existingCluster, "existing", false, "can be used with --remote=true to use already existing cluster")
 }
 
 func runSetup(cmd *cobra.Command, args []string) {
@@ -99,7 +100,7 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		RemoteCluster: remoteCluster,
 	}
 	h := harness.New(logger, fs, hCfg)
-	c := cluster.New(logger, fs, d, remoteCluster)
+	c := cluster.New(logger, fs, d, existingCluster, remoteCluster)
 
 	// tasks to run
 	bundle := []tasks.Task{

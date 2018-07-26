@@ -19,16 +19,17 @@ type Cluster struct {
 	logger          micrologger.Logger
 	runner          runner.Runner
 	fs              afero.Fs
-	remoteCluster   bool
 	existingCluster bool
+	remoteCluster   bool
 }
 
-func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, remoteCluster bool) *Cluster {
+func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, existingCluster bool, remoteCluster bool) *Cluster {
 	return &Cluster{
-		logger:        logger,
-		runner:        runner,
-		fs:            fs,
-		remoteCluster: remoteCluster,
+		logger:          logger,
+		runner:          runner,
+		fs:              fs,
+		existingCluster: existingCluster,
+		remoteCluster:   remoteCluster,
 	}
 }
 
