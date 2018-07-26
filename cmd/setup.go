@@ -136,6 +136,7 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		K8sCertCA:       k8sCertCA,
 		K8sCertKey:      k8sCertKey,
 		RemoteCluster:   remoteCluster,
+		Runner:          d,
 	}
 
 	c := cluster.New(clusterCfg)

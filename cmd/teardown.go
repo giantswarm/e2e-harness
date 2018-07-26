@@ -86,6 +86,7 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		Fs:              fs,
 		ExistingCluster: existingCluster,
 		RemoteCluster:   remoteCluster,
+		Runner:          d,
 	}
 	c := cluster.New(clusterCfg)
 
