@@ -44,7 +44,7 @@ func (l *Localkube) SetUp() error {
 
 	commands := []string{
 		"chmod a+x ./minikube-linux-amd64",
-		"sudo ./minikube-linux-amd64 start --bootstrapper localkube --vm-driver=none --extra-config=apiserver.Authorization.Mode=RBAC --feature-gates=CustomResourceSubresources=true",
+		"sudo ./minikube-linux-amd64 start --bootstrapper localkube --vm-driver=none --extra-config=apiserver.Authorization.Mode=RBAC --feature-gates=CustomResourceSubresources=true --feature-gates=MountPropagation=false",
 		"sudo chown -R $USER $HOME/.kube",
 		"sudo chgrp -R $USER $HOME/.kube",
 		"sudo chown -R $USER $HOME/.minikube",
