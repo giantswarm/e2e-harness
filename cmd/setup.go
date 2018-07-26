@@ -131,11 +131,11 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		Logger:          logger,
 		Fs:              fs,
 		ExistingCluster: existingCluster,
-		RemoteCluster:   remoteCluster,
 		K8sApiUrl:       k8sApiUrl,
 		K8sCert:         k8sCert,
 		K8sCertCA:       k8sCertCA,
 		K8sCertKey:      k8sCertKey,
+		RemoteCluster:   remoteCluster,
 	}
 
 	c := cluster.New(clusterCfg)
