@@ -18,21 +18,6 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 )
 
-const (
-	// EnvVarK8sApiUrl is the process environment variable representing the
-	// k8s api url for testing cluster.
-	EnvVarK8sApiUrl = "K8S_API_URL"
-	// EnvVarK8sCert is the process environment variable representing the
-	// k8s kubeconfig cert value for testing cluster.
-	EnvVarK8sCert = "K8S_CERT_ENCODED"
-	// EnvVarK8sCert is the process environment variable representing the
-	// k8s kubeconfig ca cert value for testing cluster.
-	EnvVarK8sCertCA = "K8S_CERT_CA_ENCODED"
-	// EnvVarK8sCert is the process environment variable representing the
-	// k8s kubeconfig private key value for testing cluster.
-	EnvVarK8sCertPrivate = "K8S_CERT_PRIVATE_ENCODED"
-)
-
 var (
 	SetupCmd = &cobra.Command{
 		Use:   "setup",
