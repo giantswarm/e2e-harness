@@ -16,10 +16,11 @@ import (
 )
 
 type Cluster struct {
-	logger        micrologger.Logger
-	runner        runner.Runner
-	fs            afero.Fs
-	remoteCluster bool
+	logger          micrologger.Logger
+	runner          runner.Runner
+	fs              afero.Fs
+	remoteCluster   bool
+	existingCluster bool
 }
 
 func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, remoteCluster bool) *Cluster {
@@ -35,6 +36,9 @@ func New(logger micrologger.Logger, fs afero.Fs, runner runner.Runner, remoteClu
 // are using a local one, puts in place the required files for
 // later access to it
 func (c *Cluster) Create() error {
+	if c.existingCluster {
+		return nil
+	}
 	if c.remoteCluster {
 		err := c.clusterAction("shipyard -action=start")
 		if err != nil {

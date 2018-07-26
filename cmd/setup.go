@@ -38,6 +38,7 @@ func init() {
 	SetupCmd.Flags().StringVar(&setupCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
+	SetupCmd.Flags().BoolVar(&remoteCluster, "existing", false, "can be used with --remote=true to use already existing cluster")
 }
 
 func runSetup(cmd *cobra.Command, args []string) {
