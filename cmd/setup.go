@@ -110,8 +110,12 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 	pCfg := &project.Config{
-		Name: projectName,
-		Tag:  projectTag,
+		Name:       projectName,
+		K8sContext: "minikube",
+		Tag:        projectTag,
+	}
+	if existingCluster {
+		pCfg.K8sContext = "giantswarm-e2e"
 	}
 	fs := afero.NewOsFs()
 	pDeps := &project.Dependencies{
