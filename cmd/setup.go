@@ -29,6 +29,11 @@ var (
 var (
 	setupCmdTestDir string
 	name            string
+	existingCluster bool
+	k8sApiUrl       string
+	k8sCert         string
+	k8sCertCA       string
+	k8sCertKey      string
 	remoteCluster   bool
 )
 
@@ -37,6 +42,11 @@ func init() {
 
 	SetupCmd.Flags().StringVar(&setupCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 	SetupCmd.Flags().StringVar(&name, "name", "e2e-harness", "CI execution identifier")
+	SetupCmd.Flags().BoolVar(&existingCluster, "existing", false, "can be used with --remote=true to use already existing cluster")
+	SetupCmd.Flags().StringVar(&k8sApiUrl, "k8s-api-url", "", "k8s api url for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCert, "k8s-cert", "", "k8s cert for auth for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-cert-ca", "", "k8s cert ca for auth for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCertKey, "k8s-cert-key", "", "k8s cert key for auth for existing cluster")
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
 
@@ -59,6 +69,23 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		return microerror.Mask(err)
 	}
 
+	if existingCluster {
+		if k8sApiUrl == "" {
+			return microerror.Maskf(invalidConfigError, "flag --k8s-api-url must not be empty")
+		}
+
+		if k8sCert == "" {
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert must not be empty")
+		}
+
+		if k8sCertCA == "" {
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert-ca must not be empty")
+		}
+
+		if k8sCertKey == "" {
+			return microerror.Maskf(invalidConfigError, "flag --k8s-cert-key  must not be empty")
+		}
+	}
 	projectTag := harness.GetProjectTag()
 	projectName := harness.GetProjectName()
 	// use latest tag for consumer projects (not dog-fooding e2e-harness)
@@ -95,10 +122,24 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 	}
 	p := project.New(pDeps, pCfg)
 	hCfg := harness.Config{
-		RemoteCluster: remoteCluster,
+		ExistingCluster: existingCluster,
+		RemoteCluster:   remoteCluster,
 	}
 	h := harness.New(logger, fs, hCfg)
-	c := cluster.New(logger, fs, d, remoteCluster)
+
+	clusterCfg := cluster.Config{
+		Logger:          logger,
+		Fs:              fs,
+		ExistingCluster: existingCluster,
+		K8sApiUrl:       k8sApiUrl,
+		K8sCert:         k8sCert,
+		K8sCertCA:       k8sCertCA,
+		K8sCertKey:      k8sCertKey,
+		RemoteCluster:   remoteCluster,
+		Runner:          d,
+	}
+
+	c := cluster.New(clusterCfg)
 
 	// tasks to run
 	bundle := []tasks.Task{
