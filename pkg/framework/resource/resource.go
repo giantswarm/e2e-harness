@@ -81,7 +81,7 @@ func (r *Resource) InstallResource(name, values, channel string, conditions ...f
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(chartValuesEnv)), helm.InstallWait(true))
+	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(chartname), helm.ValueOverrides([]byte(chartValuesEnv)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
 	}
