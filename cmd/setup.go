@@ -34,6 +34,7 @@ var (
 	k8sCert         string
 	k8sCertCA       string
 	k8sCertKey      string
+	k8sContext      string
 	remoteCluster   bool
 )
 
@@ -46,6 +47,7 @@ func init() {
 	SetupCmd.Flags().StringVar(&k8sApiUrl, "k8s-api-url", "", "k8s api url for existing cluster")
 	SetupCmd.Flags().StringVar(&k8sCert, "k8s-cert", "", "k8s cert for auth for existing cluster")
 	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-cert-ca", "", "k8s cert ca for auth for existing cluster")
+	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-context", "minikube", "k8s context to use")
 	SetupCmd.Flags().StringVar(&k8sCertKey, "k8s-cert-key", "", "k8s cert key for auth for existing cluster")
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
@@ -110,10 +112,6 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 	pa := patterns.New(logger)
 	w := wait.New(logger, d, pa)
 
-	k8sContext := "minikube"
-	if existingCluster {
-		k8sContext = "giantswarm-e2e"
-	}
 	pCfg := &project.Config{
 		Name:       projectName,
 		K8sContext: k8sContext,
