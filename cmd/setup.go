@@ -47,7 +47,7 @@ func init() {
 	SetupCmd.Flags().StringVar(&k8sApiUrl, "k8s-api-url", "", "k8s api url for existing cluster")
 	SetupCmd.Flags().StringVar(&k8sCert, "k8s-cert", "", "k8s cert for auth for existing cluster")
 	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-cert-ca", "", "k8s cert ca for auth for existing cluster")
-	SetupCmd.Flags().StringVar(&k8sCertCA, "k8s-context", "minikube", "k8s context to use")
+	SetupCmd.Flags().StringVar(&k8sContext, "k8s-context", "minikube", "k8s context to use")
 	SetupCmd.Flags().StringVar(&k8sCertKey, "k8s-cert-key", "", "k8s cert key for auth for existing cluster")
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }

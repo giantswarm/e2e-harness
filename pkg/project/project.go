@@ -79,7 +79,6 @@ func New(deps *Dependencies, cfg *Config) *Project {
 
 func (p *Project) CommonSetupSteps() error {
 	p.logger.Log("info", "executing common setup steps")
-	p.logger.Log("info", fmt.Sprintf("using k8s context: %s", p.cfg.K8sContext))
 	steps := []Step{
 		Step{
 			Run: "kubectl config use-context " + p.cfg.K8sContext,
