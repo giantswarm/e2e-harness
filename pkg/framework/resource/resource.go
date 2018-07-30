@@ -96,6 +96,23 @@ func (r *Resource) InstallResource(name, values, channel string, conditions ...f
 	return nil
 }
 
+func (r *Resource) UpdateResource(name, values, channel string, conditions ...func() error) error {
+	chartValuesEnv := os.ExpandEnv(values)
+	chartname := fmt.Sprintf("%s-chart", name)
+
+	tarballPath, err := r.apprClient.PullChartTarball(chartname, "stable")
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.helmClient.UpdateReleaseFromTarball(chartname, tarballPath, helm.UpdateValueOverrides([]byte(chartValuesEnv)))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
+}
+
 func (r *Resource) WaitForStatus(release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
