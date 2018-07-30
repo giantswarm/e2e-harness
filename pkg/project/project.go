@@ -43,9 +43,10 @@ type Test struct {
 }
 
 type Config struct {
-	Dir  string
-	Name string
-	Tag  string
+	Dir        string
+	K8sContext string
+	Name       string
+	Tag        string
 }
 
 type Dependencies struct {
@@ -80,7 +81,7 @@ func (p *Project) CommonSetupSteps() error {
 	p.logger.Log("info", "executing common setup steps")
 	steps := []Step{
 		Step{
-			Run: "kubectl config use-context minikube",
+			Run: "kubectl config use-context " + p.cfg.K8sContext,
 		},
 		// Fix kube-dns RBAC issues.
 		// Allow kube-dns and other kube-system services full access to the API.
