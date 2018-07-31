@@ -62,9 +62,10 @@ func runTest(cmd *cobra.Command, args []string) error {
 		c := docker.Config{
 			Logger: logger,
 
-			Dir:           testCmdTestDir,
-			ImageTag:      e2eHarnessTag,
-			RemoteCluster: cfg.RemoteCluster,
+			Dir:             testCmdTestDir,
+			ExistingCluster: cfg.ExistingCluster,
+			ImageTag:        e2eHarnessTag,
+			RemoteCluster:   cfg.RemoteCluster,
 		}
 
 		d = docker.New(c)

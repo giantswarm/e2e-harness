@@ -60,9 +60,10 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		c := docker.Config{
 			Logger: logger,
 
-			Dir:           teardownCmdTestDir,
-			ImageTag:      e2eHarnessTag,
-			RemoteCluster: cfg.RemoteCluster,
+			Dir:             teardownCmdTestDir,
+			ExistingCluster: cfg.ExistingCluster,
+			ImageTag:        e2eHarnessTag,
+			RemoteCluster:   cfg.RemoteCluster,
 		}
 
 		d = docker.New(c)
