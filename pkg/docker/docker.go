@@ -17,26 +17,29 @@ import (
 type Config struct {
 	Logger micrologger.Logger
 
-	Dir           string
-	ImageTag      string
-	RemoteCluster bool
+	Dir             string
+	ExistingCluster bool
+	ImageTag        string
+	RemoteCluster   bool
 }
 
 type Docker struct {
 	logger micrologger.Logger
 
-	dir           string
-	imageTag      string
-	remoteCluster bool
+	dir             string
+	existingCluster bool
+	imageTag        string
+	remoteCluster   bool
 }
 
 func New(config Config) *Docker {
 	d := &Docker{
 		logger: config.Logger,
 
-		dir:           config.Dir,
-		imageTag:      config.ImageTag,
-		remoteCluster: config.RemoteCluster,
+		dir:             config.Dir,
+		existingCluster: config.ExistingCluster,
+		imageTag:        config.ImageTag,
+		remoteCluster:   config.RemoteCluster,
 	}
 
 	return d
@@ -46,8 +49,8 @@ func New(config Config) *Docker {
 // setting up the port forwarding to the remote cluster, this command
 // is meant to be used after that cluster has been initialized
 func (d *Docker) RunPortForward(out io.Writer, command string, env ...string) error {
-	if !d.remoteCluster {
-		// no need to port forward in local clusters
+	if !d.remoteCluster || d.existingCluster {
+		// no need to port forward in local clusters or on existing cluster
 		return d.Run(out, command, env...)
 	}
 

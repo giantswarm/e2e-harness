@@ -248,8 +248,7 @@ func (c *Cluster) copyFile(orig, dst string) error {
 	return microerror.Mask(err)
 }
 
-const kubeConfigTmpl string = `
-apiVersion: v1
+const kubeConfigTmpl string = `apiVersion: v1
 kind: Config
 clusters:
 - name: giantswarm-e2e

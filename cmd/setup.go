@@ -101,9 +101,10 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		c := docker.Config{
 			Logger: logger,
 
-			Dir:           setupCmdTestDir,
-			ImageTag:      e2eHarnessTag,
-			RemoteCluster: remoteCluster,
+			Dir:             setupCmdTestDir,
+			ExistingCluster: existingCluster,
+			ImageTag:        e2eHarnessTag,
+			RemoteCluster:   remoteCluster,
 		}
 
 		d = docker.New(c)
