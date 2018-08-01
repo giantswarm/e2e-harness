@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type DeploymentConfig struct {
+type Config struct {
 	K8sClient kubernetes.Interface
 	Logger    micrologger.Logger
 }
@@ -20,7 +20,7 @@ type Deployment struct {
 	logger    micrologger.Logger
 }
 
-func New(config DeploymentConfig) (*Deployment, error) {
+func New(config Config) (*Deployment, error) {
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
