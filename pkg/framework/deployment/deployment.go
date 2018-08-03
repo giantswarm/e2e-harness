@@ -40,7 +40,7 @@ func New(config Config) (*Deployment, error) {
 func (d *Deployment) Check(name string, replicas int, expectedLabels, expectedMatchLabels map[string]string) error {
 	ds, err := d.k8sClient.Apps().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		return microerror.Maskf(notFoundError, "could not find deployment: '%s'", name)
+		return microerror.Maskf(notFoundError, "deployment: '%s'", name)
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
