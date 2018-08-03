@@ -2,6 +2,15 @@ package deployment
 
 import "github.com/giantswarm/microerror"
 
+var incorrectDeploymentError = &microerror.Error{
+	Kind: "incorrectDeploymentError",
+}
+
+// IsIncorrectDeployment asserts incorrectDeploymentError.
+func IsIncorrectDeployment(err error) bool {
+	return microerror.Cause(err) == incorrectDeploymentError
+}
+
 var invalidConfigError = &microerror.Error{
 	Kind: "invalidConfigError",
 }
@@ -18,22 +27,4 @@ var notFoundError = &microerror.Error{
 // IsNotFound asserts notFoundError.
 func IsNotFound(err error) bool {
 	return microerror.Cause(err) == notFoundError
-}
-
-var wrongLabelsError = &microerror.Error{
-	Kind: "wrongLabelsError",
-}
-
-// IsWrongLabels asserts wrongLabelsError.
-func IsWrongLabels(err error) bool {
-	return microerror.Cause(err) == wrongLabelsError
-}
-
-var wrongReplicasError = &microerror.Error{
-	Kind: "wrongReplicasError",
-}
-
-// IsWrongReplicas asserts wrongReplicasError.
-func IsWrongReplicas(err error) bool {
-	return microerror.Cause(err) == wrongReplicasError
 }

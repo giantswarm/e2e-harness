@@ -47,22 +47,22 @@ func (d *Deployment) Check(name string, replicas int, expectedLabels, expectedMa
 
 	// Check deployment labels.
 	if !reflect.DeepEqual(expectedLabels, ds.ObjectMeta.Labels) {
-		return microerror.Maskf(wrongLabelsError, "expected: %v got: %v", expectedLabels, ds.ObjectMeta.Labels)
+		return microerror.Maskf(incorrectDeploymentError, "expected labels: %v got: %v", expectedLabels, ds.ObjectMeta.Labels)
 	}
 
 	// Check selector match labels.
 	if !reflect.DeepEqual(expectedMatchLabels, ds.Spec.Selector.MatchLabels) {
-		return microerror.Maskf(wrongLabelsError, "expected match labels: %v got: %v", expectedMatchLabels, ds.Spec.Selector.MatchLabels)
+		return microerror.Maskf(incorrectDeploymentError, "expected match labels: %v got: %v", expectedMatchLabels, ds.Spec.Selector.MatchLabels)
 	}
 
 	// Check pod labels.
 	if !reflect.DeepEqual(expectedLabels, ds.Spec.Template.ObjectMeta.Labels) {
-		return microerror.Maskf(wrongLabelsError, "expected pod labels: %v got: %v", expectedLabels, ds.Spec.Template.ObjectMeta.Labels)
+		return microerror.Maskf(incorrectDeploymentError, "expected pod labels: %v got: %v", expectedLabels, ds.Spec.Template.ObjectMeta.Labels)
 	}
 
 	// Check replica count.
 	if *ds.Spec.Replicas != int32(replicas) {
-		return microerror.Maskf(wrongReplicasError, "expected: %d got: %d", replicas, ds.Spec.Replicas)
+		return microerror.Maskf(incorrectDeploymentError, "expected replicas: %d got: %d", replicas, ds.Spec.Replicas)
 	}
 
 	return nil
