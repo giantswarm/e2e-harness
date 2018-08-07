@@ -113,7 +113,10 @@ func (r *Resource) UpdateResource(name, values, channel string, conditions ...fu
 func (r *Resource) WaitForStatus(release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
-		if err != nil {
+		if helmclient.IsReleaseNotFound(err) && status == "DELETED" {
+			// Error is expected because we purge releases when deleting.
+			return nil
+		} else if err != nil {
 			return microerror.Mask(err)
 		}
 		if rc.Status != status {
