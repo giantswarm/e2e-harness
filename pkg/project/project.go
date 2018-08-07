@@ -1,12 +1,13 @@
 package project
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/cenkalti/backoff"
+	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -79,8 +80,9 @@ func New(deps *Dependencies, cfg *Config) *Project {
 
 func (p *Project) CommonSetupSteps() error {
 	p.logger.Log("info", "executing common setup steps")
+
 	steps := []Step{
-		Step{
+		{
 			Run: "kubectl config use-context " + p.cfg.K8sContext,
 		},
 		// Fix kube-dns RBAC issues.
@@ -88,16 +90,16 @@ func (p *Project) CommonSetupSteps() error {
 		// See:
 		// * https://github.com/kubernetes/minikube/issues/1734
 		// * https://github.com/kubernetes/minikube/issues/1722
-		Step{
+		{
 			Run: "kubectl create clusterrolebinding cluster-admin:kube-system --clusterrole=cluster-admin --serviceaccount=kube-system:default",
 		},
-		Step{
+		{
 			Run: "kubectl -n kube-system create sa tiller",
 		},
-		Step{
+		{
 			Run: "kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller",
 		},
-		Step{
+		{
 			Run: "helm init --service-account tiller",
 			WaitFor: WaitStep{
 				Run:   "kubectl get pod -n kube-system",
@@ -105,39 +107,37 @@ func (p *Project) CommonSetupSteps() error {
 			},
 		}}
 
-	newNotify := func(operationName string) func(error, time.Duration) {
-		return func(err error, delay time.Duration) {
-			p.logger.Log(fmt.Sprintf("%q failed, retrying with delay %s: '%#v'", operationName, delay, err))
-		}
-	}
 	for _, s := range steps {
-		operation := func() error {
+		o := func() error {
 			err := p.RunStep(s)
 			if err != nil {
 				return microerror.Mask(err)
 			}
 			return nil
 		}
-		bo := backoff.NewExponentialBackOff()
-		err := backoff.RetryNotify(operation, bo, newNotify(s.Run))
+		b := backoff.NewExponential(15*time.Minute, 60*time.Second)
+		n := backoff.NewNotifier(p.logger, context.Background())
+		err := backoff.RetryNotify(o, b, n)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 	}
+
 	p.logger.Log("info", "finished common setup steps")
+
 	return nil
 }
 
 func (p *Project) CommonTearDownSteps() error {
 	p.logger.Log("info", "starting common teardown steps")
 	steps := []Step{
-		Step{
+		{
 			Run: "helm reset --force",
 		},
-		Step{
+		{
 			Run: "kubectl -n kube-system delete sa tiller",
 		},
-		Step{
+		{
 			Run: "kubectl delete clusterrolebinding tiller",
 		}}
 
@@ -169,6 +169,7 @@ func (p *Project) Test() error {
 	}
 
 	p.logger.Log("info", "finished tests")
+
 	return nil
 }
 
