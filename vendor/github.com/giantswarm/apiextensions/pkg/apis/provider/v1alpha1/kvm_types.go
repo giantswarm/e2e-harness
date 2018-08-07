@@ -118,8 +118,8 @@ type KVMConfigSpecKVMNodeControllerDocker struct {
 
 type KVMConfigSpecKVMPortMappings struct {
 	Name       string `json:"name" yaml:"name"`
-	NodePort   string `json:"nodePort" yaml:"nodePort"`
-	TargetPort string `json:"targetPort" yaml:"targetPort"`
+	NodePort   int    `json:"nodePort" yaml:"nodePort"`
+	TargetPort int    `json:"targetPort" yaml:"targetPort"`
 }
 
 type KVMConfigSpecVersionBundle struct {

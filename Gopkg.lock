@@ -115,7 +115,7 @@
     "pkg/clientset/versioned/typed/example/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "5c41f2e2c7b583cc195cb49191c3f34ee1c20c23"
+  revision = "b8a446f6cdfde2c50e005628a22630538956446f"
 
 [[projects]]
   branch = "master"
@@ -127,7 +127,7 @@
   branch = "master"
   name = "github.com/giantswarm/backoff"
   packages = ["."]
-  revision = "9bb1a360a1e8b2b6b5aa561308c5e54ab89d21d6"
+  revision = "f539bcb215a07214d89caf21724f497575f8ef03"
 
 [[projects]]
   branch = "master"
