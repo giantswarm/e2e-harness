@@ -36,8 +36,8 @@ required = [
 
 
 [[constraint]]
-  version = "v1.1.0"
-  name = "github.com/cenkalti/backoff"
+  branch = "master"
+  name = "github.com/giantswarm/backoff"
 
 [[constraint]]
   branch = "master"
