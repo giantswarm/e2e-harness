@@ -83,9 +83,8 @@ func NewHost(c HostConfig) (*Host, error) {
 		k8sClient:  k8sClient,
 		restConfig: restConfig,
 
-		clusterID:       c.ClusterID,
-		targetNamespace: c.TargetNamespace,
-		vaultToken:      c.VaultToken,
+		clusterID:  c.ClusterID,
+		vaultToken: c.VaultToken,
 	}
 
 	return h, nil
@@ -283,7 +282,7 @@ func (h *Host) InstallCertResource() error {
 			// the helm client lib. Then error handling will be better.
 			HelmCmd("delete --purge cert-config-e2e")
 
-			cmdStr := fmt.Sprintf("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=%[1]s --set namespace=%[2]s --namespace %[2]s", h.clusterID, h.targetNamespace)
+			cmdStr := fmt.Sprintf("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=%[1]s", h.clusterID)
 			err := HelmCmd(cmdStr)
 			if err != nil {
 				return microerror.Mask(err)
