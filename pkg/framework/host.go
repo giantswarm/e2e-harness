@@ -31,9 +31,8 @@ type HostConfig struct {
 	Backoff backoff.Interface
 	Logger  micrologger.Logger
 
-	ClusterID       string
-	TargetNamespace string
-	VaultToken      string
+	ClusterID  string
+	VaultToken string
 }
 
 type Host struct {
@@ -44,9 +43,8 @@ type Host struct {
 	k8sClient  kubernetes.Interface
 	restConfig *rest.Config
 
-	clusterID       string
-	targetNamespace string
-	vaultToken      string
+	clusterID  string
+	vaultToken string
 }
 
 func NewHost(c HostConfig) (*Host, error) {
@@ -59,9 +57,6 @@ func NewHost(c HostConfig) (*Host, error) {
 
 	if c.ClusterID == "" {
 		return nil, microerror.Maskf(invalidConfigError, "%T.ClusterID must not be empty", c)
-	}
-	if c.TargetNamespace == "" {
-		return nil, microerror.Maskf(invalidConfigError, "%T.TargetNamespace must not be empty", c)
 	}
 	if c.VaultToken == "" {
 		return nil, microerror.Maskf(invalidConfigError, "%T.VaultToken must not be empty", c)
@@ -245,7 +240,7 @@ func (h *Host) InstallResource(name, values, version string, conditions ...func(
 	}
 
 	{
-		installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s-chart%[2]s -- -n %[1]s --namespace %[4]s --values %[3]s --set namespace=%[4]s", name, version, tmpfile.Name(), h.targetNamespace)
+		installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s-chart%[2]s -- -n %[1]s --values %[3]s", name, version, tmpfile.Name())
 		deleteCmd := fmt.Sprintf("delete --purge %s", name)
 		o := func() error {
 			// NOTE we ignore errors here because we cannot get really useful error
