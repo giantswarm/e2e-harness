@@ -95,7 +95,7 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 
 	if cfg.RemoteCluster && !cfg.ExistingCluster {
 		bundle = append(bundle, c.Delete)
-	} else {
+	} else if !cfg.ExistingCluster {
 		bundle = append(bundle, p.CommonTearDownSteps)
 	}
 
