@@ -32,7 +32,7 @@ func New(logger micrologger.Logger, builder builder.Builder, tag string) *Miniku
 // BuildImages is a Task that build the required images for both the main
 // project and the e2e containers using the minikube docker environment.
 func (m *Minikube) BuildImages() error {
-	m.logger.Log("info", "Getting minikube docker environment")
+	m.logger.Log("level", "info", "message", "getting minikube docker environment")
 	env, err := m.getDockerEnv()
 	dir, err := os.Getwd()
 	if err != nil {
@@ -42,7 +42,7 @@ func (m *Minikube) BuildImages() error {
 	name := harness.GetProjectName()
 
 	image := fmt.Sprintf("quay.io/giantswarm/%s", name)
-	m.logger.Log("info", "Building image "+image)
+	m.logger.Log("level", "info", "message", "building image "+image)
 	if err := m.buildImage(name, dir, image, env); err != nil {
 		return microerror.Mask(err)
 	}
@@ -84,7 +84,7 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 
 func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) error {
 	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
-		m.logger.Log("function", "buildImage", "level", "error", "message", fmt.Sprintf("could not build image %s: %v", imageName, err))
+		m.logger.Log("level", "error", "message", fmt.Sprintf("could not build image %s: %v", imageName, err))
 		return microerror.Mask(err)
 	}
 	return nil

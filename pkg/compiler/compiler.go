@@ -43,15 +43,14 @@ func (c *Compiler) CompileMain() error {
 	mainPath := filepath.Join(dir, "main.go")
 	_, err = os.Stat(mainPath)
 	if os.IsNotExist(err) {
-		c.logger.Log("function", "CompileMain", "level", "info", "message", "no main.go, skipping binary build")
+		c.logger.Log("level", "info", "message", "no main.go, skipping binary build")
 		return nil
 	}
 
 	name := harness.GetProjectName()
 
-	c.logger.Log("info", "Compiling binary "+name)
+	c.logger.Log("level", "info", "message", "compiling binary "+name)
 	if err := c.compileMain(name, dir); err != nil {
-		c.logger.Log("info", "error compiling binary "+name)
 		return microerror.Mask(err)
 	}
 
@@ -68,10 +67,9 @@ func (c *Compiler) CompileTests() error {
 	e2eBinary := harness.GetProjectName() + "-e2e"
 	e2eDir := filepath.Join(dir, c.testDir)
 
-	c.logger.Log("info", "Compiling binary "+e2eBinary)
+	c.logger.Log("level", "info", "message", "compiling binary "+e2eBinary)
 	err = c.compileTests(e2eBinary, e2eDir)
 	if err != nil {
-		c.logger.Log("info", "error compiling binary "+e2eBinary)
 		return microerror.Mask(err)
 	}
 
@@ -84,7 +82,7 @@ func (c *Compiler) compileMain(binaryName, path string) error {
 	// do not build if binary is already there
 	binPath := filepath.Join(path, binaryName)
 	if executebleExists(binPath) {
-		c.logger.Log("function", "compileMain", "level", "info", "message", "main binary exists, not building")
+		c.logger.Log("level", "info", "message", "main binary exists, not building")
 		return nil
 	}
 
