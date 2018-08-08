@@ -158,6 +158,5 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		bundle = append(bundle, p.CommonSetupSteps)
 	}
 
-
 	return microerror.Mask(tasks.Run(bundle))
 }
