@@ -288,7 +288,7 @@ func (h *Host) InstallCertResource() error {
 			// the helm client lib. Then error handling will be better.
 			HelmCmd("delete --purge cert-config-e2e")
 
-			cmdStr := fmt.Sprintf("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=%s --set namespace=%s --namespace %s", h.clusterID, h.targetNamespace, h.targetNamespace)
+			cmdStr := fmt.Sprintf("registry install quay.io/giantswarm/apiextensions-cert-config-e2e-chart:stable -- -n cert-config-e2e --set commonDomain=${COMMON_DOMAIN} --set clusterName=%[1]s --set namespace=%[2]s --namespace %[2]s", h.clusterID, h.targetNamespace)
 			err := HelmCmd(cmdStr)
 			if err != nil {
 				return microerror.Mask(err)
