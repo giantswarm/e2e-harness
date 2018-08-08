@@ -152,7 +152,9 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		h.Init,
 		h.WriteConfig,
 		c.Create,
-		p.CommonSetupSteps,
+	}
+	if !existingCluster {
+		bundle = append(bundle, p.CommonSetupSteps)
 	}
 
 	return microerror.Mask(tasks.Run(bundle))
