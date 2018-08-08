@@ -79,7 +79,7 @@ func New(deps *Dependencies, cfg *Config) *Project {
 }
 
 func (p *Project) CommonSetupSteps() error {
-	p.logger.Log("info", "executing common setup steps")
+	p.logger.Log("level", "info", "message", "executing common setup steps")
 
 	steps := []Step{
 		{
@@ -123,13 +123,13 @@ func (p *Project) CommonSetupSteps() error {
 		}
 	}
 
-	p.logger.Log("info", "finished common setup steps")
+	p.logger.Log("level", "info", "message", "finished common setup steps")
 
 	return nil
 }
 
 func (p *Project) CommonTearDownSteps() error {
-	p.logger.Log("info", "starting common teardown steps")
+	p.logger.Log("level", "info", "message", "starting common teardown steps")
 	steps := []Step{
 		{
 			Run: "helm reset --force",
@@ -146,12 +146,12 @@ func (p *Project) CommonTearDownSteps() error {
 			return microerror.Mask(err)
 		}
 	}
-	p.logger.Log("info", "finished common teardown steps")
+	p.logger.Log("level", "info", "message", "finished common teardown steps")
 	return nil
 }
 
 func (p *Project) Test() error {
-	p.logger.Log("info", "started tests")
+	p.logger.Log("level", "info", "message", "started tests")
 
 	// --test-dir is mounted in /e2e in the test container, and the binary with
 	// the e2e tests is named <project_name>-e2e so the final location in the
@@ -168,7 +168,7 @@ func (p *Project) Test() error {
 		return microerror.Mask(err)
 	}
 
-	p.logger.Log("info", "finished tests")
+	p.logger.Log("level", "info", "message", "finished tests")
 
 	return nil
 }
@@ -203,7 +203,7 @@ func (p *Project) readProjectFile() (*E2e, error) {
 	projectFile := filepath.Join(dir, p.cfg.Dir, "project.yaml")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
 		msg := fmt.Sprintf("optional %s not found, continue build", projectFile)
-		p.logger.Log("function", "readProjectFile", "level", "info", "message", msg)
+		p.logger.Log("level", "info", "message", msg)
 		return &E2e{}, nil
 	}
 
