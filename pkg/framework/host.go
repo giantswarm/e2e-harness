@@ -381,6 +381,10 @@ func (h *Host) Setup() error {
 	return nil
 }
 
+func (h *Host) TargetNamespace() string {
+	return h.targetNamespace
+}
+
 func (h *Host) Teardown() {
 	HelmCmd("delete vault --purge")
 	h.k8sClient.CoreV1().
