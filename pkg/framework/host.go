@@ -204,7 +204,10 @@ func (h *Host) DeleteGuestCluster(ctx context.Context, provider string) error {
 
 		n := backoff.NewNotifier(h.logger, context.Background())
 		err := backoff.RetryNotify(o, h.backoff, n)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
+			h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("did not trigger deletion of CR for guest cluster %#q", h.clusterID))
+			h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("CR for guest cluster %#q does not exist", h.clusterID))
+		} else if err != nil {
 			h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("did not trigger deletion of CR for guest cluster %#q", h.clusterID))
 			return microerror.Mask(err)
 		}
