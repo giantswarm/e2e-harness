@@ -315,7 +315,12 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	if err != nil {
 		return err
 	}
-	err = h.filelogger.StartLoggingPod(name, "giantswarm")
+	podName, err := h.PodName("giantswarm", fmt.Sprintf("app=%s", name))
+	if err != nil {
+		return err
+	}
+
+	err = h.filelogger.StartLoggingPod(podName, "giantswarm")
 	if err != nil {
 		return err
 	}
