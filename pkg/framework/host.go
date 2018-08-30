@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
@@ -42,8 +43,9 @@ type HostConfig struct {
 }
 
 type Host struct {
-	backoff backoff.Interface
-	logger  micrologger.Logger
+	backoff    backoff.Interface
+	logger     micrologger.Logger
+	filelogger *filelogger.FileLogger
 
 	g8sClient  *versioned.Clientset
 	k8sClient  kubernetes.Interface
@@ -84,10 +86,22 @@ func NewHost(c HostConfig) (*Host, error) {
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
+	var fileLogger *filelogger.FileLogger
+	{
+		fc := filelogger.Config{
+			K8sClient: k8sClient,
+			Logger:    c.Logger,
+		}
+		fileLogger, err = filelogger.New(fc)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
 
 	h := &Host{
-		backoff: c.Backoff,
-		logger:  c.Logger,
+		backoff:    c.Backoff,
+		logger:     c.Logger,
+		filelogger: fileLogger,
 
 		g8sClient:  g8sClient,
 		k8sClient:  k8sClient,
@@ -297,7 +311,16 @@ func (h *Host) InstallBranchOperator(name, cr, values string) error {
 }
 
 func (h *Host) InstallOperator(name, cr, values, version string) error {
-	return h.InstallResource(name, values, version, h.crd(cr))
+	err := h.InstallResource(name, values, version, h.crd(cr))
+	if err != nil {
+		return err
+	}
+	err = h.filelogger.StartLoggingPod(name, "giantswarm")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (h *Host) InstallResource(name, values, version string, conditions ...func() error) error {
