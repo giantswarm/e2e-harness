@@ -314,16 +314,16 @@ func (h *Host) InstallBranchOperator(name, cr, values string) error {
 func (h *Host) InstallOperator(name, cr, values, version string) error {
 	err := h.InstallResource(name, values, version, h.crd(cr))
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	podName, err := h.PodName("giantswarm", fmt.Sprintf("app=%s", name))
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
-	err = h.filelogger.StartLoggingPod(podName, "giantswarm")
+	err = h.filelogger.StartLoggingPod("giantswarm", podName)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return nil

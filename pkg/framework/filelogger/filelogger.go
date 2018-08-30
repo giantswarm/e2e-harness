@@ -51,7 +51,7 @@ func New(config Config) (*FileLogger, error) {
 	return f, nil
 }
 
-func (f FileLogger) StartLoggingPod(name, namespace string) error {
+func (f FileLogger) StartLoggingPod(namespace, name string) error {
 	req := f.k8sClient.CoreV1().RESTClient().Get().Namespace(namespace).Name(name).Resource("pods").SubResource("log").Param("follow", strconv.FormatBool(true))
 
 	var readCloser io.ReadCloser
@@ -90,11 +90,11 @@ func (f FileLogger) scan(readCloser io.ReadCloser, name string) {
 
 	defer outFile.Close()
 
-	f.logger.Log("level", "debug", "message", fmt.Sprintf("logging output of %s to %s", name, outFile.Name()))
+	f.logger.Log("level", "debug", "message", fmt.Sprintf("logging output of %#q to %#q", name, outFile.Name()))
 	_, err = io.Copy(outFile, readCloser)
 	if err != nil {
 		f.logger.Log("level", "error", "stack", microerror.Mask(err))
 	}
 
-	f.logger.Log("level", "debug", "message", fmt.Sprintf("logged output of %s to %s", name, outFile.Name()))
+	f.logger.Log("level", "debug", "message", fmt.Sprintf("logged output of %#q to %#q", name, outFile.Name()))
 }
