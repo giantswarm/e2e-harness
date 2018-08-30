@@ -1,6 +1,7 @@
 package filelogger
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"k8s.io/client-go/kubernetes"
@@ -18,16 +20,21 @@ const (
 )
 
 type Config struct {
+	Backoff   backoff.Interface
 	K8sClient kubernetes.Interface
 	Logger    micrologger.Logger
 }
 
 type FileLogger struct {
+	backoff   backoff.Interface
 	k8sClient kubernetes.Interface
 	logger    micrologger.Logger
 }
 
 func New(config Config) (*FileLogger, error) {
+	if config.Backoff == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.Backoff must not be empty", config)
+	}
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
@@ -36,6 +43,7 @@ func New(config Config) (*FileLogger, error) {
 	}
 
 	f := &FileLogger{
+		backoff:   config.Backoff,
 		k8sClient: config.K8sClient,
 		logger:    config.Logger,
 	}
@@ -45,10 +53,23 @@ func New(config Config) (*FileLogger, error) {
 
 func (f FileLogger) StartLoggingPod(name, namespace string) error {
 	req := f.k8sClient.CoreV1().RESTClient().Get().Namespace(namespace).Name(name).Resource("pods").SubResource("log").Param("follow", strconv.FormatBool(true))
-	readCloser, err := req.Stream()
+
+	var readCloser io.ReadCloser
+	var err error
+
+	o := func() error {
+		readCloser, err = req.Stream()
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		return nil
+	}
+	n := backoff.NewNotifier(f.logger, context.Background())
+	err = backoff.RetryNotify(o, f.backoff, n)
 	if err != nil {
 		return microerror.Mask(err)
 	}
+
 	go f.scan(readCloser, name)
 	return nil
 }

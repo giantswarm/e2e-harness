@@ -89,6 +89,7 @@ func NewHost(c HostConfig) (*Host, error) {
 	var fileLogger *filelogger.FileLogger
 	{
 		fc := filelogger.Config{
+			Backoff:   c.Backoff,
 			K8sClient: k8sClient,
 			Logger:    c.Logger,
 		}
