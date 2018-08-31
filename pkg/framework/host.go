@@ -324,8 +324,8 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	//
 	// Final version of the code:
 	//
-	// podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
-	// 	if err != nil {
+	//	podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
+	//	if err != nil {
 	//		return microerror.Mask(err)
 	//	}
 	//	err = h.filelogger.StartLoggingPod(h.targetNamespace, podName)
