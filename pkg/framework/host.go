@@ -316,6 +316,23 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	if err != nil {
 		return microerror.Mask(err)
 	}
+	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
+	// This fallback to h.targetNamespace was introduced because not all our
+	// operators accept and apply configured namespaces.
+	//
+	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
+	//
+	// Final version of the code:
+	//
+	// podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
+	// 	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//	err = h.filelogger.StartLoggingPod(h.targetNamespace, podName)
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//
 	podNamespace := h.targetNamespace
 
 	podName, err := h.PodName(podNamespace, fmt.Sprintf("app=%s", name))
@@ -333,6 +350,7 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	if err != nil {
 		return microerror.Mask(err)
 	}
+	// TODO end
 
 	return nil
 }
