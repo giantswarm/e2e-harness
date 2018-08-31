@@ -318,7 +318,7 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	}
 	podNamespace := h.targetNamespace
 
-	podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
+	podName, err := h.PodName(podNamespace, fmt.Sprintf("app=%s", name))
 	if IsNotFound(err) {
 		podNamespace = "giantswarm"
 		podName, err = h.PodName(podNamespace, fmt.Sprintf("app=%s", name))
