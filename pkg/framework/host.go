@@ -317,7 +317,7 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 		return microerror.Mask(err)
 	}
 	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
-	// This fallback to h.targetNamespace was introduced because not all our
+	// This fallback from h.targetNamespace was introduced because not all our
 	// operators accept and apply configured namespaces.
 	//
 	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
