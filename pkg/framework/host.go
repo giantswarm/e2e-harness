@@ -24,6 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	aggregatorclient "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 
 	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -47,9 +48,10 @@ type Host struct {
 	logger     micrologger.Logger
 	filelogger *filelogger.FileLogger
 
-	g8sClient  *versioned.Clientset
-	k8sClient  kubernetes.Interface
-	restConfig *rest.Config
+	g8sClient            *versioned.Clientset
+	k8sClient            kubernetes.Interface
+	k8sAggregationClient *aggregatorclient.Clientset
+	restConfig           *rest.Config
 
 	clusterID       string
 	targetNamespace string
@@ -84,6 +86,10 @@ func NewHost(c HostConfig) (*Host, error) {
 	}
 	k8sClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+	k8sAggregationClient, err := aggregatorclient.NewForConfig(restConfig)
+	if err != nill {
 		return nil, microerror.Mask(err)
 	}
 	var fileLogger *filelogger.FileLogger
@@ -463,6 +469,11 @@ func (h *Host) InstallCertResource() error {
 // K8sClient returns the host cluster framework's Kubernetes client.
 func (h *Host) K8sClient() kubernetes.Interface {
 	return h.k8sClient
+}
+
+// K8sClient returns the host cluster framework's Kubernetes aggregation client.
+func (h *Host) K8sAggregationClient() kubernetes.Interface {
+	return h.k8sAggregationClient
 }
 
 func (h *Host) PodName(namespace, labelSelector string) (string, error) {
