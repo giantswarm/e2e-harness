@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 RUN adduser -D -u 1001 e2e-harness
 ENV HOME=/home/e2e-harness
