@@ -76,7 +76,7 @@ func New(config Config) (*Resource, error) {
 	return c, nil
 }
 
-func (r *Resource) DeleteResource(name string) error {
+func (r *Resource) Delete(name string) error {
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
 	if err != nil {
 		return microerror.Mask(err)
@@ -85,7 +85,7 @@ func (r *Resource) DeleteResource(name string) error {
 	return nil
 }
 
-func (r *Resource) InstallResource(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Install(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarball, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -107,7 +107,7 @@ func (r *Resource) InstallResource(name, values, channel string, conditions ...f
 	return nil
 }
 
-func (r *Resource) UpdateResource(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Update(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarballPath, err := r.apprClient.PullChartTarball(chartname, channel)
