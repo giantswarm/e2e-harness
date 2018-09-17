@@ -6,20 +6,19 @@ import (
 
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
+	"github.com/giantswarm/e2e-harness/pkg/framework"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"k8s.io/helm/pkg/helm"
-
-	"github.com/giantswarm/e2e-harness/pkg/framework"
 )
 
 const (
 	defaultNamespace = "default"
 )
 
-type ResourceConfig struct {
+type Config struct {
 	ApprClient *apprclient.Client
 	HelmClient *helmclient.Client
 	Logger     micrologger.Logger
@@ -35,7 +34,7 @@ type Resource struct {
 	namespace string
 }
 
-func New(config ResourceConfig) (*Resource, error) {
+func New(config Config) (*Resource, error) {
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
@@ -74,6 +73,15 @@ func New(config ResourceConfig) (*Resource, error) {
 	}
 
 	return c, nil
+}
+
+func (r *Resource) DeleteResource(name string) error {
+	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
 }
 
 func (r *Resource) InstallResource(name, values, channel string, conditions ...func() error) error {
