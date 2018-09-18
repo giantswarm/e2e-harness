@@ -473,8 +473,8 @@ func (h *Host) K8sClient() kubernetes.Interface {
 }
 
 // K8sAggregationClient returns the host cluster framework's Kubernetes aggregation client.
-func (h *Host) K8sAggregationClient() aggregationclient.Clientset {
-	return *h.k8sAggregationClient
+func (h *Host) K8sAggregationClient() *aggregationclient.Clientset {
+	return h.k8sAggregationClient
 }
 
 func (h *Host) PodName(namespace, labelSelector string) (string, error) {
