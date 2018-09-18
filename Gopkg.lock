@@ -44,7 +44,7 @@
     "digestset",
     "reference"
   ]
-  revision = "642075f42c027b8a05b7d06f4f132939eb9ed902"
+  revision = "b089e91688254eb5aef187f188c8ee0ebe4e4675"
 
 [[projects]]
   name = "github.com/docker/docker"
@@ -115,7 +115,7 @@
     "pkg/clientset/versioned/typed/example/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "e52bb804d8aced1aa7ca1aa9173cb8839edd979a"
+  revision = "6206a841872f34408a645afddd7bae4162984bf1"
 
 [[projects]]
   branch = "master"
@@ -139,7 +139,7 @@
   branch = "master"
   name = "github.com/giantswarm/helmclient"
   packages = ["."]
-  revision = "e34390752975ad2db4b52bad7487440223184073"
+  revision = "1bc4dcdb7e3c4b3d8900dd31c3dac2aa64d318c4"
 
 [[projects]]
   branch = "master"
@@ -245,13 +245,13 @@
   branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "6a066663937e1660351a58675fc166f5ef5db088"
+  revision = "1048f8804c0e60f23237cfa1b59cc5f521bf9826"
 
 [[projects]]
-  branch = "master"
   name = "github.com/google/go-querystring"
   packages = ["query"]
-  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -429,7 +429,7 @@
     "publicsuffix",
     "trace"
   ]
-  revision = "161cd47e91fd58ac17490ef4d742dc98bb4cf60e"
+  revision = "26e67e76b6c3f6ce91f7c52def5af501b4e0f3a2"
 
 [[projects]]
   branch = "master"
@@ -506,7 +506,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "11092d34479b07829b72e10713b159248caf5dad"
+  revision = "4b56f30a1fd96a133a036b62cdd2a249883dd89b"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -539,8 +539,8 @@
     "status",
     "tap"
   ]
-  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
-  version = "v1.14.0"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
 
 [[projects]]
   name = "gopkg.in/inf.v0"
@@ -843,7 +843,6 @@
   version = "v2.10.0"
 
 [[projects]]
-  branch = "master"
   name = "k8s.io/kube-aggregator"
   packages = [
     "pkg/apis/apiregistration",
@@ -854,7 +853,8 @@
     "pkg/client/clientset_generated/clientset/typed/apiregistration/v1",
     "pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1"
   ]
-  revision = "351484fbb4d11bb8ce8bec465f2bbf90f0568f0f"
+  revision = "239337b3ca87b9f2ce4d2f03b7a5ed985ffa8206"
+  version = "kubernetes-1.10.4"
 
 [[projects]]
   branch = "master"
@@ -1018,8 +1018,8 @@
     "pkg/volume/util/recyclerclient",
     "pkg/volume/util/types"
   ]
-  revision = "0c38c362511b20a098d7cd855f1314dad92c2780"
-  version = "v1.10.7"
+  revision = "7eab6a49736cc7b01869a15f9f05dc5b49efb9fc"
+  version = "v1.10.8"
 
 [[projects]]
   branch = "master"
@@ -1036,6 +1036,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c9a2b59b2987eb2736cd71f486164d4842a743a982839fd705cb01baa5cc360a"
+  inputs-digest = "49e52784388bb064125781f32a5b8fe3abc848af9f11a3cdcb302b9687fcd6f6"
   solver-name = "gps-cdcl"
   solver-version = 1

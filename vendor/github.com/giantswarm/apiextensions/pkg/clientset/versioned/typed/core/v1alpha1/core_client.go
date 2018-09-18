@@ -37,6 +37,7 @@ type CoreV1alpha1Interface interface {
 	IngressConfigsGetter
 	KVMClusterConfigsGetter
 	NodeConfigsGetter
+	ReleasesGetter
 	StorageConfigsGetter
 }
 
@@ -83,6 +84,10 @@ func (c *CoreV1alpha1Client) KVMClusterConfigs(namespace string) KVMClusterConfi
 
 func (c *CoreV1alpha1Client) NodeConfigs(namespace string) NodeConfigInterface {
 	return newNodeConfigs(c, namespace)
+}
+
+func (c *CoreV1alpha1Client) Releases(namespace string) ReleaseInterface {
+	return newReleases(c, namespace)
 }
 
 func (c *CoreV1alpha1Client) StorageConfigs(namespace string) StorageConfigInterface {
