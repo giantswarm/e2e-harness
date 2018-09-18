@@ -78,7 +78,9 @@ func New(config Config) (*Resource, error) {
 
 func (r *Resource) Delete(name string) error {
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
-	if err != nil {
+	if helmclient.IsReleaseNotFound(err) {
+		return microerror.Maskf(releaseNotFoundError, name)
+	} else if err != nil {
 		return microerror.Mask(err)
 	}
 
