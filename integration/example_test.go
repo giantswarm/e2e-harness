@@ -11,6 +11,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestAggregationClient(t *testing.T) {
+	acs, err := getK8sAggregationClient()
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
+	apis, err := acs.ApiregistrationV1beta1().APIServices().List(metav1.ListOptions{})
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
+	if len(apis.Items) == 0 {
+		t.Errorf("Unexpected empty list of apiservices")
+	}
+}
+
 func TestZeroInitialPods(t *testing.T) {
 	cs, err := getK8sClient()
 	if err != nil {

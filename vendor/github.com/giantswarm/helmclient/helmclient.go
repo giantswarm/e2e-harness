@@ -1,11 +1,12 @@
 package helmclient
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"time"
 
-	"github.com/cenkalti/backoff"
+	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/errors/guest"
 	"github.com/giantswarm/k8sportforward"
 	"github.com/giantswarm/microerror"
@@ -99,7 +100,7 @@ func (c *Client) DeleteRelease(releaseName string, options ...helmclient.DeleteO
 
 		return nil
 	}
-	b := newExponentialBackoff(2*time.Minute, backoff.DefaultMaxInterval)
+	b := backoff.NewExponential(2*time.Minute, 60*time.Second)
 	n := func(err error, delay time.Duration) {
 		c.logger.Log("level", "debug", "message", "failed deleting release", "stack", fmt.Sprintf("%#v", err))
 	}
@@ -188,19 +189,31 @@ func (c *Client) EnsureTillerInstalled() error {
 		}
 	}
 
-	// Install the tiller deployment in the guest cluster.
+	// Install the tiller deployment in the tenant cluster.
 	{
-		o := &installer.Options{
-			ImageSpec:      tillerImageSpec,
-			Namespace:      c.tillerNamespace,
-			ServiceAccount: tillerPodName,
-		}
+		o := func() error {
+			i := &installer.Options{
+				ImageSpec:      tillerImageSpec,
+				MaxHistory:     defaultMaxHistory,
+				Namespace:      c.tillerNamespace,
+				ServiceAccount: tillerPodName,
+			}
 
-		err := installer.Install(c.k8sClient, o)
-		if errors.IsAlreadyExists(err) {
-			c.logger.Log("level", "debug", "message", "tiller deployment installation failed", "stack", fmt.Sprintf("%#v", err))
-			// fall through
-		} else if err != nil {
+			err := installer.Install(c.k8sClient, i)
+			if errors.IsAlreadyExists(err) {
+				c.logger.Log("level", "debug", "message", "tiller deployment already exists")
+				// fall through
+			} else if err != nil {
+				return microerror.Mask(err)
+			}
+
+			return nil
+		}
+		b := backoff.NewExponential(2*time.Minute, 5*time.Second)
+		n := backoff.NewNotifier(c.logger, context.Background())
+
+		err := backoff.RetryNotify(o, b, n)
+		if err != nil {
 			return microerror.Mask(err)
 		}
 	}
@@ -233,7 +246,7 @@ func (c *Client) EnsureTillerInstalled() error {
 
 			return nil
 		}
-		b := newExponentialBackoff(2*time.Minute, 5*time.Second)
+		b := backoff.NewExponential(2*time.Minute, 5*time.Second)
 		n := func(err error, delay time.Duration) {
 			c.logger.Log("level", "debug", "message", "failed pinging tiller", "stack", fmt.Sprintf("%#v", err))
 		}
@@ -273,7 +286,7 @@ func (c *Client) GetReleaseContent(releaseName string) (*ReleaseContent, error) 
 
 			return nil
 		}
-		b := newExponentialBackoff(2*time.Minute, backoff.DefaultMaxInterval)
+		b := backoff.NewExponential(2*time.Minute, 60*time.Second)
 		n := func(err error, delay time.Duration) {
 			c.logger.Log("level", "debug", "message", "failed fetching release content")
 		}
@@ -326,7 +339,7 @@ func (c *Client) GetReleaseHistory(releaseName string) (*ReleaseHistory, error) 
 
 			return nil
 		}
-		b := newExponentialBackoff(2*time.Minute, backoff.DefaultMaxInterval)
+		b := backoff.NewExponential(2*time.Minute, 60*time.Second)
 		n := func(err error, delay time.Duration) {
 			c.logger.Log("level", "debug", "message", "failed fetching release content", "stack", fmt.Sprintf("%#v", err))
 		}
@@ -387,12 +400,28 @@ func (c *Client) InstallFromTarball(path, ns string, options ...helmclient.Insta
 
 		return nil
 	}
-	b := newExponentialBackoff(2*time.Minute, backoff.DefaultMaxInterval)
+	b := backoff.NewExponential(2*time.Minute, 60*time.Second)
 	n := func(err error, delay time.Duration) {
 		c.logger.Log("level", "debug", "message", "failed installing from tarball", "stack", fmt.Sprintf("%#v", err))
 	}
 
 	err := backoff.RetryNotify(o, b, n)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
+}
+
+// PingTiller proxies the underlying Helm client PingTiller method.
+func (c *Client) PingTiller() error {
+	t, err := c.newTunnel()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	defer c.closeTunnel(t)
+
+	err = c.newHelmClientFromTunnel(t).PingTiller()
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -468,7 +497,7 @@ func (c *Client) UpdateReleaseFromTarball(releaseName, path string, options ...h
 
 		return nil
 	}
-	b := newExponentialBackoff(2*time.Minute, backoff.DefaultMaxInterval)
+	b := backoff.NewExponential(2*time.Minute, 60*time.Second)
 	n := func(err error, delay time.Duration) {
 		c.logger.Log("level", "debug", "message", "failed updating release from tarball", "stack", fmt.Sprintf("%#v", err))
 	}
@@ -501,7 +530,7 @@ func (c *Client) newHelmClientFromTunnel(t *k8sportforward.Tunnel) helmclient.In
 	}
 
 	return helmclient.NewClient(
-		helmclient.Host(newTunnelAddress(t)),
+		helmclient.Host(t.LocalAddress()),
 		helmclient.ConnectTimeout(5),
 	)
 }
@@ -520,10 +549,11 @@ func (c *Client) newTunnel() (*k8sportforward.Tunnel, error) {
 
 	var forwarder *k8sportforward.Forwarder
 	{
-		c := k8sportforward.Config{
+		c := k8sportforward.ForwarderConfig{
 			RestConfig: c.restConfig,
 		}
-		forwarder, err = k8sportforward.New(c)
+
+		forwarder, err = k8sportforward.NewForwarder(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -531,13 +561,7 @@ func (c *Client) newTunnel() (*k8sportforward.Tunnel, error) {
 
 	var tunnel *k8sportforward.Tunnel
 	{
-		c := k8sportforward.TunnelConfig{
-			Remote:    tillerPort,
-			Namespace: c.tillerNamespace,
-			PodName:   podName,
-		}
-
-		tunnel, err = forwarder.ForwardPort(c)
+		tunnel, err = forwarder.ForwardPort(c.tillerNamespace, podName, tillerPort)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -564,9 +588,4 @@ func getPodName(client kubernetes.Interface, labelSelector, namespace string) (s
 	pod := pods.Items[0]
 
 	return pod.Name, nil
-}
-
-// TODO remove when k8sportforward.Tunnel.Address() got implemented.
-func newTunnelAddress(t *k8sportforward.Tunnel) string {
-	return fmt.Sprintf("127.0.0.1:%d", t.Local)
 }

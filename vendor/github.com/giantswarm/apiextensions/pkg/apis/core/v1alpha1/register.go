@@ -35,6 +35,8 @@ var knownTypes = []runtime.Object{
 	&IngressConfigList{},
 	&NodeConfig{},
 	&NodeConfigList{},
+	&Release{},
+	&ReleaseList{},
 	&StorageConfig{},
 	&StorageConfigList{},
 }
