@@ -90,8 +90,11 @@ func (f FileLogger) scan(readCloser io.ReadCloser, name string) {
 
 	defer outFile.Close()
 
+	var writers io.Writer
+	writers = io.MultiWriter(os.Stdout, outFile)
+
 	f.logger.Log("level", "debug", "message", fmt.Sprintf("logging output of %#q to %#q", name, outFile.Name()))
-	_, err = io.Copy(outFile, readCloser)
+	_, err = io.Copy(writers, readCloser)
 	if err != nil {
 		f.logger.Log("level", "error", "stack", microerror.Mask(err))
 	}
