@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -19,7 +20,7 @@ const (
 	defaultNamespace = "default"
 )
 
-type ResourceConfig struct {
+type Config struct {
 	ApprClient *apprclient.Client
 	HelmClient *helmclient.Client
 	Logger     micrologger.Logger
@@ -35,7 +36,7 @@ type Resource struct {
 	namespace string
 }
 
-func New(config ResourceConfig) (*Resource, error) {
+func New(config Config) (*Resource, error) {
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
@@ -76,7 +77,39 @@ func New(config ResourceConfig) (*Resource, error) {
 	return c, nil
 }
 
-func (r *Resource) InstallResource(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Delete(name string) error {
+	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
+	if helmclient.IsReleaseNotFound(err) {
+		return microerror.Maskf(releaseNotFoundError, name)
+	} else if helmclient.IsTillerNotFound(err) {
+		return microerror.Mask(tillerNotFoundError)
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
+}
+
+func (r *Resource) EnsureDeleted(ctx context.Context, name string) error {
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring deletion of release %#q", name))
+
+	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
+	if helmclient.IsReleaseNotFound(err) {
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q does not exist", name))
+	} else if helmclient.IsTillerNotFound(err) {
+		r.logger.LogCtx(ctx, "level", "warning", "message", "tiller is not found/installed")
+	} else if err != nil {
+		return microerror.Mask(err)
+	} else {
+		r.logger.LogCtx(ctx, "level", "info", "message", fmt.Sprintf("deleted release %#q", name))
+	}
+
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured deletion of release %#q", name))
+
+	return nil
+}
+
+func (r *Resource) Install(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarball, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -98,7 +131,7 @@ func (r *Resource) InstallResource(name, values, channel string, conditions ...f
 	return nil
 }
 
-func (r *Resource) UpdateResource(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Update(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarballPath, err := r.apprClient.PullChartTarball(chartname, channel)

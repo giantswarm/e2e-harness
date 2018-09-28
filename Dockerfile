@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 RUN adduser -D -u 1001 e2e-harness
 ENV HOME=/home/e2e-harness
@@ -10,15 +10,15 @@ RUN chown -R e2e-harness:e2e-harness ${WORKDIR} ${HOME}
 
 RUN apk -Uuv add --update --no-cache \
       bash=4.4.19-r1 \
-      build-base=0.5-r0 \
-      git=2.15.2-r0 \
-      jq=1.5-r5 \
-      less=520-r0 \
+      build-base=0.5-r1 \
+      git=2.18.0-r0 \
+      jq=1.6_rc1-r1 \
+      less=530-r0 \
       libffi-dev=3.2.1-r4 \
-      openssh-client=7.5_p1-r8 \
-      openssl=1.0.2o-r1 \
-      sudo=1.8.21_p2-r1 \
-      iptables=1.6.1-r1
+      openssh-client=7.7_p1-r3 \
+      openssl=1.0.2o-r2 \
+      sudo=1.8.23-r2 \
+      iptables=1.6.2-r0
 
 ENV KUBECTL_VERSION=v1.10.1
 ENV HELM_VERSION=v2.8.2
