@@ -151,6 +151,22 @@ just keep in mind these considerations:
 * The kube config file path for connecting to the test cluster can be obtained from
 the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` package.
 
+## Projects using `e2e-harness`
+
+- https://github.com/giantswarm/apprclient
+- https://github.com/giantswarm/aws-operator
+- https://github.com/giantswarm/azure-operator
+- https://github.com/giantswarm/cert-operator
+- https://github.com/giantswarm/certctl
+- https://github.com/giantswarm/chart-operator
+- https://github.com/giantswarm/cluster-operator
+- https://github.com/giantswarm/e2etests
+- https://github.com/giantswarm/helmclient
+- https://github.com/giantswarm/kubernetes-nginx-ingress-controller
+- https://github.com/giantswarm/kvm-operator
+- https://github.com/giantswarm/operatorkit
+- https://github.com/giantswarm/release-operator
+
 ## Contact
 
 - Mailing list: [giantswarm](https://groups.google.com/forum/!forum/giantswarm)
