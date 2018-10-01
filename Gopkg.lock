@@ -156,12 +156,12 @@
   revision = "30620a9d0ecdb133f82257768ece76ebc1b6f8ef"
 
 [[projects]]
-  branch = "max_times"
-  digest = "1:b523ed059aa3b8d324a5811444df5683de1b870e32376af5a58a6045691bf074"
+  branch = "master"
+  digest = "1:aee5f8435859ee2e6c032c21d92b3b4853cd81387a3738ac1ac20c85cf3ab560"
   name = "github.com/giantswarm/backoff"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f08c9cd80f1ce44382e6f0828ef4b9d57b295706"
+  revision = "ad43cca0891cbff638be34f232c85a23dc96fee9"
 
 [[projects]]
   branch = "master"
