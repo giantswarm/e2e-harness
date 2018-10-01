@@ -35,8 +35,8 @@ required = [
   branch = "master"
 
 
-[[constraint]]
-  branch = "master"
+[[override]]
+  branch = "max_times"
   name = "github.com/giantswarm/backoff"
 
 [[constraint]]
