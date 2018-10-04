@@ -115,7 +115,7 @@ func (p *Project) CommonSetupSteps() error {
 			}
 			return nil
 		}
-		b := backoff.NewExponential(15*time.Minute, 60*time.Second)
+		b := backoff.NewExponential(backoff.MediumMaxWait, backoff.LongMaxInterval)
 		n := backoff.NewNotifier(p.logger, context.Background())
 		err := backoff.RetryNotify(o, b, n)
 		if err != nil {
