@@ -26,7 +26,7 @@ type Config struct {
 	Namespace string
 }
 
-type Resource struct {
+type Release struct {
 	apprClient *apprclient.Client
 	helmClient *helmclient.Client
 	logger     micrologger.Logger
