@@ -365,7 +365,7 @@ func (h *Host) InstallOperator(ctx context.Context, name, cr, values, version st
 
 // InstallResource installs a chart
 // quay.io/giantswarm/${name}-chart:${version}. If the version is prefixed with
-// colon it will be stripped. The first encurtered error from condidtionFns (if
+// colon it will be stripped. The first encountered error from conditionFns (if
 // any) will be returned.
 func (h *Host) InstallResource(ctx context.Context, name, values, version string, conditionFns ...func() error) error {
 	if len(version) > 1 && version[0] == ':' {
