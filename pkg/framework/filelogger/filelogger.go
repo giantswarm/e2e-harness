@@ -12,6 +12,7 @@ import (
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -51,7 +52,7 @@ func New(config Config) (*FileLogger, error) {
 	return f, nil
 }
 
-func (f FileLogger) StartLoggingPod(namespace, name string) error {
+func (f FileLogger) StartLoggingPod(ctx context.Context, namespace, name string) error {
 	req := f.k8sClient.CoreV1().RESTClient().Get().Namespace(namespace).Name(name).Resource("pods").SubResource("log").Param("follow", strconv.FormatBool(true))
 
 	var readCloser io.ReadCloser
@@ -59,7 +60,9 @@ func (f FileLogger) StartLoggingPod(namespace, name string) error {
 
 	o := func() error {
 		readCloser, err = req.Stream()
-		if err != nil {
+		if apierrors.IsNotFound(err) {
+			return backoff.Permanent(microerror.Maskf(notFoundError, "pod %#q in namespace %#q", name, namespace))
+		} else if err != nil {
 			return microerror.Mask(err)
 		}
 		return nil

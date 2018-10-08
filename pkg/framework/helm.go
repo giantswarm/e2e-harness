@@ -5,11 +5,18 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/giantswarm/microerror"
 )
 
 // HelmCmd executes a helm command.
 func HelmCmd(cmd string) error {
-	return runCmd("helm " + cmd)
+	err := runCmd("helm " + cmd)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
 }
 
 func runCmd(cmdStr string) error {
@@ -20,5 +27,10 @@ func runCmd(cmdStr string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
 }
