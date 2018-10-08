@@ -302,27 +302,28 @@ func (h *Host) GetPodName(namespace, labelSelector string) (string, error) {
 	return pod.Name, nil
 }
 
-func (h *Host) InstallStableOperator(name, cr, values string) error {
-	err := h.InstallOperator(name, cr, values, ":stable")
+func (h *Host) InstallStableOperator(ctx context.Context, name, cr, values string) error {
+	err := h.InstallOperator(ctx, name, cr, values, ":stable")
 	if err != nil {
 		return microerror.Mask(err)
 	}
 	return nil
 }
 
-func (h *Host) InstallBranchOperator(name, cr, values string) error {
-	err := h.InstallOperator(name, cr, values, "@1.0.0-${CIRCLE_SHA1}")
+func (h *Host) InstallBranchOperator(ctx context.Context, name, cr, values string) error {
+	err := h.InstallOperator(ctx, name, cr, values, "@1.0.0-${CIRCLE_SHA1}")
 	if err != nil {
 		return microerror.Mask(err)
 	}
 	return nil
 }
 
-func (h *Host) InstallOperator(name, cr, values, version string) error {
-	err := h.InstallResource(name, values, version, h.crd(cr))
+func (h *Host) InstallOperator(ctx context.Context, name, cr, values, version string) error {
+	err := h.InstallResource(ctx, name, values, version, h.crd(cr))
 	if err != nil {
 		return microerror.Mask(err)
 	}
+
 	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
 	// This fallback from h.targetNamespace was introduced because not all our
 	// operators accept and apply configured namespaces.
@@ -353,7 +354,7 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 		return microerror.Mask(err)
 	}
 
-	err = h.filelogger.StartLoggingPod(podNamespace, podName)
+	err = h.filelogger.StartLoggingPod(ctx, podNamespace, podName)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -362,54 +363,80 @@ func (h *Host) InstallOperator(name, cr, values, version string) error {
 	return nil
 }
 
-func (h *Host) InstallResource(name, values, version string, conditions ...func() error) error {
-	chartValuesEnv := os.ExpandEnv(values)
-
-	tmpfile, err := ioutil.TempFile("", name+"-values")
-	if err != nil {
-		return microerror.Mask(err)
+// InstallResource installs a chart
+// quay.io/giantswarm/${name}-chart:${version}. If the version is prefixed with
+// colon it will be stripped. The first encountered error from conditionFns (if
+// any) will be returned.
+func (h *Host) InstallResource(ctx context.Context, name, values, version string, conditionFns ...func() error) error {
+	if len(version) > 1 && version[0] == ':' {
+		version = version[1:]
 	}
-	defer os.Remove(tmpfile.Name())
-
-	if _, err := tmpfile.Write([]byte(chartValuesEnv)); err != nil {
-		return microerror.Mask(err)
-	}
+	chart := fmt.Sprintf("%s-chart:%s", name, version)
 
 	{
-		installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%[1]s-chart%[2]s -- -n %[4]s-%[1]s --namespace %[4]s --values %[3]s --set namespace=%[4]s", name, version, tmpfile.Name(), h.targetNamespace)
-		deleteCmd := fmt.Sprintf("delete --purge %s-%s", h.targetNamespace, name)
-		o := func() error {
-			// NOTE we ignore errors here because we cannot get really useful error
-			// handling done. This here should anyway only be a quick fix until we use
-			// the helm client lib. Then error handling will be better.
-			HelmCmd(deleteCmd)
+		h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("installing chart %#q", chart))
 
-			err := HelmCmd(installCmd)
+		chartValuesEnv := os.ExpandEnv(values)
+
+		tmpfile, err := ioutil.TempFile("", name+"-values")
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		defer os.Remove(tmpfile.Name())
+
+		if _, err := tmpfile.Write([]byte(chartValuesEnv)); err != nil {
+			return microerror.Mask(err)
+		}
+
+		{
+			release := fmt.Sprintf("%s-%s", h.targetNamespace, name)
+
+			installCmd := fmt.Sprintf("registry install quay.io/giantswarm/%s -- -n %s --namespace %s --values %s --set namespace=%s", chart, release, h.targetNamespace, tmpfile.Name(), h.targetNamespace)
+			deleteCmd := fmt.Sprintf("delete --purge %s", release)
+
+			o := func() error {
+				// NOTE we ignore errors here because we cannot get really useful error
+				// handling done. This here should anyway only be a quick fix until we use
+				// the helm client lib. Then error handling will be better.
+				HelmCmd(deleteCmd)
+
+				err := HelmCmd(installCmd)
+				if err != nil {
+					return microerror.Mask(err)
+				}
+
+				return nil
+			}
+			n := backoff.NewNotifier(h.logger, context.Background())
+			err = backoff.RetryNotify(o, h.backoff, n)
 			if err != nil {
 				return microerror.Mask(err)
 			}
+		}
 
-			return nil
-		}
-		n := backoff.NewNotifier(h.logger, context.Background())
-		err = backoff.RetryNotify(o, h.backoff, n)
-		if err != nil {
-			return microerror.Mask(err)
-		}
+		h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("installed chart %#q", chart))
 	}
 
-	for _, c := range conditions {
-		n := backoff.NewNotifier(h.logger, context.Background())
-		err = backoff.RetryNotify(c, h.backoff, n)
-		if err != nil {
-			return microerror.Mask(err)
+	if len(conditionFns) > 0 {
+		h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("checking chart %#q conditions", chart))
+
+		for _, c := range conditionFns {
+			n := backoff.NewNotifier(h.logger, context.Background())
+			err := backoff.RetryNotify(c, h.backoff, n)
+			if err != nil {
+				return microerror.Mask(err)
+			}
 		}
+
+		h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("checking chart %#q conditions", chart))
+	} else {
+		h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("chart %#q does not have conditions to check", chart))
 	}
 
 	return nil
 }
 
-func (h *Host) InstallCertResource() error {
+func (h *Host) InstallCertResource(ctx context.Context) error {
 	{
 		h.logger.Log("level", "debug", "message", "installing cert resource chart")
 
@@ -487,10 +514,10 @@ func (h *Host) PodName(namespace, labelSelector string) (string, error) {
 		return "", microerror.Mask(err)
 	}
 	if len(pods.Items) > 1 {
-		return "", microerror.Mask(tooManyResultsError)
+		return "", microerror.Maskf(tooManyResultsError, "wanted single pod for label selector %#q", labelSelector)
 	}
 	if len(pods.Items) == 0 {
-		return "", microerror.Mask(notFoundError)
+		return "", microerror.Maskf(notFoundError, "wanted single pod for label selector %#q", labelSelector)
 	}
 	pod := pods.Items[0]
 	return pod.Name, nil
@@ -624,7 +651,7 @@ func (h *Host) runningPod(namespace, labelSelector string) func() error {
 		pod := pods.Items[0]
 		phase := pod.Status.Phase
 		if phase != v1.PodRunning {
-			return microerror.Maskf(unexpectedStatusPhaseError, "pod selected with %q is in phase %q instead of %q", labelSelector, string(phase), string(v1.PodRunning))
+			return microerror.Maskf(unexpectedStatusPhaseError, "pod selected with %#q is in phase %#q instead of %#q", labelSelector, string(phase), string(v1.PodRunning))
 		}
 		return nil
 	}
