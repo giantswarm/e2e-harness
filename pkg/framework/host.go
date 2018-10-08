@@ -319,6 +319,11 @@ func (h *Host) InstallBranchOperator(ctx context.Context, name, cr, values strin
 }
 
 func (h *Host) InstallOperator(ctx context.Context, name, cr, values, version string) error {
+	err := h.InstallResource(ctx, name, values, version, h.crd(cr))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
 	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
 	// This fallback from h.targetNamespace was introduced because not all our
 	// operators accept and apply configured namespaces.
