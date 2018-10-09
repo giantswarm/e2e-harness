@@ -1,4 +1,4 @@
-package release
+package resource
 
 import "github.com/giantswarm/microerror"
 
