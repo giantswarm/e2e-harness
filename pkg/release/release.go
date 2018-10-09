@@ -26,7 +26,7 @@ type Config struct {
 	Namespace string
 }
 
-type Release struct {
+type Resource struct {
 	apprClient *apprclient.Client
 	helmClient *helmclient.Client
 	logger     micrologger.Logger
@@ -34,7 +34,7 @@ type Release struct {
 	namespace string
 }
 
-func New(config Config) (*Release, error) {
+func New(config Config) (*Resource, error) {
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
@@ -64,7 +64,7 @@ func New(config Config) (*Release, error) {
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
 	}
-	c := &Release{
+	c := &Resource{
 		apprClient: config.ApprClient,
 		helmClient: config.HelmClient,
 		logger:     config.Logger,
@@ -75,7 +75,7 @@ func New(config Config) (*Release, error) {
 	return c, nil
 }
 
-func (r *Release) Delete(name string) error {
+func (r *Resource) Delete(name string) error {
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
 		return microerror.Maskf(releaseNotFoundError, name)
@@ -88,7 +88,7 @@ func (r *Release) Delete(name string) error {
 	return nil
 }
 
-func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
+func (r *Resource) EnsureDeleted(ctx context.Context, name string) error {
 	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring deletion of release %#q", name))
 
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
@@ -107,7 +107,7 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 	return nil
 }
 
-func (r *Release) Install(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Install(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarball, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -129,7 +129,7 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 	return nil
 }
 
-func (r *Release) Update(name, values, channel string, conditions ...func() error) error {
+func (r *Resource) Update(name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarballPath, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -145,7 +145,7 @@ func (r *Release) Update(name, values, channel string, conditions ...func() erro
 	return nil
 }
 
-func (r *Release) WaitForStatus(release string, status string) error {
+func (r *Resource) WaitForStatus(release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
 		if helmclient.IsReleaseNotFound(err) && status == "DELETED" {
@@ -172,7 +172,7 @@ func (r *Release) WaitForStatus(release string, status string) error {
 	return nil
 }
 
-func (r *Release) WaitForVersion(release string, version string) error {
+func (r *Resource) WaitForVersion(release string, version string) error {
 	operation := func() error {
 		rh, err := r.helmClient.GetReleaseHistory(release)
 		if err != nil {
