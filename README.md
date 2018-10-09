@@ -1,5 +1,4 @@
 # e2e-harness
-add
 
 [![CircleCI](https://circleci.com/gh/giantswarm/e2e-harness.svg?style=shield)](https://circleci.com/gh/giantswarm/e2e-harness)
 
