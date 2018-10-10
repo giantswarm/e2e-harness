@@ -14,12 +14,12 @@ import (
 type conditionFn func() error
 
 type conditionSetConfig struct {
-	ExtClient *apiextensionsclient.Clientset
+	ExtClient apiextensionsclient.Interface
 	Logger    micrologger.Logger
 }
 
 type conditionSet struct {
-	extClient *apiextensionsclient.Clientset
+	extClient apiextensionsclient.Interface
 	logger    micrologger.Logger
 }
 
