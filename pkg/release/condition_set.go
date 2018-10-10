@@ -45,9 +45,10 @@ func (c *conditionSet) CRD(ctx context.Context, name string) conditionFn {
 			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return microerror.Mask(err)
-			} else {
+			} else if err != nil {
 				return backoff.Permanent(microerror.Mask(err))
 			}
+			return nil
 		}
 		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
 		n := backoff.NewNotifier(c.logger, ctx)
