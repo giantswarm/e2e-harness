@@ -64,6 +64,10 @@ required = [
   version = "kubernetes-1.10.4"
 
 [[constraint]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.10.4"
+
+[[constraint]]
   name = "k8s.io/apimachinery"
   version = "kubernetes-1.10.4"
 
@@ -87,12 +91,12 @@ required = [
   branch = "master"
   name = "golang.org/x/oauth2"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/giantswarm/helmclient"
+
 
 
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/giantswarm/helmclient"
