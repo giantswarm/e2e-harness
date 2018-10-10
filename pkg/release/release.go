@@ -8,11 +8,13 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
+	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
 )
@@ -24,6 +26,7 @@ const (
 type Config struct {
 	ApprClient *apprclient.Client
 	ExtClient  apiextensionsclient.Interface
+	FileLogger *filelogger.FileLogger
 	G8sClient  versioned.Interface
 	HelmClient *helmclient.Client
 	K8sClient  kubernetes.Interface
@@ -34,12 +37,13 @@ type Config struct {
 
 type Release struct {
 	apprClient *apprclient.Client
+	fileLogger *filelogger.FileLogger
 	helmClient *helmclient.Client
+	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
-	namespace string
-
 	condition *conditionSet
+	namespace string
 }
 
 func New(config Config) (*Release, error) {
@@ -66,6 +70,9 @@ func New(config Config) (*Release, error) {
 
 		config.ApprClient = a
 	}
+	if config.FileLogger == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.FileLogger must not be empty", config)
+	}
 	if config.ExtClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.ExtClient must not be empty", config)
 	}
@@ -78,7 +85,6 @@ func New(config Config) (*Release, error) {
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
-
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
 	}
@@ -102,12 +108,13 @@ func New(config Config) (*Release, error) {
 
 	r := &Release{
 		apprClient: config.ApprClient,
+		fileLogger: config.FileLogger,
 		helmClient: config.HelmClient,
+		k8sClient:  config.K8sClient,
 		logger:     config.Logger,
 
-		namespace: config.Namespace,
-
 		condition: condition,
+		namespace: config.Namespace,
 	}
 
 	return r, nil
@@ -163,6 +170,50 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 			return microerror.Mask(err)
 		}
 	}
+
+	return nil
+}
+
+func (r *Release) InstallOperator(ctx context.Context, name, cr, values, version string) error {
+	err := r.Install(name, values, version, r.condition.CRD(ctx, cr))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
+	// This fallback from r.namespace was introduced because not all our
+	// operators accept and apply configured namespaces.
+	//
+	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
+	//
+	// Final version of the code:
+	//
+	//	podName, err := r.podName(r.namespace, fmt.Sprintf("app=%s", name))
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//	err = r.filelogger.StartLoggingPod(r.namespace, podName)
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//
+	podNamespace := r.namespace
+
+	podName, err := r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+	if IsNotFound(err) {
+		podNamespace = "giantswarm"
+		podName, err = r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.fileLogger.StartLoggingPod(podNamespace, podName)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO end
 
 	return nil
 }
@@ -232,4 +283,22 @@ func (r *Release) WaitForVersion(release string, version string) error {
 		return microerror.Mask(err)
 	}
 	return nil
+}
+func (r *Release) podName(namespace, labelSelector string) (string, error) {
+	pods, err := r.k8sClient.CoreV1().
+		Pods(namespace).
+		List(metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
+	if len(pods.Items) > 1 {
+		return "", microerror.Mask(tooManyResultsError)
+	}
+	if len(pods.Items) == 0 {
+		return "", microerror.Mask(notFoundError)
+	}
+	pod := pods.Items[0]
+	return pod.Name, nil
 }
