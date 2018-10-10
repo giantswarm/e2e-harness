@@ -154,12 +154,23 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 }
 
 func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	var err error
+
 	chartname := fmt.Sprintf("%s-chart", name)
 
-	tarball, err := r.apprClient.PullChartTarball(chartname, version.String())
-	if err != nil {
-		return microerror.Mask(err)
+	var tarball string
+	if version.isChannel {
+		tarball, err = r.apprClient.PullChartTarball(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else {
+		tarball, err = r.apprClient.PullChartTarballFromRelease(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
+
 	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)

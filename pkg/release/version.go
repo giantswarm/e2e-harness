@@ -1,15 +1,24 @@
 package release
 
-type Version string
+type Version struct {
+	name      string
+	isChannel bool
+}
 
 func NewStableVersion() Version {
-	return Version(":stable")
+	return Version{
+		name:      "stable",
+		isChannel: true,
+	}
 }
 
 func NewVersion(gitSHA string) Version {
-	return Version("@1.0.0-" + gitSHA)
+	return Version{
+		name:      "1.0.0-" + gitSHA,
+		isChannel: false,
+	}
 }
 
 func (v Version) String() string {
-	return string(v)
+	return v.name
 }
