@@ -44,8 +44,6 @@ type Release struct {
 
 	condition *conditionSet
 	namespace string
-
-	condition *conditionSet
 }
 
 func New(config Config) (*Release, error) {
@@ -117,8 +115,6 @@ func New(config Config) (*Release, error) {
 
 		condition: condition,
 		namespace: config.Namespace,
-
-		condition: condition,
 	}
 
 	return r, nil
