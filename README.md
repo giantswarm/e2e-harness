@@ -155,6 +155,7 @@ the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` pac
 
 ### Test libraries
 
+- https://github.com/giantswarm/e2esetup
 - https://github.com/giantswarm/e2etests
 
 ### Libraries
