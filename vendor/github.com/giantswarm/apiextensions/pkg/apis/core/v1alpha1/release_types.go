@@ -5,6 +5,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	kindRelease = "Release"
+)
+
 // NewReleaseCRD returns a new custom resource definition for Release. This
 // might look something like the following.
 //
@@ -48,9 +52,45 @@ func NewReleaseCRD() *apiextensionsv1beta1.CustomResourceDefinition {
 	}
 }
 
+func NewReleaseTypeMeta() metav1.TypeMeta {
+	return metav1.TypeMeta{
+		APIVersion: version,
+		Kind:       kindRelease,
+	}
+}
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// Release represents a Giant Swarm release used to describe the managed
+// versiones of tenant clusters. This might look something like the following.
+//
+//     typemeta:
+//       apiversion: "v1alpha1"
+//       kind: "Release"
+//     objectmeta:
+//       name: "2.0.0"
+//     spec:
+//       active: false
+//       authorities:
+//       - name: azure-operator
+//         version: 2.0.0
+//       - name: cert-operator
+//         version: 0.1.0
+//       - name: chart-operator
+//         version: 0.3.0
+//       - name: cluster-operator
+//         version: 0.7.0
+//       date: "0001-01-01T00:00:00Z"
+//       provider: "azure"
+//       version: "2.0.0"
+//       versionBundle:
+//         version: "0.1.0"
+//     status:
+//       conditions:
+//       - status: True
+//         type: ExampleCondition
+//
 type Release struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -59,13 +99,17 @@ type Release struct {
 }
 
 type ReleaseSpec struct {
-	Operator      ReleaseSpecOperator      `json:"operator" yaml:"operator"`
+	Active        bool                     `json:"active" yaml:"active"`
+	Authorities   []ReleaseSpecAuthority   `json:"authorities" yaml:"authorities"`
+	Date          DeepCopyTime             `json:"date" yaml:"date"`
+	Provider      string                   `json:"provider" yaml:"provider"`
+	Version       string                   `json:"version" yaml:"version"`
 	VersionBundle ReleaseSpecVersionBundle `json:"versionBundle" yaml:"versionBundle"`
 }
 
-type ReleaseSpecOperator struct {
-	Name    string `json:"cluster" yaml:"name"`
-	Version string `json:"node" yaml:"version"`
+type ReleaseSpecAuthority struct {
+	Name    string `json:"name" yaml:"name"`
+	Version string `json:"version" yaml:"version"`
 }
 
 type ReleaseSpecVersionBundle struct {
@@ -80,7 +124,7 @@ type ReleaseStatus struct {
 type ReleaseStatusCondition struct {
 	// Status may be True, False or Unknown.
 	Status string `json:"status" yaml:"status"`
-	// Type may be Pending, Ready, Draining, Drained.
+	// Type is not yet specified.
 	Type string `json:"type" yaml:"type"`
 }
 
