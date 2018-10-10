@@ -153,16 +153,25 @@ the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` pac
 
 ## Projects using `e2e-harness`
 
+### Test libraries
+
+- https://github.com/giantswarm/e2etests
+
+### Libraries
+
 - https://github.com/giantswarm/apprclient
+- https://github.com/giantswarm/certctl
+- https://github.com/giantswarm/helmclient
+- https://github.com/giantswarm/operatorkit
+
+### Services & operators
+
 - https://github.com/giantswarm/aws-operator
 - https://github.com/giantswarm/azure-operator
 - https://github.com/giantswarm/cert-exporter
 - https://github.com/giantswarm/cert-operator
-- https://github.com/giantswarm/certctl
 - https://github.com/giantswarm/chart-operator
 - https://github.com/giantswarm/cluster-operator
-- https://github.com/giantswarm/e2etests
-- https://github.com/giantswarm/helmclient
 - https://github.com/giantswarm/kubernetes-coredns
 - https://github.com/giantswarm/kubernetes-external-dns
 - https://github.com/giantswarm/kubernetes-kube-state-metrics
@@ -171,7 +180,6 @@ the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` pac
 - https://github.com/giantswarm/kubernetes-node-health
 - https://github.com/giantswarm/kvm-operator
 - https://github.com/giantswarm/net-exporter
-- https://github.com/giantswarm/operatorkit
 - https://github.com/giantswarm/release-operator
 
 ## Contact
