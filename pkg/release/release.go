@@ -13,6 +13,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -120,7 +121,7 @@ func New(config Config) (*Release, error) {
 	return r, nil
 }
 
-func (r *Release) Delete(name string) error {
+func (r *Release) Delete(ctx context.Context, name string) error {
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
 		return microerror.Maskf(releaseNotFoundError, name)
@@ -152,13 +153,24 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 	return nil
 }
 
-func (r *Release) Install(name, values, channel string, conditions ...func() error) error {
+func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	var err error
+
 	chartname := fmt.Sprintf("%s-chart", name)
 
-	tarball, err := r.apprClient.PullChartTarball(chartname, channel)
-	if err != nil {
-		return microerror.Mask(err)
+	var tarball string
+	if version.isChannel {
+		tarball, err = r.apprClient.PullChartTarball(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else {
+		tarball, err = r.apprClient.PullChartTarballFromRelease(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
+
 	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
@@ -174,8 +186,8 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 	return nil
 }
 
-func (r *Release) InstallOperator(ctx context.Context, name, cr, values, version string) error {
-	err := r.Install(name, values, version, r.condition.CRD(ctx, cr))
+func (r *Release) InstallOperator(ctx context.Context, name string, version Version, values string, crd *apiextensionsv1beta1.CustomResourceDefinition) error {
+	err := r.Install(ctx, name, version, values, r.condition.CRD(ctx, crd))
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -218,7 +230,7 @@ func (r *Release) InstallOperator(ctx context.Context, name, cr, values, version
 	return nil
 }
 
-func (r *Release) Update(name, values, channel string, conditions ...func() error) error {
+func (r *Release) Update(ctx context.Context, name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarballPath, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -234,7 +246,7 @@ func (r *Release) Update(name, values, channel string, conditions ...func() erro
 	return nil
 }
 
-func (r *Release) WaitForStatus(release string, status string) error {
+func (r *Release) WaitForStatus(ctx context.Context, release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
 		if helmclient.IsReleaseNotFound(err) && status == "DELETED" {
@@ -261,7 +273,7 @@ func (r *Release) WaitForStatus(release string, status string) error {
 	return nil
 }
 
-func (r *Release) WaitForVersion(release string, version string) error {
+func (r *Release) WaitForVersion(ctx context.Context, release string, version string) error {
 	operation := func() error {
 		rh, err := r.helmClient.GetReleaseHistory(release)
 		if err != nil {
@@ -284,6 +296,7 @@ func (r *Release) WaitForVersion(release string, version string) error {
 	}
 	return nil
 }
+
 func (r *Release) podName(namespace, labelSelector string) (string, error) {
 	pods, err := r.k8sClient.CoreV1().
 		Pods(namespace).
