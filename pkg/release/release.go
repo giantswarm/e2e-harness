@@ -11,6 +11,8 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/rest"
 	"k8s.io/helm/pkg/helm"
 )
 
@@ -22,6 +24,7 @@ type Config struct {
 	ApprClient *apprclient.Client
 	HelmClient *helmclient.Client
 	Logger     micrologger.Logger
+	RestConfig *rest.Config
 
 	Namespace string
 }
@@ -32,6 +35,8 @@ type Release struct {
 	logger     micrologger.Logger
 
 	namespace string
+
+	condition *conditionSet
 }
 
 func New(config Config) (*Release, error) {
@@ -61,18 +66,50 @@ func New(config Config) (*Release, error) {
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
+	if config.RestConfig == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.RestConfig must not be empty", config)
+	}
+
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
 	}
-	c := &Release{
+
+	var err error
+
+	var extClient *apiextensionsclient.Clientset
+	{
+		extClient, err = apiextensionsclient.NewForConfig(config.RestConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var condition *conditionSet
+	{
+
+		c := conditionSetConfig{
+			ExtClient: extClient,
+			Logger:    config.Logger,
+		}
+
+		condition, err = newConditionSet(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+	}
+
+	r := &Release{
 		apprClient: config.ApprClient,
 		helmClient: config.HelmClient,
 		logger:     config.Logger,
 
 		namespace: config.Namespace,
+
+		condition: condition,
 	}
 
-	return c, nil
+	return r, nil
 }
 
 func (r *Release) Delete(name string) error {
