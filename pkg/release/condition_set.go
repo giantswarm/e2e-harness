@@ -48,7 +48,6 @@ func (c *conditionSet) CRD(ctx context.Context, name string) conditionFn {
 			} else {
 				return backoff.Permanent(microerror.Mask(err))
 			}
-			return nil
 		}
 		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
 		n := backoff.NewNotifier(c.logger, ctx)
