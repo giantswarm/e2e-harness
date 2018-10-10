@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
 )
 
@@ -20,7 +23,10 @@ const (
 
 type Config struct {
 	ApprClient *apprclient.Client
+	ExtClient  apiextensionsclient.Interface
+	G8sClient  versioned.Interface
 	HelmClient *helmclient.Client
+	K8sClient  kubernetes.Interface
 	Logger     micrologger.Logger
 
 	Namespace string
@@ -32,6 +38,8 @@ type Release struct {
 	logger     micrologger.Logger
 
 	namespace string
+
+	condition *conditionSet
 }
 
 func New(config Config) (*Release, error) {
@@ -58,21 +66,51 @@ func New(config Config) (*Release, error) {
 
 		config.ApprClient = a
 	}
+	if config.ExtClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.ExtClient must not be empty", config)
+	}
+	if config.G8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.G8sClient must not be empty", config)
+	}
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
+	if config.K8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
+	}
+
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
 	}
-	c := &Release{
+
+	var err error
+
+	var condition *conditionSet
+	{
+
+		c := conditionSetConfig{
+			ExtClient: config.ExtClient,
+			Logger:    config.Logger,
+		}
+
+		condition, err = newConditionSet(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+	}
+
+	r := &Release{
 		apprClient: config.ApprClient,
 		helmClient: config.HelmClient,
 		logger:     config.Logger,
 
 		namespace: config.Namespace,
+
+		condition: condition,
 	}
 
-	return c, nil
+	return r, nil
 }
 
 func (r *Release) Delete(name string) error {
