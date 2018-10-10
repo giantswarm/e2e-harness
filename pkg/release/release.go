@@ -24,9 +24,9 @@ type Config struct {
 	ApprClient *apprclient.Client
 	HelmClient *helmclient.Client
 	Logger     micrologger.Logger
-	RestConfig *rest.Config
 
-	Namespace string
+	Namespace  string
+	RestConfig *rest.Config
 }
 
 type Release struct {
@@ -66,12 +66,12 @@ func New(config Config) (*Release, error) {
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
-	if config.RestConfig == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.RestConfig must not be empty", config)
-	}
 
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
+	}
+	if config.RestConfig == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.RestConfig must not be empty", config)
 	}
 
 	var err error
