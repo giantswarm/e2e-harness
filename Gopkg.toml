@@ -41,6 +41,10 @@ required = [
 
 [[constraint]]
   branch = "master"
+  name = "github.com/giantswarm/helmclient"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/giantswarm/microerror"
 
 [[constraint]]
@@ -61,6 +65,10 @@ required = [
 
 [[constraint]]
   name = "k8s.io/api"
+  version = "kubernetes-1.10.4"
+
+[[constraint]]
+  name = "k8s.io/apiextensions-apiserver"
   version = "kubernetes-1.10.4"
 
 [[constraint]]
@@ -92,7 +100,3 @@ required = [
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/giantswarm/helmclient"

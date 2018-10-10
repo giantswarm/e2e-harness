@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
@@ -12,6 +13,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
@@ -23,12 +25,14 @@ const (
 
 type Config struct {
 	ApprClient *apprclient.Client
+	ExtClient  apiextensionsclient.Interface
 	FileLogger *filelogger.FileLogger
+	G8sClient  versioned.Interface
 	HelmClient *helmclient.Client
 	K8sClient  kubernetes.Interface
 	Logger     micrologger.Logger
 
-	TargetNamespace string
+	Namespace string
 }
 
 type Release struct {
@@ -38,7 +42,8 @@ type Release struct {
 	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
-	targetNamespace string
+	condition *conditionSet
+	namespace string
 }
 
 func New(config Config) (*Release, error) {
@@ -68,27 +73,51 @@ func New(config Config) (*Release, error) {
 	if config.FileLogger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.FileLogger must not be empty", config)
 	}
+	if config.ExtClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.ExtClient must not be empty", config)
+	}
+	if config.G8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.G8sClient must not be empty", config)
+	}
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
-	if config.TargetNamespace == "" {
-		config.TargetNamespace = defaultNamespace
+	if config.Namespace == "" {
+		config.Namespace = defaultNamespace
 	}
 
-	c := &Release{
+	var err error
+
+	var condition *conditionSet
+	{
+
+		c := conditionSetConfig{
+			ExtClient: config.ExtClient,
+			Logger:    config.Logger,
+		}
+
+		condition, err = newConditionSet(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+	}
+
+	r := &Release{
 		apprClient: config.ApprClient,
 		fileLogger: config.FileLogger,
 		helmClient: config.HelmClient,
 		k8sClient:  config.K8sClient,
 		logger:     config.Logger,
 
-		targetNamespace: config.TargetNamespace,
+		condition: condition,
+		namespace: config.Namespace,
 	}
 
-	return c, nil
+	return r, nil
 }
 
 func (r *Release) Delete(name string) error {
@@ -130,7 +159,7 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	err = r.helmClient.InstallFromTarball(tarball, r.targetNamespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
+	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -145,29 +174,29 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 	return nil
 }
 
-func (r *Release) InstallOperator(name, cr, values, version string) error {
-	err := r.Install(name, values, version, r.crd(cr))
+func (r *Release) InstallOperator(ctx context.Context, name, cr, values, version string) error {
+	err := r.Install(name, values, version, r.condition.CRD(ctx, cr))
 	if err != nil {
 		return microerror.Mask(err)
 	}
 	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
-	// This fallback from h.targetNamespace was introduced because not all our
+	// This fallback from r.namespace was introduced because not all our
 	// operators accept and apply configured namespaces.
 	//
 	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
 	//
 	// Final version of the code:
 	//
-	//	podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
+	//	podName, err := r.podName(r.namespace, fmt.Sprintf("app=%s", name))
 	//	if err != nil {
 	//		return microerror.Mask(err)
 	//	}
-	//	err = h.filelogger.StartLoggingPod(h.targetNamespace, podName)
+	//	err = r.filelogger.StartLoggingPod(r.namespace, podName)
 	//	if err != nil {
 	//		return microerror.Mask(err)
 	//	}
 	//
-	podNamespace := r.targetNamespace
+	podNamespace := r.namespace
 
 	podName, err := r.podName(podNamespace, fmt.Sprintf("app=%s", name))
 	if IsNotFound(err) {
