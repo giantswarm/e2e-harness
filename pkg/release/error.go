@@ -11,6 +11,15 @@ func IsInvalidConfig(err error) bool {
 	return microerror.Cause(err) == invalidConfigError
 }
 
+var notFoundError = &microerror.Error{
+	Kind: "notFoundError",
+}
+
+// IsNotFound asserts notFoundError.
+func IsNotFound(err error) bool {
+	return microerror.Cause(err) == notFoundError
+}
+
 var releaseNotFoundError = &microerror.Error{
 	Kind: "releaseNotFoundError",
 }
@@ -36,6 +45,15 @@ var releaseVersionNotMatchingError = &microerror.Error{
 // IsReleaseVersionNotMatching asserts releaseVersionNotMatchingError
 func IsReleaseVersionNotMatching(err error) bool {
 	return microerror.Cause(err) == releaseVersionNotMatchingError
+}
+
+var tooManyResultsError = &microerror.Error{
+	Kind: "tooManyResultsError",
+}
+
+// IsTooManyResults asserts invalidConfigError.
+func IsTooManyResults(err error) bool {
+	return microerror.Cause(err) == tooManyResultsError
 }
 
 var tillerNotFoundError = &microerror.Error{

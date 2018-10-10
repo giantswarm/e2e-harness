@@ -7,10 +7,13 @@ import (
 
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
+	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
 )
 
@@ -20,18 +23,22 @@ const (
 
 type Config struct {
 	ApprClient *apprclient.Client
+	FileLogger *filelogger.FileLogger
 	HelmClient *helmclient.Client
+	K8sClient  kubernetes.Interface
 	Logger     micrologger.Logger
 
-	Namespace string
+	TargetNamespace string
 }
 
 type Release struct {
 	apprClient *apprclient.Client
+	fileLogger *filelogger.FileLogger
 	helmClient *helmclient.Client
+	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
-	namespace string
+	targetNamespace string
 }
 
 func New(config Config) (*Release, error) {
@@ -58,18 +65,27 @@ func New(config Config) (*Release, error) {
 
 		config.ApprClient = a
 	}
+	if config.FileLogger == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.FileLogger must not be empty", config)
+	}
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
 	}
-	if config.Namespace == "" {
-		config.Namespace = defaultNamespace
+	if config.K8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
+	if config.TargetNamespace == "" {
+		config.TargetNamespace = defaultNamespace
+	}
+
 	c := &Release{
 		apprClient: config.ApprClient,
+		fileLogger: config.FileLogger,
 		helmClient: config.HelmClient,
+		k8sClient:  config.K8sClient,
 		logger:     config.Logger,
 
-		namespace: config.Namespace,
+		targetNamespace: config.TargetNamespace,
 	}
 
 	return c, nil
@@ -114,7 +130,7 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
+	err = r.helmClient.InstallFromTarball(tarball, r.targetNamespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -125,6 +141,50 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 			return microerror.Mask(err)
 		}
 	}
+
+	return nil
+}
+
+func (r *Release) InstallOperator(name, cr, values, version string) error {
+	err := r.Install(name, values, version, r.crd(cr))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
+	// This fallback from h.targetNamespace was introduced because not all our
+	// operators accept and apply configured namespaces.
+	//
+	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
+	//
+	// Final version of the code:
+	//
+	//	podName, err := h.PodName(h.targetNamespace, fmt.Sprintf("app=%s", name))
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//	err = h.filelogger.StartLoggingPod(h.targetNamespace, podName)
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//
+	podNamespace := r.targetNamespace
+
+	podName, err := r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+	if IsNotFound(err) {
+		podNamespace = "giantswarm"
+		podName, err = r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.fileLogger.StartLoggingPod(podNamespace, podName)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO end
 
 	return nil
 }
@@ -194,4 +254,22 @@ func (r *Release) WaitForVersion(release string, version string) error {
 		return microerror.Mask(err)
 	}
 	return nil
+}
+func (r *Release) podName(namespace, labelSelector string) (string, error) {
+	pods, err := r.k8sClient.CoreV1().
+		Pods(namespace).
+		List(metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
+	if len(pods.Items) > 1 {
+		return "", microerror.Mask(tooManyResultsError)
+	}
+	if len(pods.Items) == 0 {
+		return "", microerror.Mask(notFoundError)
+	}
+	pod := pods.Items[0]
+	return pod.Name, nil
 }
