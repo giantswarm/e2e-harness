@@ -121,6 +121,10 @@ func New(config Config) (*Release, error) {
 	return r, nil
 }
 
+func (r *Release) Condition() ConditionSet {
+	return r.condition
+}
+
 func (r *Release) Delete(ctx context.Context, name string) error {
 	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
