@@ -13,12 +13,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type ConditionFn func() error
+type ConditionFunc func() error
 
 type ConditionSet interface {
-	// Secret return a function waiting for the Secret to appear in the
+	// SecretExists return a function waiting for the Secret to appear in the
 	// Kubernetes API.
-	Secret(ctx context.Context, namespace, name string) ConditionFn
+	SecretExists(ctx context.Context, namespace, name string) ConditionFunc
 }
 
 type conditionSetConfig struct {
@@ -53,7 +53,7 @@ func newConditionSet(config conditionSetConfig) (*conditionSet, error) {
 	return c, nil
 }
 
-func (c *conditionSet) CRD(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFn {
+func (c *conditionSet) CRD(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFunc {
 	return func() error {
 		o := func() error {
 			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
@@ -75,7 +75,7 @@ func (c *conditionSet) CRD(ctx context.Context, crd *apiextensionsv1beta1.Custom
 	}
 }
 
-func (c *conditionSet) Secret(ctx context.Context, namespace, name string) ConditionFn {
+func (c *conditionSet) SecretExists(ctx context.Context, namespace, name string) ConditionFunc {
 	return func() error {
 		o := func() error {
 			_, err := c.k8sClient.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
