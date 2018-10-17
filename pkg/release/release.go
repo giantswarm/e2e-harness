@@ -97,6 +97,7 @@ func New(config Config) (*Release, error) {
 
 		c := conditionSetConfig{
 			ExtClient: config.ExtClient,
+			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 		}
 
