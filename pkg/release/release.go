@@ -191,7 +191,7 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 }
 
 func (r *Release) InstallOperator(ctx context.Context, name string, version Version, values string, crd *apiextensionsv1beta1.CustomResourceDefinition) error {
-	err := r.Install(ctx, name, version, values, r.condition.CRD(ctx, crd))
+	err := r.Install(ctx, name, version, values, r.condition.CRDExists(ctx, crd))
 	if err != nil {
 		return microerror.Mask(err)
 	}

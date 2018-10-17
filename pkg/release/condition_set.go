@@ -53,7 +53,7 @@ func newConditionSet(config conditionSetConfig) (*conditionSet, error) {
 	return c, nil
 }
 
-func (c *conditionSet) CRD(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFunc {
+func (c *conditionSet) CRDExists(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFunc {
 	return func() error {
 		o := func() error {
 			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
