@@ -104,7 +104,6 @@ func New(config Config) (*Release, error) {
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
-
 	}
 
 	r := &Release{
@@ -158,6 +157,8 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 }
 
 func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring creation of release %#q", name))
+
 	var err error
 
 	chartname := fmt.Sprintf("%s-chart", name)
@@ -186,6 +187,8 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 			return microerror.Mask(err)
 		}
 	}
+
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured creation of release %#q", name))
 
 	return nil
 }
