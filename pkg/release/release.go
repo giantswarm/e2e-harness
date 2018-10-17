@@ -157,7 +157,7 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 }
 
 func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring creation of release %#q", name))
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", name))
 
 	var err error
 
@@ -188,7 +188,7 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 		}
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured creation of release %#q", name))
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", name))
 
 	return nil
 }
