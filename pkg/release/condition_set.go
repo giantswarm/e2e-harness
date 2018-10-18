@@ -6,20 +6,13 @@ import (
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-type ConditionFunc func() error
-
-type ConditionSet interface {
-	// SecretExists return a function waiting for the Secret to appear in the
-	// Kubernetes API.
-	SecretExists(ctx context.Context, namespace, name string) ConditionFunc
-}
 
 type conditionSetConfig struct {
 	ExtClient apiextensionsclient.Interface
@@ -67,6 +60,35 @@ func (c *conditionSet) CRDExists(ctx context.Context, crd *apiextensionsv1beta1.
 		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
 		n := backoff.NewNotifier(c.logger, ctx)
 		err := backoff.RetryNotify(o, b, n)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		return nil
+	}
+}
+
+func (c *conditionSet) PodExists(ctx context.Context, namespace, labelSelector string) ConditionFunc {
+	return func() error {
+		o := func() error {
+			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+			if err != nil {
+				return microerror.Mask(err)
+			}
+			if len(pods.Items) > 1 {
+				return microerror.Mask(tooManyResultsError)
+			}
+
+			pod := pods.Items[0]
+			if pod.Status.Phase != v1.PodRunning {
+				return microerror.Maskf(unexpectedStatusPhaseError, string(pod.Status.Phase))
+			}
+
+			return nil
+		}
+		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
+
+		err := backoff.Retry(o, b)
 		if err != nil {
 			return microerror.Mask(err)
 		}

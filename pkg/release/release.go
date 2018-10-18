@@ -97,6 +97,7 @@ func New(config Config) (*Release, error) {
 
 		c := conditionSetConfig{
 			ExtClient: config.ExtClient,
+			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 		}
 
@@ -104,7 +105,6 @@ func New(config Config) (*Release, error) {
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
-
 	}
 
 	r := &Release{
@@ -158,6 +158,8 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
 }
 
 func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", name))
+
 	var err error
 
 	chartname := fmt.Sprintf("%s-chart", name)
@@ -186,6 +188,8 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 			return microerror.Mask(err)
 		}
 	}
+
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", name))
 
 	return nil
 }
