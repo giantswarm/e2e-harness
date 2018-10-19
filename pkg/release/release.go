@@ -5,12 +5,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
+	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
 )
 
@@ -20,7 +26,11 @@ const (
 
 type Config struct {
 	ApprClient *apprclient.Client
+	ExtClient  apiextensionsclient.Interface
+	FileLogger *filelogger.FileLogger
+	G8sClient  versioned.Interface
 	HelmClient *helmclient.Client
+	K8sClient  kubernetes.Interface
 	Logger     micrologger.Logger
 
 	Namespace string
@@ -28,9 +38,12 @@ type Config struct {
 
 type Release struct {
 	apprClient *apprclient.Client
+	fileLogger *filelogger.FileLogger
 	helmClient *helmclient.Client
+	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
+	condition *conditionSet
 	namespace string
 }
 
@@ -58,63 +71,123 @@ func New(config Config) (*Release, error) {
 
 		config.ApprClient = a
 	}
+	if config.FileLogger == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.FileLogger must not be empty", config)
+	}
+	if config.ExtClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.ExtClient must not be empty", config)
+	}
+	if config.G8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.G8sClient must not be empty", config)
+	}
 	if config.HelmClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.HelmClient must not be empty", config)
+	}
+	if config.K8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
 	}
 	if config.Namespace == "" {
 		config.Namespace = defaultNamespace
 	}
-	c := &Release{
+
+	var err error
+
+	var condition *conditionSet
+	{
+
+		c := conditionSetConfig{
+			ExtClient: config.ExtClient,
+			K8sClient: config.K8sClient,
+			Logger:    config.Logger,
+		}
+
+		condition, err = newConditionSet(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	r := &Release{
 		apprClient: config.ApprClient,
+		fileLogger: config.FileLogger,
 		helmClient: config.HelmClient,
+		k8sClient:  config.K8sClient,
 		logger:     config.Logger,
 
+		condition: condition,
 		namespace: config.Namespace,
 	}
 
-	return c, nil
+	return r, nil
 }
 
-func (r *Release) Delete(name string) error {
-	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
+func (r *Release) Condition() ConditionSet {
+	return r.condition
+}
+
+func (r *Release) Delete(ctx context.Context, name string) error {
+	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
+
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting release %#q", releaseName))
+
+	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
-		return microerror.Maskf(releaseNotFoundError, name)
+		return microerror.Maskf(releaseNotFoundError, releaseName)
 	} else if helmclient.IsTillerNotFound(err) {
 		return microerror.Mask(tillerNotFoundError)
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
 
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleted release %#q", releaseName))
+
 	return nil
 }
 
 func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring deletion of release %#q", name))
+	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
 
-	err := r.helmClient.DeleteRelease(name, helm.DeletePurge(true))
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring deletion of release %#q", releaseName))
+
+	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
-		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q does not exist", name))
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q does not exist", releaseName))
 	} else if helmclient.IsTillerNotFound(err) {
 		r.logger.LogCtx(ctx, "level", "warning", "message", "tiller is not found/installed")
 	} else if err != nil {
 		return microerror.Mask(err)
 	} else {
-		r.logger.LogCtx(ctx, "level", "info", "message", fmt.Sprintf("deleted release %#q", name))
+		r.logger.LogCtx(ctx, "level", "info", "message", fmt.Sprintf("deleted release %#q", releaseName))
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured deletion of release %#q", name))
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured deletion of release %#q", releaseName))
 
 	return nil
 }
 
-func (r *Release) Install(name, values, channel string, conditions ...func() error) error {
+func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
+
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", releaseName))
+
+	var err error
+
 	chartname := fmt.Sprintf("%s-chart", name)
 
-	tarball, err := r.apprClient.PullChartTarball(chartname, channel)
-	if err != nil {
-		return microerror.Mask(err)
+	var tarball string
+	if version.isChannel {
+		tarball, err = r.apprClient.PullChartTarball(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else {
+		tarball, err = r.apprClient.PullChartTarballFromRelease(chartname, version.String())
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
-	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(name), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
+
+	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(releaseName), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -126,10 +199,56 @@ func (r *Release) Install(name, values, channel string, conditions ...func() err
 		}
 	}
 
+	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", releaseName))
+
 	return nil
 }
 
-func (r *Release) Update(name, values, channel string, conditions ...func() error) error {
+func (r *Release) InstallOperator(ctx context.Context, name string, version Version, values string, crd *apiextensionsv1beta1.CustomResourceDefinition) error {
+	err := r.Install(ctx, name, version, values, r.condition.CRDExists(ctx, crd))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO introduced: https://github.com/giantswarm/e2e-harness/pull/121
+	// This fallback from r.namespace was introduced because not all our
+	// operators accept and apply configured namespaces.
+	//
+	// Tracking issue: https://github.com/giantswarm/giantswarm/issues/4123
+	//
+	// Final version of the code:
+	//
+	//	podName, err := r.podName(r.namespace, fmt.Sprintf("app=%s", name))
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//	err = r.filelogger.StartLoggingPod(r.namespace, podName)
+	//	if err != nil {
+	//		return microerror.Mask(err)
+	//	}
+	//
+	podNamespace := r.namespace
+
+	podName, err := r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+	if IsNotFound(err) {
+		podNamespace = "giantswarm"
+		podName, err = r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.fileLogger.StartLoggingPod(podNamespace, podName)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+	// TODO end
+
+	return nil
+}
+
+func (r *Release) Update(ctx context.Context, name, values, channel string, conditions ...func() error) error {
 	chartname := fmt.Sprintf("%s-chart", name)
 
 	tarballPath, err := r.apprClient.PullChartTarball(chartname, channel)
@@ -145,7 +264,7 @@ func (r *Release) Update(name, values, channel string, conditions ...func() erro
 	return nil
 }
 
-func (r *Release) WaitForStatus(release string, status string) error {
+func (r *Release) WaitForStatus(ctx context.Context, release string, status string) error {
 	operation := func() error {
 		rc, err := r.helmClient.GetReleaseContent(release)
 		if helmclient.IsReleaseNotFound(err) && status == "DELETED" {
@@ -172,7 +291,7 @@ func (r *Release) WaitForStatus(release string, status string) error {
 	return nil
 }
 
-func (r *Release) WaitForVersion(release string, version string) error {
+func (r *Release) WaitForVersion(ctx context.Context, release string, version string) error {
 	operation := func() error {
 		rh, err := r.helmClient.GetReleaseHistory(release)
 		if err != nil {
@@ -194,4 +313,23 @@ func (r *Release) WaitForVersion(release string, version string) error {
 		return microerror.Mask(err)
 	}
 	return nil
+}
+
+func (r *Release) podName(namespace, labelSelector string) (string, error) {
+	pods, err := r.k8sClient.CoreV1().
+		Pods(namespace).
+		List(metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
+	if len(pods.Items) > 1 {
+		return "", microerror.Mask(tooManyResultsError)
+	}
+	if len(pods.Items) == 0 {
+		return "", microerror.Mask(notFoundError)
+	}
+	pod := pods.Items[0]
+	return pod.Name, nil
 }
