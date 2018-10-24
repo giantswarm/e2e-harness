@@ -1,6 +1,9 @@
 package release
 
-import "github.com/giantswarm/microerror"
+import (
+	"github.com/giantswarm/helmclient"
+	"github.com/giantswarm/microerror"
+)
 
 var invalidConfigError = &microerror.Error{
 	Kind: "invalidConfigError",
@@ -20,13 +23,12 @@ func IsNotFound(err error) bool {
 	return microerror.Cause(err) == notFoundError
 }
 
-var releaseNotFoundError = &microerror.Error{
-	Kind: "releaseNotFoundError",
+func IsReleaseAlreadyExists(err error) bool {
+	return helmclient.IsReleaseAlreadyExists(err)
 }
 
-// IsReleaseNotFound asserts releaseNotFoundError.
 func IsReleaseNotFound(err error) bool {
-	return microerror.Cause(err) == releaseNotFoundError
+	return helmclient.IsReleaseNotFound(err)
 }
 
 var releaseStatusNotMatchingError = &microerror.Error{
@@ -47,13 +49,12 @@ func IsReleaseVersionNotMatching(err error) bool {
 	return microerror.Cause(err) == releaseVersionNotMatchingError
 }
 
-var tillerNotFoundError = &microerror.Error{
-	Kind: "tillerNotFoundError",
+func IsTarballNotFound(err error) bool {
+	return helmclient.IsTarballNotFound(err)
 }
 
-// IsTillerNotFound asserts tillerNotFoundError.
 func IsTillerNotFound(err error) bool {
-	return microerror.Cause(err) == tillerNotFoundError
+	return helmclient.IsTillerNotFound(err)
 }
 
 var tooManyResultsError = &microerror.Error{

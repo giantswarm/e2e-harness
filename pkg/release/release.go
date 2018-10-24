@@ -132,9 +132,9 @@ func (r *Release) Delete(ctx context.Context, name string) error {
 
 	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
-		return microerror.Maskf(releaseNotFoundError, releaseName)
+		return microerror.Mask(err)
 	} else if helmclient.IsTillerNotFound(err) {
-		return microerror.Mask(tillerNotFoundError)
+		return microerror.Mask(err)
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
@@ -144,23 +144,66 @@ func (r *Release) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-func (r *Release) EnsureDeleted(ctx context.Context, name string) error {
-	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
+// EnsureDeleted makes sure the release is deleted and purged and all
+// conditions are met.
+func (r *Release) EnsureDeleted(ctx context.Context, name string, conditions ...func() error) error {
+	{
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting release %#q", name))
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring deletion of release %#q", releaseName))
+		err := r.Delete(ctx, name)
+		if helmclient.IsReleaseNotFound(err) {
+			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q already deleted", name))
+		} else if err != nil {
+			return microerror.Mask(err)
+		} else {
+			r.logger.LogCtx(ctx, "level", "info", "message", fmt.Sprintf("deleted release %#q", name))
+		}
 
-	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
-	if helmclient.IsReleaseNotFound(err) {
-		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q does not exist", releaseName))
-	} else if helmclient.IsTillerNotFound(err) {
-		r.logger.LogCtx(ctx, "level", "warning", "message", "tiller is not found/installed")
-	} else if err != nil {
-		return microerror.Mask(err)
-	} else {
-		r.logger.LogCtx(ctx, "level", "info", "message", fmt.Sprintf("deleted release %#q", releaseName))
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured deletion of release %#q", name))
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured deletion of release %#q", releaseName))
+	{
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring conditions for deleted release %#q", name))
+
+		err := r.waitForConditions(ctx, conditions...)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured conditions for deleted release %#q", name))
+	}
+
+	return nil
+}
+
+// EnsureInstalled makes sure the release is installed and all conditions are
+// met.
+//
+// NOTE: It does not update the release if it already exists.
+func (r *Release) EnsureInstalled(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
+	{
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", name))
+
+		err := r.Install(ctx, name, version, values)
+		if helmclient.IsReleaseAlreadyExists(err) {
+			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q already created", name))
+		} else if err != nil {
+			return microerror.Mask(err)
+		}
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", name))
+	}
+
+	{
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensuring conditions for release %#q", name))
+
+		err := r.waitForConditions(ctx, conditions...)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("ensured conditions for release %#q", name))
+	}
 
 	return nil
 }
@@ -172,31 +215,23 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 
 	var err error
 
-	chartname := fmt.Sprintf("%s-chart", name)
-
-	var tarball string
-	if version.isChannel {
-		tarball, err = r.apprClient.PullChartTarball(chartname, version.String())
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	} else {
-		tarball, err = r.apprClient.PullChartTarballFromRelease(chartname, version.String())
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	}
-
-	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(releaseName), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
+	tarball, err := r.pullTarball(fmt.Sprintf("%s-chart", name), version)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	for _, c := range conditions {
-		err = backoff.Retry(c, backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval))
-		if err != nil {
-			return microerror.Mask(err)
-		}
+	err = r.helmClient.InstallFromTarball(tarball, r.namespace, helm.ReleaseName(releaseName), helm.ValueOverrides([]byte(values)), helm.InstallWait(true))
+	if helmclient.IsReleaseAlreadyExists(err) {
+		return microerror.Maskf(releaseAlreadyExistsError, "failed to install release %#q", releaseName)
+	} else if helmclient.IsTarballNotFound(err) {
+		return microerror.Maskf(releaseAlreadyExistsError, "failed to install tarball %#q", tarball)
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.waitForConditions(ctx, conditions...)
+	if err != nil {
+		return microerror.Mask(err)
 	}
 
 	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", releaseName))
@@ -257,6 +292,11 @@ func (r *Release) Update(ctx context.Context, name, values, channel string, cond
 	}
 
 	err = r.helmClient.UpdateReleaseFromTarball(name, tarballPath, helm.UpdateValueOverrides([]byte(values)))
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.waitForConditions(ctx, conditions...)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -332,4 +372,49 @@ func (r *Release) podName(namespace, labelSelector string) (string, error) {
 	}
 	pod := pods.Items[0]
 	return pod.Name, nil
+}
+
+func (r *Release) pullTarball(chart string, version Version) (string, error) {
+	if version.isChannel {
+		tarball, err := r.apprClient.PullChartTarball(chart, version.String())
+		if err != nil {
+			return "", microerror.Mask(err)
+		}
+
+		return tarball, nil
+	}
+
+	tarball, err := r.apprClient.PullChartTarballFromRelease(chart, version.String())
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
+
+	return tarball, nil
+}
+
+func (r *Release) waitForConditions(ctx context.Context, conditions ...func() error) error {
+	for _, c := range conditions {
+		err := ctx.Err()
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		o := func() error {
+			err := c()
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			return nil
+		}
+		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
+		n := backoff.NewNotifier(r.logger, ctx)
+
+		err = backoff.RetryNotify(o, b, n)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
+	return nil
 }
