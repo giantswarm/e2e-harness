@@ -132,9 +132,9 @@ func (r *Release) Delete(ctx context.Context, name string) error {
 
 	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
-		return microerror.Mask(err)
+		return microerror.Maskf(releaseNotFoundError, "failed to delete release %#q", name)
 	} else if helmclient.IsTillerNotFound(err) {
-		return microerror.Mask(err)
+		return microerror.Mask(tillerNotFoundError)
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
