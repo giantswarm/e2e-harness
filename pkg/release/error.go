@@ -1,7 +1,6 @@
 package release
 
 import (
-	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 )
 
@@ -23,12 +22,22 @@ func IsNotFound(err error) bool {
 	return microerror.Cause(err) == notFoundError
 }
 
-func IsReleaseAlreadyExists(err error) bool {
-	return helmclient.IsReleaseAlreadyExists(err)
+var releaseAlreadyExistsError = &microerror.Error{
+	Kind: "releaseAlreadyExistsError",
 }
 
+// IsReleaseAlreadyExists asserts releaseAlreadyExistsError.
+func IsReleaseAlreadyExists(err error) bool {
+	return microerror.Cause(err) == releaseAlreadyExistsError
+}
+
+var releaseNotFoundError = &microerror.Error{
+	Kind: "releaseNotFoundError",
+}
+
+// IsReleaseNotFound asserts releaseNotFoundError.
 func IsReleaseNotFound(err error) bool {
-	return helmclient.IsReleaseNotFound(err)
+	return microerror.Cause(err) == releaseNotFoundError
 }
 
 var releaseStatusNotMatchingError = &microerror.Error{
@@ -49,12 +58,22 @@ func IsReleaseVersionNotMatching(err error) bool {
 	return microerror.Cause(err) == releaseVersionNotMatchingError
 }
 
-func IsTarballNotFound(err error) bool {
-	return helmclient.IsTarballNotFound(err)
+var tarballNotFoundError = &microerror.Error{
+	Kind: "tarballNotFoundError",
 }
 
+// IsTarballNotFound asserts tarballNotFoundError.
+func IsTarballNotFound(err error) bool {
+	return microerror.Cause(err) == tarballNotFoundError
+}
+
+var tillerNotFoundError = &microerror.Error{
+	Kind: "tillerNotFoundError",
+}
+
+// IsTillerNotFound asserts tillerNotFoundError.
 func IsTillerNotFound(err error) bool {
-	return helmclient.IsTillerNotFound(err)
+	return microerror.Cause(err) == tillerNotFoundError
 }
 
 var tooManyResultsError = &microerror.Error{
