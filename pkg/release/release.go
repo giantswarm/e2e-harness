@@ -128,8 +128,6 @@ func (r *Release) Condition() ConditionSet {
 func (r *Release) Delete(ctx context.Context, name string) error {
 	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting release %#q", releaseName))
-
 	err := r.helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
 	if helmclient.IsReleaseNotFound(err) {
 		return microerror.Maskf(releaseNotFoundError, "failed to delete release %#q", name)
@@ -138,8 +136,6 @@ func (r *Release) Delete(ctx context.Context, name string) error {
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
-
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleted release %#q", releaseName))
 
 	return nil
 }
@@ -211,8 +207,6 @@ func (r *Release) EnsureInstalled(ctx context.Context, name string, version Vers
 func (r *Release) Install(ctx context.Context, name string, version Version, values string, conditions ...func() error) error {
 	releaseName := fmt.Sprintf("%s-%s", r.namespace, name)
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", releaseName))
-
 	var err error
 
 	tarball, err := r.pullTarball(fmt.Sprintf("%s-chart", name), version)
@@ -233,8 +227,6 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 	if err != nil {
 		return microerror.Mask(err)
 	}
-
-	r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("created release %#q", releaseName))
 
 	return nil
 }
