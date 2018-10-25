@@ -8,7 +8,7 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
-	"github.com/giantswarm/e2e-harness/pkg/framework/filelogger"
+	"github.com/giantswarm/e2e-harness/pkg/internal/filelogger"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -248,7 +248,7 @@ func (r *Release) InstallOperator(ctx context.Context, name string, version Vers
 	//	if err != nil {
 	//		return microerror.Mask(err)
 	//	}
-	//	err = r.filelogger.StartLoggingPod(r.namespace, podName)
+	//	err = r.filelogger.EnsurePodLogging(ctx, r.namespace, podName)
 	//	if err != nil {
 	//		return microerror.Mask(err)
 	//	}
@@ -266,7 +266,7 @@ func (r *Release) InstallOperator(ctx context.Context, name string, version Vers
 		return microerror.Mask(err)
 	}
 
-	err = r.fileLogger.StartLoggingPod(podNamespace, podName)
+	err = r.fileLogger.EnsurePodLogging(ctx, podNamespace, podName)
 	if err != nil {
 		return microerror.Mask(err)
 	}
