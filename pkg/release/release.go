@@ -107,8 +107,8 @@ func New(config Config) (*Release, error) {
 	var fileLogger *filelogger.FileLogger
 	{
 		c := filelogger.Config{
-			K8sClient: k8sClient,
-			Logger:    c.Logger,
+			K8sClient: config.K8sClient,
+			Logger:    config.Logger,
 		}
 
 		fileLogger, err = filelogger.New(c)
@@ -126,7 +126,7 @@ func New(config Config) (*Release, error) {
 		namespace: config.Namespace,
 
 		condition:  condition,
-		fileLogger: config.FileLogger,
+		fileLogger: fileLogger,
 	}
 
 	return r, nil
