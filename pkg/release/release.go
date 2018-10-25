@@ -41,10 +41,10 @@ type Release struct {
 	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
-	namespace string
-
 	condition  *conditionSet
 	fileLogger *filelogger.FileLogger
+
+	namespace string
 }
 
 func New(config Config) (*Release, error) {
