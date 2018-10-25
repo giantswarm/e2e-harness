@@ -279,7 +279,7 @@ func (r *Release) InstallOperator(ctx context.Context, name string, version Vers
 		return microerror.Mask(err)
 	}
 
-	err = r.Condition().PodExists(ctx, podNamespace, labelSelector)
+	err = r.Condition().PodExists(ctx, podNamespace, labelSelector)()
 	if err != nil {
 		return microerror.Mask(err)
 	}
