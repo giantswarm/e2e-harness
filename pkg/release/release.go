@@ -28,7 +28,6 @@ const (
 type Config struct {
 	ApprClient *apprclient.Client
 	ExtClient  apiextensionsclient.Interface
-	FileLogger *filelogger.FileLogger
 	G8sClient  versioned.Interface
 	HelmClient *helmclient.Client
 	K8sClient  kubernetes.Interface
@@ -39,12 +38,13 @@ type Config struct {
 
 type Release struct {
 	apprClient *apprclient.Client
-	fileLogger *filelogger.FileLogger
 	helmClient *helmclient.Client
 	k8sClient  kubernetes.Interface
 	logger     micrologger.Logger
 
-	condition *conditionSet
+	condition  *conditionSet
+	fileLogger *filelogger.FileLogger
+
 	namespace string
 }
 
@@ -71,9 +71,6 @@ func New(config Config) (*Release, error) {
 		}
 
 		config.ApprClient = a
-	}
-	if config.FileLogger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.FileLogger must not be empty", config)
 	}
 	if config.ExtClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.ExtClient must not be empty", config)
@@ -108,15 +105,29 @@ func New(config Config) (*Release, error) {
 		}
 	}
 
+	var fileLogger *filelogger.FileLogger
+	{
+		c := filelogger.Config{
+			K8sClient: config.K8sClient,
+			Logger:    config.Logger,
+		}
+
+		fileLogger, err = filelogger.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	r := &Release{
 		apprClient: config.ApprClient,
-		fileLogger: config.FileLogger,
 		helmClient: config.HelmClient,
 		k8sClient:  config.K8sClient,
 		logger:     config.Logger,
 
-		condition: condition,
 		namespace: config.Namespace,
+
+		condition:  condition,
+		fileLogger: fileLogger,
 	}
 
 	return r, nil
