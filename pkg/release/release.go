@@ -158,7 +158,7 @@ func (r *Release) EnsureDeleted(ctx context.Context, name string, conditions ...
 		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting release %#q", name))
 
 		err := r.Delete(ctx, name)
-		if helmclient.IsReleaseNotFound(err) {
+		if IsReleaseNotFound(err) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q already deleted", name))
 		} else if err != nil {
 			return microerror.Mask(err)
