@@ -279,6 +279,10 @@ func (r *Release) Install(ctx context.Context, name string, version Version, val
 	return nil
 }
 
+// TODO Remove once we are done with migration to EnsureInstalled.
+//
+//	Issue https://github.com/giantswarm/giantswarm/issues/4355.
+//
 func (r *Release) InstallOperator(ctx context.Context, name string, version Version, values string, crd *apiextensionsv1beta1.CustomResourceDefinition) error {
 	err := r.Install(ctx, name, version, values, r.condition.CRDExists(ctx, crd))
 	if err != nil {
