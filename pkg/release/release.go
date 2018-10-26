@@ -307,14 +307,21 @@ func (r *Release) InstallOperator(ctx context.Context, name string, version Vers
 	//
 	podNamespace := r.namespace
 
-	podName, err := r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+	labelSelector := fmt.Sprintf("app=%s", name)
+
+	podName, err := r.podName(podNamespace, labelSelector)
 	if IsNotFound(err) {
 		podNamespace = "giantswarm"
-		podName, err = r.podName(podNamespace, fmt.Sprintf("app=%s", name))
+		podName, err = r.podName(podNamespace, labelSelector)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	err = r.Condition().PodExists(ctx, podNamespace, labelSelector)()
+	if err != nil {
 		return microerror.Mask(err)
 	}
 
