@@ -197,7 +197,7 @@ func (r *Release) EnsureInstalled(ctx context.Context, name string, version Vers
 		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("creating release %#q", name))
 
 		err := r.Install(ctx, name, version, values)
-		if helmclient.IsReleaseAlreadyExists(err) {
+		if IsReleaseAlreadyExists(err) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("release %#q already created", name))
 		} else if err != nil {
 			return microerror.Mask(err)
