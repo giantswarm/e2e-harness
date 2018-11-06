@@ -22,10 +22,6 @@ func NewStableChartInfo(name string) ChartInfo {
 	}
 }
 
-func (c ChartInfo) String() string {
-	return c.version
-}
-
 // Version is an **alias** for ChartInfo. See https://golang.org/doc/go1.9#language.
 type Version = ChartInfo
 

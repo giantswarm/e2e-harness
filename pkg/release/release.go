@@ -432,7 +432,7 @@ func (r *Release) pullTarball(releaseName string, chartInfo ChartInfo) (string, 
 	}
 
 	if chartInfo.isChannel {
-		tarball, err := r.apprClient.PullChartTarball(chartName, chartInfo.String())
+		tarball, err := r.apprClient.PullChartTarball(chartName, chartInfo.version)
 		if err != nil {
 			return "", microerror.Mask(err)
 		}
@@ -440,7 +440,7 @@ func (r *Release) pullTarball(releaseName string, chartInfo ChartInfo) (string, 
 		return tarball, nil
 	}
 
-	tarball, err := r.apprClient.PullChartTarballFromRelease(chartName, chartInfo.String())
+	tarball, err := r.apprClient.PullChartTarballFromRelease(chartName, chartInfo.version)
 	if err != nil {
 		return "", microerror.Mask(err)
 	}
