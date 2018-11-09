@@ -266,7 +266,7 @@ func (r *Release) Install(ctx context.Context, name string, chartInfo ChartInfo,
 	if helmclient.IsReleaseAlreadyExists(err) {
 		return microerror.Maskf(releaseAlreadyExistsError, "failed to install release %#q", releaseName)
 	} else if helmclient.IsTarballNotFound(err) {
-		return microerror.Maskf(tarballNotFoundError, "failed to instll release %#q from tarball %#q", releaseName, tarballPath)
+		return microerror.Maskf(tarballNotFoundError, "failed to install release %#q from tarball %#q", releaseName, tarballPath)
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
