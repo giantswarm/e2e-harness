@@ -344,7 +344,7 @@ func (r *Release) Update(ctx context.Context, name string, chartInfo ChartInfo, 
 		return microerror.Mask(err)
 	}
 
-	err = r.helmClient.UpdateReleaseFromTarball(ctx, releaseName, tarballPath, helm.UpdateValueOverrides([]byte(values)))
+	err = r.helmClient.UpdateReleaseFromTarball(ctx, releaseName, tarballPath, helm.UpdateValueOverrides([]byte(values)), helm.UpgradeWait(true))
 	if helmclient.IsReleaseAlreadyExists(err) {
 		return microerror.Maskf(releaseAlreadyExistsError, "failed to update release %#q", releaseName)
 	} else if helmclient.IsTarballNotFound(err) {
