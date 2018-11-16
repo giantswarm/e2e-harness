@@ -1292,6 +1292,14 @@ func (c *CommitFile) GetPatch() string {
 	return *c.Patch
 }
 
+// GetPreviousFilename returns the PreviousFilename field if it's non-nil, zero value otherwise.
+func (c *CommitFile) GetPreviousFilename() string {
+	if c == nil || c.PreviousFilename == nil {
+		return ""
+	}
+	return *c.PreviousFilename
+}
+
 // GetRawURL returns the RawURL field if it's non-nil, zero value otherwise.
 func (c *CommitFile) GetRawURL() string {
 	if c == nil || c.RawURL == nil {
@@ -2292,6 +2300,14 @@ func (d *DeploymentStatusRequest) GetDescription() string {
 	return *d.Description
 }
 
+// GetEnvironment returns the Environment field if it's non-nil, zero value otherwise.
+func (d *DeploymentStatusRequest) GetEnvironment() string {
+	if d == nil || d.Environment == nil {
+		return ""
+	}
+	return *d.Environment
+}
+
 // GetEnvironmentURL returns the EnvironmentURL field if it's non-nil, zero value otherwise.
 func (d *DeploymentStatusRequest) GetEnvironmentURL() string {
 	if d == nil || d.EnvironmentURL == nil {
@@ -3138,14 +3154,6 @@ func (h *Hook) GetID() int64 {
 		return 0
 	}
 	return *h.ID
-}
-
-// GetName returns the Name field if it's non-nil, zero value otherwise.
-func (h *Hook) GetName() string {
-	if h == nil || h.Name == nil {
-		return ""
-	}
-	return *h.Name
 }
 
 // GetUpdatedAt returns the UpdatedAt field if it's non-nil, zero value otherwise.
@@ -10108,6 +10116,22 @@ func (s *ServiceHook) GetName() string {
 	return *s.Name
 }
 
+// GetEnabled returns the Enabled field if it's non-nil, zero value otherwise.
+func (s *SignaturesProtectedBranch) GetEnabled() bool {
+	if s == nil || s.Enabled == nil {
+		return false
+	}
+	return *s.Enabled
+}
+
+// GetURL returns the URL field if it's non-nil, zero value otherwise.
+func (s *SignaturesProtectedBranch) GetURL() string {
+	if s == nil || s.URL == nil {
+		return ""
+	}
+	return *s.URL
+}
+
 // GetPayload returns the Payload field if it's non-nil, zero value otherwise.
 func (s *SignatureVerification) GetPayload() string {
 	if s == nil || s.Payload == nil {
@@ -11570,6 +11594,14 @@ func (u *User) GetTotalPrivateRepos() int {
 		return 0
 	}
 	return *u.TotalPrivateRepos
+}
+
+// GetTwoFactorAuthentication returns the TwoFactorAuthentication field if it's non-nil, zero value otherwise.
+func (u *User) GetTwoFactorAuthentication() bool {
+	if u == nil || u.TwoFactorAuthentication == nil {
+		return false
+	}
+	return *u.TwoFactorAuthentication
 }
 
 // GetType returns the Type field if it's non-nil, zero value otherwise.
