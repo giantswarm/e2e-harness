@@ -16,7 +16,7 @@ RUN apk -Uuv add --update --no-cache \
       less=530-r0 \
       libffi-dev=3.2.1-r4 \
       openssh-client=7.7_p1-r3 \
-      openssl=1.0.2p-r0 \
+      openssl \
       sudo=1.8.23-r2 \
       iptables=1.6.2-r0
 
