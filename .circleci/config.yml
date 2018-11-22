@@ -1,26 +1,40 @@
+e2eTest: &e2eTest
+  machine: true
+  working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/operatorkit
+  steps:
+    - checkout
+    - attach_workspace:
+        at: .
+    - run: ./e2e-harness localkube
+    - run: ./e2e-harness setup --remote=false
+    - run:
+        command: ./e2e-harness test --test-dir=${TEST_DIR}
+        environment:
+          GOPATH: /home/circleci/.go_workspace
+    - run:
+        command: ./e2e-harness teardown
+        when: always
+
+
+
 version: 2
 jobs:
   build:
     machine: true
     steps:
     - checkout
-
     - run: |
         wget -q $(curl -sS -H "Authorization: token $RELEASE_TOKEN" https://api.github.com/repos/giantswarm/architect/releases/latest | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
         chmod +x ./architect
         ./architect version
-
     - run: ./architect build
-
     - store_test_results:
         path: /tmp/results
-
     - persist_to_workspace:
         root: .
         paths:
-        - ./e2e-harness
         - ./architect
-
+        - ./e2e-harness
     - deploy:
         command: |
           if [ "${CIRCLE_BRANCH}" == "master" ]; then
@@ -28,44 +42,14 @@ jobs:
           fi
 
   e2eLocalTest:
-    working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
-    machine: true
-    steps:
-    - checkout
-
-    - attach_workspace:
-        at: .
-
-    - run: ./e2e-harness localkube
-
-    - run: ./e2e-harness setup --remote=false
-
-    - run: ./e2e-harness test
-
-    - run:
-        name: Finish with cleanup, no matter if the test succeeded or not
-        command: ./e2e-harness teardown
-        when: always
+    <<: *e2eTest
+    environment:
+      E2E_TEST_DIR: "integration"
 
   e2eLocalSubDirTest:
-    working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
-    machine: true
-    steps:
-    - checkout
-
-    - attach_workspace:
-        at: .
-
-    - run: ./e2e-harness localkube
-
-    - run: ./e2e-harness setup --remote=false
-
-    - run: ./e2e-harness test --test-dir=e2e/sub-dir
-
-    - run:
-        name: Finish with cleanup, no matter if the test succeeded or not
-        command: ./e2e-harness teardown
-        when: always
+    <<: *e2eTest
+    environment:
+      E2E_TEST_DIR: "e2e/sub-dir"
 
  # TODO investiage why the test is failing.
  #
