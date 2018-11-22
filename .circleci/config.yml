@@ -8,7 +8,8 @@ e2eTest: &e2eTest
     - run: ./e2e-harness localkube
     - run: ./e2e-harness setup --remote=false
     - run:
-        command: echo "debug: TEST_DIR=$TEST_DIR GOPATH=$GOPATH A=$A"
+        command: |
+          echo "debug: TEST_DIR=$TEST_DIR GOPATH=$GOPATH A=$A"
         environment:
           A: a_value
           GOPATH: /home/circleci/.go_workspace
