@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -53,19 +54,21 @@ func init() {
 }
 
 func runSetup(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
+
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		panic(fmt.Sprintf("%#v", err))
 	}
 
-	err = runSetupError(cmd, args)
+	err = runSetupError(ctx, cmd, args)
 	if err != nil {
 		logger.Log("level", "error", "message", "exiting with status 1 due to error", "stack", fmt.Sprintf("%#v", err))
 		os.Exit(1)
 	}
 }
 
-func runSetupError(cmd *cobra.Command, args []string) error {
+func runSetupError(ctx context.Context, cmd *cobra.Command, args []string) error {
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -157,5 +160,5 @@ func runSetupError(cmd *cobra.Command, args []string) error {
 		bundle = append(bundle, p.CommonSetupSteps)
 	}
 
-	return microerror.Mask(tasks.Run(bundle))
+	return microerror.Mask(tasks.Run(ctx, bundle))
 }

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -24,6 +26,8 @@ func init() {
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -38,5 +42,5 @@ func runInit(cmd *cobra.Command, args []string) error {
 		i.CreateLayout,
 	}
 
-	return tasks.Run(bundle)
+	return tasks.Run(ctx, bundle)
 }

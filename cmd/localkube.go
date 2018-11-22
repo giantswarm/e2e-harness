@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/e2e-harness/pkg/localkube"
@@ -27,6 +29,8 @@ func init() {
 }
 
 func runLocalkube(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+
 	var err error
 
 	var l *localkube.Localkube
@@ -46,5 +50,5 @@ func runLocalkube(cmd *cobra.Command, args []string) error {
 		l.SetUp,
 	}
 
-	return tasks.Run(bundle)
+	return tasks.Run(ctx, bundle)
 }

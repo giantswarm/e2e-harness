@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -34,6 +36,8 @@ func init() {
 }
 
 func runTeardown(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -99,5 +103,5 @@ func runTeardown(cmd *cobra.Command, args []string) error {
 		bundle = append(bundle, p.CommonTearDownSteps)
 	}
 
-	return tasks.Run(bundle)
+	return tasks.Run(ctx, bundle)
 }
