@@ -9,12 +9,8 @@ e2eTest: &e2eTest
     - run: ./e2e-harness setup --remote=false
     - run:
         command: |
-          echo "debug: TEST_DIR=$TEST_DIR GOPATH=$GOPATH A=$A"
-        environment:
-          A: a_value
-          GOPATH: /home/circleci/.go_workspace
-    - run:
-        command: ./e2e-harness test --test-dir=${TEST_DIR}
+          echo "debug: TEST_DIR=$TEST_DIR GOPATH=$GOPATH"
+          ./e2e-harness test --test-dir=${TEST_DIR}
         environment:
           GOPATH: /home/circleci/.go_workspace
     - run:
@@ -50,12 +46,12 @@ jobs:
   e2eLocalTest:
     <<: *e2eTest
     environment:
-      E2E_TEST_DIR: "integration"
+      TEST_DIR: "integration"
 
   e2eLocalSubDirTest:
     <<: *e2eTest
     environment:
-      E2E_TEST_DIR: "e2e/sub-dir"
+      TEST_DIR: "e2e/sub-dir"
 
  # TODO investiage why the test is failing.
  #
