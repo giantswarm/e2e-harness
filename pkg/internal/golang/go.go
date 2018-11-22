@@ -50,11 +50,9 @@ func Go(ctx context.Context, args ...string) error {
 
 	var hostGoPath string
 	{
-		envVar := "GOPATH"
-
-		v := os.Getenv(envVar)
+		v := os.Getenv(envVarGoPath)
 		if hostGoPath == "" {
-			return microerror.Maskf(executionFailedError, "environment variable %#q must not be empty", envVar)
+			return microerror.Maskf(executionFailedError, "environment variable %#q must not be empty", envVarGoPath)
 		}
 
 		split := strings.Split(v, ":")
