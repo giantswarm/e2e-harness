@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/e2e-harness/cmd/internal"
 	"github.com/giantswarm/e2e-harness/pkg/cluster"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -23,7 +22,7 @@ var (
 	SetupCmd = &cobra.Command{
 		Use:   "setup",
 		Short: "setup e2e tests",
-		Run:   runSetup,
+		Run:   internal.NewRunFunc(runSetup),
 	}
 )
 
@@ -53,22 +52,7 @@ func init() {
 	SetupCmd.Flags().BoolVar(&remoteCluster, "remote", true, "use remote cluster")
 }
 
-func runSetup(cmd *cobra.Command, args []string) {
-	ctx := context.Background()
-
-	logger, err := micrologger.New(micrologger.Config{})
-	if err != nil {
-		panic(fmt.Sprintf("%#v", err))
-	}
-
-	err = runSetupError(ctx, cmd, args)
-	if err != nil {
-		logger.Log("level", "error", "message", "exiting with status 1 due to error", "stack", fmt.Sprintf("%#v", err))
-		os.Exit(1)
-	}
-}
-
-func runSetupError(ctx context.Context, cmd *cobra.Command, args []string) error {
+func runSetup(ctx context.Context, cmd *cobra.Command, args []string) error {
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)

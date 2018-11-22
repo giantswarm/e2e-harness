@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/e2e-harness/cmd/internal"
 	"github.com/giantswarm/e2e-harness/pkg/cluster"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -21,7 +22,7 @@ var (
 	TeardownCmd = &cobra.Command{
 		Use:   "teardown",
 		Short: "teardown e2e tests",
-		RunE:  runTeardown,
+		Run:   internal.NewRunFunc(runTeardown),
 	}
 )
 
@@ -35,9 +36,7 @@ func init() {
 	TeardownCmd.Flags().StringVar(&teardownCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 }
 
-func runTeardown(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
-
+func runTeardown(ctx context.Context, cmd *cobra.Command, args []string) error {
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
