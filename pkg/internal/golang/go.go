@@ -51,7 +51,7 @@ func Go(ctx context.Context, args ...string) error {
 	var hostGoPath string
 	{
 		v := os.Getenv(envVarGoPath)
-		if hostGoPath == "" {
+		if v == "" {
 			return microerror.Maskf(executionFailedError, "environment variable %#q must not be empty", envVarGoPath)
 		}
 

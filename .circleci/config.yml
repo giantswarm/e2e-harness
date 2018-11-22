@@ -7,12 +7,7 @@ e2eTest: &e2eTest
         at: .
     - run: ./e2e-harness localkube
     - run: ./e2e-harness setup --remote=false
-    - run:
-        command: |
-          echo "debug: TEST_DIR=$TEST_DIR GOPATH=$GOPATH"
-          ./e2e-harness test --test-dir=${TEST_DIR}
-        environment:
-          GOPATH: /home/circleci/.go_workspace
+    - run: ./e2e-harness test --test-dir=${TEST_DIR}
     - run:
         command: ./e2e-harness teardown
         when: always
