@@ -1,6 +1,7 @@
 package initializer
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -101,7 +102,7 @@ func New(logger micrologger.Logger, fs afero.Fs, projectName string) *Initialize
 	}
 }
 
-func (i *Initializer) CreateLayout() error {
+func (i *Initializer) CreateLayout(ctx context.Context) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return microerror.Mask(err)

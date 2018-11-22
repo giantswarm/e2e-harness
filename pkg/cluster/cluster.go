@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -60,7 +61,7 @@ func New(cfg Config) *Cluster {
 // Create is a Task that creates a remote cluster or, if we
 // are using a local one, puts in place the required files for
 // later access to it
-func (c *Cluster) Create() error {
+func (c *Cluster) Create(ctx context.Context) error {
 	if c.existingCluster {
 		kubeconfigFilePath, err := getKubeConfigPath()
 		if err != nil {
@@ -98,7 +99,7 @@ func (c *Cluster) Create() error {
 }
 
 // Delete is a Task that gets rid of a remote cluster.
-func (c *Cluster) Delete() error {
+func (c *Cluster) Delete(ctx context.Context) error {
 	return c.clusterAction("shipyard -action=stop")
 }
 

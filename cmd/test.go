@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/e2e-harness/cmd/internal"
 	"github.com/giantswarm/e2e-harness/pkg/compiler"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -20,7 +23,7 @@ var (
 	TestCmd = &cobra.Command{
 		Use:   "test",
 		Short: "execute e2e tests",
-		RunE:  runTest,
+		Run:   internal.NewRunFunc(runTest),
 	}
 )
 
@@ -34,7 +37,7 @@ func init() {
 	TestCmd.Flags().StringVar(&testCmdTestDir, "test-dir", project.DefaultDirectory, "Name of the directory containing executable tests.")
 }
 
-func runTest(cmd *cobra.Command, args []string) error {
+func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -116,5 +119,5 @@ func runTest(cmd *cobra.Command, args []string) error {
 
 	bundle = append(bundle, p.Test)
 
-	return tasks.Run(bundle)
+	return tasks.Run(ctx, bundle)
 }
