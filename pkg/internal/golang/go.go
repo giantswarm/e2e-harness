@@ -26,8 +26,10 @@ const (
 //	Go(ctx, "build", "-o", "e2e-harness", ".")
 //
 func Go(ctx context.Context, args ...string) error {
+	var err error
+
 	// Check as much as possible before executing docker image. After that
-	// error messages worth nothing and we need to check output.
+	// error messages are worth nothing and we need to check output.
 
 	{
 		if len(args) == 0 {
@@ -38,32 +40,44 @@ func Go(ctx context.Context, args ...string) error {
 		}
 	}
 
+	var hostWdir string
+	{
+		hostWdir, err = os.Getwd()
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
+	var hostGoPath string
+	{
+		envVar := "GOPATH"
+
+		v := os.Getenv(envVar)
+		if hostGoPath == "" {
+			return microerror.Maskf(executionFailedError, "environment variable %#q must not be empty", envVar)
+		}
+
+		split := strings.Split(v, ":")
+
+		for _, s := range split {
+			if strings.HasPrefix(hostWdir, s) {
+				hostGoPath = s
+				break
+			}
+		}
+
+		if hostGoPath == "" {
+			return microerror.Maskf(executionFailedError, "expected current working directory %#q to be in GOPATH %#q", hostWdir, hostGoPath)
+		}
+	}
+
 	var containerGoPath string
 	{
 		containerGoPath = "/go"
 	}
 
-	var hostGoPath string
-	{
-		v := "GOPATH"
-
-		hostGoPath = os.Getenv(v)
-		if hostGoPath == "" {
-			return microerror.Maskf(executionFailedError, "environment variable %#q must not be empty", v)
-		}
-	}
-
 	var containerWdir string
 	{
-		hostWdir, err := os.Getwd()
-		if err != nil {
-			return microerror.Mask(err)
-		}
-
-		if !strings.HasPrefix(hostWdir, hostGoPath) {
-			return microerror.Maskf(executionFailedError, "expected current working directory %#q to be in GOPATH %#q", hostWdir, hostGoPath)
-		}
-
 		relWdir := strings.TrimPrefix(hostWdir, hostGoPath)
 
 		containerWdir = filepath.Join(containerGoPath, relWdir)
@@ -85,7 +99,7 @@ func Go(ctx context.Context, args ...string) error {
 		Args:             append([]string{"go"}, args...),
 	}
 
-	err := docker.Run(ctx, c)
+	err = docker.Run(ctx, c)
 	if err != nil {
 		return microerror.Mask(err)
 	}
