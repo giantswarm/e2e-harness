@@ -1,6 +1,7 @@
 package localkube
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,7 +36,7 @@ func New(config Config) (*Localkube, error) {
 	return l, nil
 }
 
-func (l *Localkube) SetUp() error {
+func (l *Localkube) SetUp(ctx context.Context) error {
 	// download minikube binary.
 	err := downloadFromURL(fmt.Sprintf(minikubeDownloadURLFormat, l.minikubeVersion))
 	if err != nil {

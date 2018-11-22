@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/e2e-harness/cmd/internal"
 	"github.com/giantswarm/e2e-harness/pkg/localkube"
 	"github.com/giantswarm/e2e-harness/pkg/tasks"
 	"github.com/giantswarm/microerror"
@@ -12,7 +15,7 @@ var (
 	LocalkubeCmd = &cobra.Command{
 		Use:   "localkube",
 		Short: "setup localkube",
-		RunE:  runLocalkube,
+		Run:   internal.NewRunFunc(runLocalkube),
 	}
 )
 
@@ -26,7 +29,7 @@ func init() {
 	SetupCmd.Flags().StringVar(&minikubeVersion, "minikube-version", "v0.28.2", "Minikube version to use.")
 }
 
-func runLocalkube(cmd *cobra.Command, args []string) error {
+func runLocalkube(ctx context.Context, cmd *cobra.Command, args []string) error {
 	var err error
 
 	var l *localkube.Localkube
@@ -46,5 +49,5 @@ func runLocalkube(cmd *cobra.Command, args []string) error {
 		l.SetUp,
 	}
 
-	return tasks.Run(bundle)
+	return tasks.Run(ctx, bundle)
 }

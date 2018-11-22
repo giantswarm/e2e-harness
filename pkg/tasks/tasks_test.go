@@ -1,6 +1,7 @@
 package tasks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,13 +12,13 @@ import (
 
 var (
 	files   = []string{"/task1", "/task2"}
-	taskErr = func() error {
+	taskErr = func(ctx context.Context) error {
 		return fmt.Errorf("my-error")
 	}
 )
 
 func getTaskFunc(filename string, fs afero.Fs) tasks.Task {
-	return func() error {
+	return func(ctx context.Context) error {
 		if err := afero.WriteFile(fs, filename, []byte("test!"), 0644); err != nil {
 			return err
 		}
@@ -26,11 +27,13 @@ func getTaskFunc(filename string, fs afero.Fs) tasks.Task {
 }
 
 func TestRunNoError(t *testing.T) {
+	ctx := context.Background()
+
 	fs := new(afero.MemMapFs)
 
 	bundle := []tasks.Task{getTaskFunc(files[0], fs), getTaskFunc(files[1], fs)}
 
-	err := tasks.Run(bundle)
+	err := tasks.Run(ctx, bundle)
 	if err != nil {
 		t.Errorf("unexpected error %s", err)
 	}
@@ -47,6 +50,8 @@ func TestRunNoError(t *testing.T) {
 }
 
 func TestRunError(t *testing.T) {
+	ctx := context.Background()
+
 	fs := new(afero.MemMapFs)
 
 	var bundle []tasks.Task
@@ -54,7 +59,7 @@ func TestRunError(t *testing.T) {
 	bundle = append(bundle, taskErr)
 	bundle = append(bundle, getTaskFunc(files[1], fs))
 
-	err := tasks.Run(bundle)
+	err := tasks.Run(ctx, bundle)
 	if err == nil {
 		t.Error("expected error didn't happen")
 	}
@@ -70,25 +75,4 @@ func TestRunError(t *testing.T) {
 		t.Errorf("expected file %s to exists", files[0])
 	}
 
-}
-
-func TestRunIgnoreError(t *testing.T) {
-	fs := new(afero.MemMapFs)
-
-	var bundle []tasks.Task
-	bundle = append(bundle, getTaskFunc(files[0], fs))
-	bundle = append(bundle, taskErr)
-	bundle = append(bundle, getTaskFunc(files[1], fs))
-
-	tasks.RunIgnoreError(bundle)
-
-	for _, file := range files {
-		e, err := afero.Exists(fs, file)
-		if err != nil {
-			t.Errorf("unexpected error %s", err)
-		}
-		if !e {
-			t.Errorf("expected file %s to exists", file)
-		}
-	}
 }

@@ -78,7 +78,7 @@ func New(deps *Dependencies, cfg *Config) *Project {
 	return p
 }
 
-func (p *Project) CommonSetupSteps() error {
+func (p *Project) CommonSetupSteps(ctx context.Context) error {
 	p.logger.Log("level", "info", "message", "executing common setup steps")
 
 	steps := []Step{
@@ -128,7 +128,7 @@ func (p *Project) CommonSetupSteps() error {
 	return nil
 }
 
-func (p *Project) CommonTearDownSteps() error {
+func (p *Project) CommonTearDownSteps(ctx context.Context) error {
 	p.logger.Log("level", "info", "message", "starting common teardown steps")
 	steps := []Step{
 		{
@@ -150,7 +150,7 @@ func (p *Project) CommonTearDownSteps() error {
 	return nil
 }
 
-func (p *Project) Test() error {
+func (p *Project) Test(ctx context.Context) error {
 	p.logger.Log("level", "info", "message", "started tests")
 
 	// --test-dir is mounted in /e2e in the test container, and the binary with

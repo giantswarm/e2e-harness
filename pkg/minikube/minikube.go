@@ -2,6 +2,7 @@ package minikube
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -31,7 +32,7 @@ func New(logger micrologger.Logger, builder builder.Builder, tag string) *Miniku
 
 // BuildImages is a Task that build the required images for both the main
 // project and the e2e containers using the minikube docker environment.
-func (m *Minikube) BuildImages() error {
+func (m *Minikube) BuildImages(ctx context.Context) error {
 	m.logger.Log("level", "info", "message", "getting minikube docker environment")
 	env, err := m.getDockerEnv()
 	dir, err := os.Getwd()

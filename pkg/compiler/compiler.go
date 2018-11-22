@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,7 +35,7 @@ func New(config Config) *Compiler {
 }
 
 // CompileMain is a Task that builds the main binary.
-func (c *Compiler) CompileMain() error {
+func (c *Compiler) CompileMain(ctx context.Context) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return microerror.Mask(err)
@@ -58,7 +59,7 @@ func (c *Compiler) CompileMain() error {
 }
 
 // CompileTests is a Task that builds the tests binary.
-func (c *Compiler) CompileTests() error {
+func (c *Compiler) CompileTests(ctx context.Context) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return microerror.Mask(err)

@@ -1,6 +1,7 @@
 package initializer_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,6 +18,8 @@ const (
 )
 
 func TestCreateLayout(t *testing.T) {
+	ctx := context.Background()
+
 	fs := afero.NewMemMapFs()
 	logger := microloggertest.New()
 
@@ -33,13 +36,13 @@ func TestCreateLayout(t *testing.T) {
 			t.Errorf("could not create container dir, %v", err)
 		}
 
-		if err := subject.CreateLayout(); err == nil {
+		if err := subject.CreateLayout(ctx); err == nil {
 			t.Errorf("expected error creating layout did not happen")
 		}
 	})
 
 	fs.RemoveAll(baseDir)
-	if err := subject.CreateLayout(); err != nil {
+	if err := subject.CreateLayout(ctx); err != nil {
 		t.Errorf("unexpected error creating layout %s", err)
 	}
 
