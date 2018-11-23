@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -67,13 +68,18 @@ func (c *Compiler) CompileMain(ctx context.Context) error {
 func (c *Compiler) CompileTests(ctx context.Context) error {
 	binaryPath := filepath.Join(c.testDir, harness.GetProjectName()+"-e2e")
 
-	c.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("compiling binary %#q", binaryPath))
+	pkg := c.testDir
+	if !strings.HasPrefix(c.testDir, string(filepath.Separator)) {
+		pkg = "./" + pkg
+	}
 
-	err := golang.Go(ctx, "test", "-c", "-o", binaryPath, "-tags", "k8srequired", c.testDir)
+	c.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("compiling test binary %#q for package %#q", binaryPath, pkg))
+
+	err := golang.Go(ctx, "test", "-c", "-o", binaryPath, "-tags", "k8srequired", pkg)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	c.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("compiled binary %#q", binaryPath))
+	c.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("compiled test binary %#q for package %#q", binaryPath, pkg))
 	return nil
 }
