@@ -8,7 +8,6 @@ import (
 )
 
 type RunConfig struct {
-	Rm               bool
 	Volumes          []string
 	Env              []string
 	WorkingDirectory string
