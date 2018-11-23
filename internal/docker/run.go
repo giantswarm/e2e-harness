@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 
-	"github.com/giantswarm/e2e-harness/pkg/internal/exec"
+	"github.com/giantswarm/e2e-harness/internal/exec"
 	"github.com/giantswarm/microerror"
 )
 

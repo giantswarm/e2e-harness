@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/giantswarm/e2e-harness/pkg/internal/docker"
+	"github.com/giantswarm/e2e-harness/internal/docker"
 	"github.com/giantswarm/microerror"
 )
 
