@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/e2e-harness/cmd/internal"
+	"github.com/giantswarm/e2e-harness/internal/golang"
 	"github.com/giantswarm/e2e-harness/pkg/compiler"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -38,6 +39,8 @@ func init() {
 }
 
 func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
+	var err error
+
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -105,8 +108,22 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 		comp = compiler.New(c)
 	}
 
+	var pullGoDockerImageTask tasks.Task
+	{
+		c := tasks.RetryTaskConfig{
+			Logger:     logger,
+			Underlying: golang.PullDockerImage,
+		}
+
+		pullGoDockerImageTask, err = tasks.NewRetryTask(c)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
 	// tasks to run
 	bundle := []tasks.Task{
+		pullGoDockerImageTask,
 		comp.CompileTests,
 	}
 

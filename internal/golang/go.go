@@ -11,15 +11,6 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
-const (
-	dockerImage = "quay.io/giantswarm/golang:1.11.1"
-	goOS        = "linux"
-	goArch      = "amd64"
-	cgoEnabled  = "0"
-
-	envVarGoPath = "GOPATH"
-)
-
 // Go runs a go command for a project in a given working directory. Example
 // call could look like this:
 //
