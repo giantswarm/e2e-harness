@@ -9,7 +9,7 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/apprclient"
 	"github.com/giantswarm/backoff"
-	"github.com/giantswarm/e2e-harness/pkg/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/internal/filelogger"
 	"github.com/giantswarm/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
