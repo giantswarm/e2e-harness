@@ -8,15 +8,6 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
-func Pull(ctx context.Context, image string) error {
-	err := exec.Exec(ctx, "docker", "pull", image)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	return nil
-}
-
 type RunConfig struct {
 	Rm               bool
 	Volumes          []string
