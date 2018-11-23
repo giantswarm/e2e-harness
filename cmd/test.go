@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/e2e-harness/cmd/internal"
+	"github.com/giantswarm/e2e-harness/internal/golang"
 	"github.com/giantswarm/e2e-harness/pkg/compiler"
 	"github.com/giantswarm/e2e-harness/pkg/docker"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
@@ -96,20 +97,7 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 		p = project.New(pDeps, pCfg)
 	}
 
-	var pullGoDockerImageTask tasks.Task
-	{
-		c := tasks.RetryTaskConfig{
-			Logger:     logger,
-			Underlying: docker.PullDockerImage,
-		}
-
-		pullGoDockerImageTask, err = tasks.NewRetryTask(c)
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	}
-
-	var compileTestsTask tasks.Task
+	var comp *compiler.Compiler
 	{
 		c := compiler.Config{
 			Logger: logger,
@@ -118,14 +106,25 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 		}
 
 		comp = compiler.New(c)
+	}
 
-		compileTestsTask = comp.CompileTests
+	var pullGoDockerImageTask tasks.Task
+	{
+		c := tasks.RetryTaskConfig{
+			Logger:     logger,
+			Underlying: golang.PullDockerImage,
+		}
+
+		pullGoDockerImageTask, err = tasks.NewRetryTask(c)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 
 	// tasks to run
 	bundle := []tasks.Task{
 		pullGoDockerImageTask,
-		compileTestsTask,
+		comp.CompileTests,
 	}
 
 	if !cfg.RemoteCluster {

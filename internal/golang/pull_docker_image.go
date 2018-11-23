@@ -3,8 +3,9 @@ package golang
 import (
 	"context"
 
-	"github.com/giantswarm/e2e-harness/pkg/internal/docker"
 	"github.com/giantswarm/microerror"
+
+	"github.com/giantswarm/e2e-harness/internal/docker"
 )
 
 // PullDockerImage implements tasks.Task func type. It is meant to be ran

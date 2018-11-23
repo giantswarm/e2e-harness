@@ -3,8 +3,9 @@ package docker
 import (
 	"context"
 
-	"github.com/giantswarm/e2e-harness/pkg/internal/exec"
 	"github.com/giantswarm/microerror"
+
+	"github.com/giantswarm/e2e-harness/internal/exec"
 )
 
 func Pull(ctx context.Context, image string) error {
