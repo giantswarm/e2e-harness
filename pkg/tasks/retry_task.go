@@ -36,6 +36,8 @@ func NewRetryTask(config RetryTaskConfig) (Task, error) {
 		if err != nil {
 			return microerror.Mask(err)
 		}
+
+		return nil
 	}
 
 	return t, nil
