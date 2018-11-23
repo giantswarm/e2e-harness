@@ -38,6 +38,8 @@ func init() {
 }
 
 func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
+	var err error
+
 	logger, err := micrologger.New(micrologger.Config{})
 	if err != nil {
 		return microerror.Mask(err)
@@ -94,7 +96,20 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 		p = project.New(pDeps, pCfg)
 	}
 
-	var comp *compiler.Compiler
+	var pullGoDockerImageTask tasks.Task
+	{
+		c := tasks.RetryTaskConfig{
+			Logger:     logger,
+			Underlying: docker.PullDockerImage,
+		}
+
+		pullGoDockerImageTask, err = tasks.NewRetryTask(c)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
+	var compileTestsTask tasks.Task
 	{
 		c := compiler.Config{
 			Logger: logger,
@@ -103,11 +118,14 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 		}
 
 		comp = compiler.New(c)
+
+		compileTestsTask = comp.CompileTests
 	}
 
 	// tasks to run
 	bundle := []tasks.Task{
-		comp.CompileTests,
+		pullGoDockerImageTask,
+		compileTestsTask,
 	}
 
 	if !cfg.RemoteCluster {
