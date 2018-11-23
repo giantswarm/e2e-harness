@@ -8,6 +8,15 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
+func Pull(ctx context.Context, image string) error {
+	err := exec.Exec(ctx, "docker", "pull", image)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
+}
+
 type RunConfig struct {
 	Rm               bool
 	Volumes          []string
@@ -18,7 +27,6 @@ type RunConfig struct {
 }
 
 func Run(ctx context.Context, config RunConfig) error {
-	prog := "docker"
 	args := []string{
 		"run",
 		fmt.Sprintf("--rm=%t", config.Rm),
@@ -39,7 +47,7 @@ func Run(ctx context.Context, config RunConfig) error {
 		args = append(args, arg)
 	}
 
-	err := exec.Exec(ctx, prog, args...)
+	err := exec.Exec(ctx, "docker", args...)
 	if err != nil {
 		return microerror.Mask(err)
 	}

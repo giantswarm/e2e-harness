@@ -98,6 +98,8 @@ func runTest(ctx context.Context, cmd *cobra.Command, args []string) error {
 	{
 		c := compiler.Config{
 			Logger: logger,
+
+			TestDir: testCmdTestDir,
 		}
 
 		comp = compiler.New(c)
