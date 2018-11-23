@@ -10,8 +10,8 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
+	"github.com/giantswarm/e2e-harness/internal/golang"
 	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/internal/golang"
 )
 
 type Config struct {
