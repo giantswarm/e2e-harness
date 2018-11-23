@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/giantswarm/e2e-harness/pkg/internal/exec"
 	"github.com/giantswarm/microerror"
@@ -20,7 +19,7 @@ type RunConfig struct {
 func Run(ctx context.Context, config RunConfig) error {
 	args := []string{
 		"run",
-		fmt.Sprintf("--rm=%t", config.Rm),
+		"--rm",
 	}
 
 	for _, volume := range config.Volumes {
