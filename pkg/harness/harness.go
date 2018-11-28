@@ -15,7 +15,8 @@ import (
 const (
 	defaultConfigFile = "config.yaml"
 
-	// DefaultKubeConfig is the file path of the control plane kubeconfig.
+	// DefaultKubeConfig is the file path of the testing cluster
+	// kubeconfig.
 	//
 	// NOTE: This value is used in its raw form in helmclient repo. When it
 	// changes we need to change it in helmclient too.
