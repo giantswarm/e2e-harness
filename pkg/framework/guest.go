@@ -228,7 +228,7 @@ func (g *Guest) WaitForGuestReady() error {
 	return nil
 }
 
-func (g *Guest) WaitForNodesUp(numberOfNodes int) error {
+func (g *Guest) WaitForNodesReady(numberOfNodes int) error {
 	g.logger.Log("level", "debug", "message", fmt.Sprintf("waiting for %d k8s nodes to be in %#q state", numberOfNodes, v1.NodeReady))
 
 	o := func() error {
