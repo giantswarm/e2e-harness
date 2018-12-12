@@ -145,13 +145,13 @@ func (g *Guest) Initialize() error {
 // Constructing the frameworks can be done right away but setting them up can
 // only happen as soon as certain requirements have been met. A requirement for
 // the guest framework is a set up host cluster.
-func (g *Guest) Setup() error {
+func (g *Guest) Setup(ctx context.Context) error {
 	err := g.Initialize()
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	err = g.WaitForGuestReady()
+	err = g.WaitForGuestReady(ctx)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -213,7 +213,7 @@ func (g *Guest) WaitForAPIUp() error {
 	return nil
 }
 
-func (g *Guest) WaitForGuestReady() error {
+func (g *Guest) WaitForGuestReady(ctx context.Context) error {
 	var err error
 
 	err = g.WaitForAPIUp()
@@ -221,7 +221,7 @@ func (g *Guest) WaitForGuestReady() error {
 		return microerror.Mask(err)
 	}
 
-	err = g.WaitForNodesUp(minimumNodesReady)
+	err = g.WaitForNodesReady(ctx, minimumNodesReady)
 	if err != nil {
 		return microerror.Mask(err)
 	}
