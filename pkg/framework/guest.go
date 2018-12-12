@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -228,8 +229,8 @@ func (g *Guest) WaitForGuestReady() error {
 	return nil
 }
 
-func (g *Guest) WaitForNodesReady(numberOfNodes int) error {
-	g.logger.Log("level", "debug", "message", fmt.Sprintf("waiting for %d k8s nodes to be in %#q state", numberOfNodes, v1.NodeReady))
+func (g *Guest) WaitForNodesReady(ctx context.Context, numberOfNodes int) error {
+	g.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("waiting for %d k8s nodes to be in %#q state", numberOfNodes, v1.NodeReady))
 
 	o := func() error {
 		nodes, err := g.k8sClient.CoreV1().Nodes().List(metav1.ListOptions{})
@@ -257,7 +258,7 @@ func (g *Guest) WaitForNodesReady(numberOfNodes int) error {
 	}
 	b := backoff.NewConstant(backoff.LongMaxWait, backoff.LongMaxInterval)
 	n := func(err error, delay time.Duration) {
-		g.logger.Log("level", "debug", "message", err.Error())
+		g.logger.LogCtx(ctx, "level", "debug", "message", err.Error())
 	}
 
 	err := backoff.RetryNotify(o, b, n)
@@ -265,6 +266,6 @@ func (g *Guest) WaitForNodesReady(numberOfNodes int) error {
 		return microerror.Mask(err)
 	}
 
-	g.logger.Log("level", "debug", "message", fmt.Sprintf("waited for %d k8s nodes to be in %#q state", numberOfNodes, v1.NodeReady))
+	g.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("waited for %d k8s nodes to be in %#q state", numberOfNodes, v1.NodeReady))
 	return nil
 }
