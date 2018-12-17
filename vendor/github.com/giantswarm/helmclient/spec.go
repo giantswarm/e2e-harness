@@ -11,8 +11,8 @@ const (
 	// release by default.
 	defaultMaxHistory = 10
 
-	tillerDefaultNamespace = "kube-system"
-	tillerImageSpec        = "quay.io/giantswarm/tiller:v2.8.2"
+	defaultTillerImage     = "quay.io/giantswarm/tiller:v2.12.0"
+	defaultTillerNamespace = "kube-system"
 	tillerLabelSelector    = "app=helm,name=tiller"
 	tillerPodName          = "tiller-giantswarm"
 	tillerPort             = 44134
@@ -35,8 +35,10 @@ type Interface interface {
 	// The releaseName is the name of the Helm Release that is set when the Helm
 	// Chart is installed.
 	GetReleaseHistory(ctx context.Context, releaseName string) (*ReleaseHistory, error)
-	// InstallFromTarball installs a Helm Chart packaged in the given tarball.
+	// InstallReleaseFromTarball installs a Helm Chart packaged in the given tarball.
 	InstallReleaseFromTarball(ctx context.Context, path, ns string, options ...helm.InstallOption) error
+	// ListReleaseContents gets the current status of all Helm Releases.
+	ListReleaseContents(ctx context.Context) ([]*ReleaseContent, error)
 	// PingTiller proxies the underlying Helm client PingTiller method.
 	PingTiller(ctx context.Context) error
 	// RunReleaseTest runs the tests for a Helm Release. This is the same
