@@ -247,7 +247,7 @@ func (g *Guest) WaitForNodesReady(ctx context.Context, expectedNodes int) error 
 			}
 		}
 
-		if nodesReady < expectedNodes {
+		if nodesReady != expectedNodes {
 			return microerror.Maskf(waitError, "found %d/%d k8s nodes in %#q state but %d are expected", nodesReady, len(nodes.Items), v1.NodeReady, expectedNodes)
 		}
 
