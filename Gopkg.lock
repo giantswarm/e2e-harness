@@ -89,11 +89,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cb9e0c807ef811f4739c14dd4ce51c858938215a9e7bbb5bb25e1e439f303308"
+  digest = "1:616e69476c8880a527672e9f4b039590c827656d4c3e688bc6f5553a80e23aca"
   name = "github.com/giantswarm/apprclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "875ffc3f0ea820360b967d69a1a1e88c26cd7480"
+  revision = "39c10991cdd838779ac8bc27d610fa9f74525a0c"
 
 [[projects]]
   branch = "master"
