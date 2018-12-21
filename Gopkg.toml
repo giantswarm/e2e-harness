@@ -35,7 +35,7 @@ required = [
   branch = "master"
 
 [[constraint]]
-  branch = "ctx"
+  branch = "master"
   name = "github.com/giantswarm/apprclient"
 
 [[constraint]]
