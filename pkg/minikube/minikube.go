@@ -1,13 +1,10 @@
 package minikube
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
@@ -38,16 +35,12 @@ func (m *Minikube) BuildImages(ctx context.Context) error {
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	env, err := m.getDockerEnv()
-	if err != nil {
-		return microerror.Mask(err)
-	}
 	image := fmt.Sprintf("quay.io/giantswarm/%s", harness.GetProjectName())
 
 	m.logger.Log("level", "info", "message", fmt.Sprintf("building image %q", image))
 
 	o := func() error {
-		err := m.builder.Build(ioutil.Discard, image, dir, m.imageTag, env)
+		err := m.builder.Build(ioutil.Discard, image, dir, m.imageTag, nil)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -64,36 +57,4 @@ func (m *Minikube) BuildImages(ctx context.Context) error {
 	m.logger.Log("level", "info", "message", fmt.Sprintf("built image %q", image))
 
 	return nil
-}
-
-func (m *Minikube) getDockerEnv() ([]string, error) {
-	cmd := exec.Command("minikube", "docker-env")
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return []string{}, microerror.Mask(err)
-	}
-	if err := cmd.Start(); err != nil {
-		return []string{}, microerror.Mask(err)
-	}
-
-	var env []string
-
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		if strings.HasPrefix(scanner.Text(), "export") {
-			parts := strings.Fields(scanner.Text())
-			entry := strings.Replace(parts[1], `"`, "", -1)
-			env = append(env, entry)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return env, microerror.Mask(err)
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return []string{}, microerror.Mask(err)
-	}
-
-	return env, nil
 }
