@@ -54,7 +54,7 @@
     "digestset",
     "reference"
   ]
-  revision = "91b0f0559eb6710c574451049f8c71eb9c3952a7"
+  revision = "b1fd12d0c173a11f402cdf3ed725fc7e7b2a2553"
 
 [[projects]]
   branch = "master"
@@ -91,10 +91,10 @@
   revision = "4763148864dc4815b691a69b4f60b4f4a8f88dad"
 
 [[projects]]
-  branch = "master"
+  branch = "kubernetes-1.13.2"
   name = "github.com/giantswarm/e2esetup"
   packages = ["k8s"]
-  revision = "e53c0fc8c6d5d2968bf6942e96e5c73538628351"
+  revision = "557b6766af17c03ed1180d7ccb151c464b5b74e4"
 
 [[projects]]
   branch = "master"
@@ -103,10 +103,10 @@
   revision = "d4c171b8af43355ae5cb35bfd63a24aae3fbcc16"
 
 [[projects]]
-  branch = "master"
+  branch = "kubernetes-1.13.2"
   name = "github.com/giantswarm/k8sportforward"
   packages = ["."]
-  revision = "8d59ac50659c3703f33a2e95dd5b5344449335dd"
+  revision = "b9e2aa9da6149a7399eb59d5326a4794c77e7392"
 
 [[projects]]
   branch = "master"
@@ -667,6 +667,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d69554980dd4a629c12907c05703099ad731e2265d167d4b18d817b0b8e09ee0"
+  inputs-digest = "3f6960881920c16f6d21664b663df1af7d072afa0ed899b6ec13c279d6eba256"
   solver-name = "gps-cdcl"
   solver-version = 1
