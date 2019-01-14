@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
@@ -33,20 +34,34 @@ func New(logger micrologger.Logger, builder builder.Builder, tag string) *Miniku
 // BuildImages is a Task that build the required images for both the main
 // project and the e2e containers using the minikube docker environment.
 func (m *Minikube) BuildImages(ctx context.Context) error {
-	m.logger.Log("level", "info", "message", "getting minikube docker environment")
-	env, err := m.getDockerEnv()
 	dir, err := os.Getwd()
 	if err != nil {
 		return microerror.Mask(err)
 	}
-
-	name := harness.GetProjectName()
-
-	image := fmt.Sprintf("quay.io/giantswarm/%s", name)
-	m.logger.Log("level", "info", "message", "building image "+image)
-	if err := m.buildImage(name, dir, image, env); err != nil {
+	env, err := m.getDockerEnv()
+	if err != nil {
 		return microerror.Mask(err)
 	}
+	image := fmt.Sprintf("quay.io/giantswarm/%s", harness.GetProjectName())
+
+	m.logger.Log("level", "info", "message", fmt.Sprintf("building image %q", image))
+
+	o := func() error {
+		err := m.builder.Build(ioutil.Discard, image, dir, m.imageTag, env)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		return nil
+	}
+	b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
+	n := backoff.NewNotifier(m.logger, ctx)
+
+	err = backoff.RetryNotify(o, b, n)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	m.logger.Log("level", "info", "message", fmt.Sprintf("built image %q", image))
 
 	return nil
 }
@@ -81,12 +96,4 @@ func (m *Minikube) getDockerEnv() ([]string, error) {
 	}
 
 	return env, nil
-}
-
-func (m *Minikube) buildImage(binaryName, path, imageName string, env []string) error {
-	if err := m.builder.Build(ioutil.Discard, imageName, path, m.imageTag, env); err != nil {
-		m.logger.Log("level", "error", "message", fmt.Sprintf("could not build image %s: %v", imageName, err))
-		return microerror.Mask(err)
-	}
-	return nil
 }
