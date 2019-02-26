@@ -64,7 +64,7 @@ required = [
 
 [[constraint]]
   name = "gopkg.in/yaml.v2"
-  version = "2.2.2"
+  version = "=2.2.2"
 
 [[constraint]]
   name = "k8s.io/api"
