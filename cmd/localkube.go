@@ -26,7 +26,7 @@ var (
 func init() {
 	RootCmd.AddCommand(LocalkubeCmd)
 
-	SetupCmd.Flags().StringVar(&minikubeVersion, "minikube-version", "v0.28.2", "Minikube version to use.")
+	SetupCmd.Flags().StringVar(&minikubeVersion, "minikube-version", "v1.0.0", "Minikube version to use.")
 }
 
 func runLocalkube(ctx context.Context, cmd *cobra.Command, args []string) error {

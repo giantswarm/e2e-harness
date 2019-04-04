@@ -45,7 +45,7 @@ func (l *Localkube) SetUp(ctx context.Context) error {
 
 	commands := []string{
 		"chmod a+x ./minikube-linux-amd64",
-		"sudo ./minikube-linux-amd64 start --bootstrapper localkube --vm-driver=none --extra-config=apiserver.Authorization.Mode=RBAC --feature-gates=CustomResourceSubresources=true,MountPropagation=false",
+		"sudo ./minikube-linux-amd64 start --bootstrapper localkube --kubernetes-version v1.13.4 --vm-driver=none --extra-config=apiserver.Authorization.Mode=RBAC --feature-gates=CustomResourceSubresources=true,MountPropagation=false",
 		"sudo chown -R $USER $HOME/.kube",
 		"sudo chgrp -R $USER $HOME/.kube",
 		"sudo chown -R $USER $HOME/.minikube",
