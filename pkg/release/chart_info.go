@@ -64,3 +64,10 @@ func NewVersion(gitSHA string) Version {
 		isChannel: false,
 	}
 }
+
+func NewChannelVersion(channel string) Version {
+	return ChartInfo{
+		version:   channel,
+		isChannel: true,
+	}
+}
