@@ -43,7 +43,7 @@ required = [
   name = "github.com/giantswarm/backoff"
 
 [[constraint]]
-  branch = "master"
+  branch = "reduce_install_time"
   name = "github.com/giantswarm/helmclient"
 
 [[constraint]]
