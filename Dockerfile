@@ -9,8 +9,7 @@ RUN mkdir -p ${WORKDIR}
 RUN chown -R e2e-harness:e2e-harness ${WORKDIR} ${HOME}
 
 # In case of unsatisfiable constraints error consult
-# https://pkgs.alpinelinux.org/packages?name=openssh-client&branch=v3.8 for up
-# to date versions.
+# https://pkgs.alpinelinux.org/packages?branch=v3.8 for up to date versions.
 RUN apk -Uuv add --update --no-cache \
       bash=4.4.19-r1 \
       build-base=0.5-r1 \
