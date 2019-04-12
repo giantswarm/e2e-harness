@@ -124,16 +124,15 @@ func (c *conditionSet) PodNotFound(ctx context.Context, namespace, labelSelector
 	return func() error {
 		o := func() error {
 			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
-			if apierrors.IsNotFound(err) {
-				return nil
-			} else if err != nil {
+			if err != nil {
 				return microerror.Mask(err)
 			}
-			if len(pods.Items) != 1 {
-				return microerror.Maskf(waitError, "expected 1 Pod but got %d", len(pods.Items))
+
+			if len(pods.Items) != 0 {
+				return microerror.Maskf(waitError, "expected no Pods for label selector %#q but got %d", labelSelector, len(pods.Items))
 			}
 
-			return microerror.Maskf(waitError, "Pod for label selector %#q in namespace %#q still exists", labelSelector, namespace)
+			return nil
 		}
 		b := backoff.NewExponential(backoff.MediumMaxWait, backoff.LongMaxInterval)
 
