@@ -78,7 +78,7 @@ func (c *conditionSet) CRDNotFound(ctx context.Context, crd *apiextensionsv1beta
 				return backoff.Permanent(microerror.Mask(err))
 			}
 
-			return microerror.Maskf(waitError, "CRD %#q still exists", crd.Name, crd.Namespace)
+			return microerror.Maskf(waitError, "CRD %#q still exists", crd.Name)
 		}
 		b := backoff.NewExponential(backoff.ShortMaxWait, backoff.ShortMaxInterval)
 		n := backoff.NewNotifier(c.logger, ctx)
