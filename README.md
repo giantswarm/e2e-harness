@@ -52,7 +52,7 @@ for each operation mode:
 RBAC enabled before running e2e-harness:
 
 ```
-$ minikube start --extra-config=apiserver.Authorization.Mode=RBAC
+$ minikube start --extra-config=apiserver.authorization-mode=RBAC
 ```
 
 * Remote: as stated above e2e-harness uses [shipyard](https://github.com/giantswarm/shipyard)
