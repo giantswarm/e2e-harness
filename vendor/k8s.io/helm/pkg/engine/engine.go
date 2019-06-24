@@ -130,7 +130,7 @@ type renderable struct {
 	tpl string
 	// vals are the values to be supplied to the template.
 	vals chartutil.Values
-	// basePath namespace prefix to the templates of the current chart
+	// namespace prefix to the templates of the current chart
 	basePath string
 }
 

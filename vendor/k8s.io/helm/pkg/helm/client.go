@@ -302,7 +302,7 @@ func (h *Client) RunReleaseTest(rlsName string, opts ...ReleaseTestOption) (<-ch
 	return h.test(ctx, req)
 }
 
-// PingTiller pings the Tiller pod and ensures that it is up and running
+// PingTiller pings the Tiller pod and ensure's that it is up and running
 func (h *Client) PingTiller() error {
 	ctx := NewContext()
 	return h.ping(ctx)
@@ -334,7 +334,7 @@ func (h *Client) connect(ctx context.Context) (conn *grpc.ClientConn, err error)
 	return conn, nil
 }
 
-// list executes tiller.ListReleases RPC.
+// Executes tiller.ListReleases RPC.
 func (h *Client) list(ctx context.Context, req *rls.ListReleasesRequest) (*rls.ListReleasesResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -365,7 +365,7 @@ func (h *Client) list(ctx context.Context, req *rls.ListReleasesRequest) (*rls.L
 	return resp, nil
 }
 
-// install executes tiller.InstallRelease RPC.
+// Executes tiller.InstallRelease RPC.
 func (h *Client) install(ctx context.Context, req *rls.InstallReleaseRequest) (*rls.InstallReleaseResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -377,7 +377,7 @@ func (h *Client) install(ctx context.Context, req *rls.InstallReleaseRequest) (*
 	return rlc.InstallRelease(ctx, req)
 }
 
-// delete executes tiller.UninstallRelease RPC.
+// Executes tiller.UninstallRelease RPC.
 func (h *Client) delete(ctx context.Context, req *rls.UninstallReleaseRequest) (*rls.UninstallReleaseResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -389,7 +389,7 @@ func (h *Client) delete(ctx context.Context, req *rls.UninstallReleaseRequest) (
 	return rlc.UninstallRelease(ctx, req)
 }
 
-// update executes tiller.UpdateRelease RPC.
+// Executes tiller.UpdateRelease RPC.
 func (h *Client) update(ctx context.Context, req *rls.UpdateReleaseRequest) (*rls.UpdateReleaseResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -401,7 +401,7 @@ func (h *Client) update(ctx context.Context, req *rls.UpdateReleaseRequest) (*rl
 	return rlc.UpdateRelease(ctx, req)
 }
 
-// rollback executes tiller.RollbackRelease RPC.
+// Executes tiller.RollbackRelease RPC.
 func (h *Client) rollback(ctx context.Context, req *rls.RollbackReleaseRequest) (*rls.RollbackReleaseResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -413,7 +413,7 @@ func (h *Client) rollback(ctx context.Context, req *rls.RollbackReleaseRequest) 
 	return rlc.RollbackRelease(ctx, req)
 }
 
-// status executes tiller.GetReleaseStatus RPC.
+// Executes tiller.GetReleaseStatus RPC.
 func (h *Client) status(ctx context.Context, req *rls.GetReleaseStatusRequest) (*rls.GetReleaseStatusResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -425,7 +425,7 @@ func (h *Client) status(ctx context.Context, req *rls.GetReleaseStatusRequest) (
 	return rlc.GetReleaseStatus(ctx, req)
 }
 
-// content executes tiller.GetReleaseContent RPC.
+// Executes tiller.GetReleaseContent RPC.
 func (h *Client) content(ctx context.Context, req *rls.GetReleaseContentRequest) (*rls.GetReleaseContentResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -437,7 +437,7 @@ func (h *Client) content(ctx context.Context, req *rls.GetReleaseContentRequest)
 	return rlc.GetReleaseContent(ctx, req)
 }
 
-// version executes tiller.GetVersion RPC.
+// Executes tiller.GetVersion RPC.
 func (h *Client) version(ctx context.Context, req *rls.GetVersionRequest) (*rls.GetVersionResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -449,7 +449,7 @@ func (h *Client) version(ctx context.Context, req *rls.GetVersionRequest) (*rls.
 	return rlc.GetVersion(ctx, req)
 }
 
-// history executes tiller.GetHistory RPC.
+// Executes tiller.GetHistory RPC.
 func (h *Client) history(ctx context.Context, req *rls.GetHistoryRequest) (*rls.GetHistoryResponse, error) {
 	c, err := h.connect(ctx)
 	if err != nil {
@@ -461,7 +461,7 @@ func (h *Client) history(ctx context.Context, req *rls.GetHistoryRequest) (*rls.
 	return rlc.GetHistory(ctx, req)
 }
 
-// test executes tiller.TestRelease RPC.
+// Executes tiller.TestRelease RPC.
 func (h *Client) test(ctx context.Context, req *rls.TestReleaseRequest) (<-chan *rls.TestReleaseResponse, <-chan error) {
 	errc := make(chan error, 1)
 	c, err := h.connect(ctx)
@@ -499,7 +499,7 @@ func (h *Client) test(ctx context.Context, req *rls.TestReleaseRequest) (<-chan 
 	return ch, errc
 }
 
-// ping executes tiller.Ping RPC.
+// Executes tiller.Ping RPC.
 func (h *Client) ping(ctx context.Context) error {
 	c, err := h.connect(ctx)
 	if err != nil {
