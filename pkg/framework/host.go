@@ -32,7 +32,6 @@ type HostConfig struct {
 
 	ClusterID       string
 	TargetNamespace string
-	VaultToken      string
 }
 
 type Host struct {
@@ -48,7 +47,6 @@ type Host struct {
 
 	clusterID       string
 	targetNamespace string
-	vaultToken      string
 }
 
 func NewHost(c HostConfig) (*Host, error) {
@@ -64,9 +62,6 @@ func NewHost(c HostConfig) (*Host, error) {
 	}
 	if c.TargetNamespace == "" {
 		c.TargetNamespace = defaultNamespace
-	}
-	if c.VaultToken == "" {
-		return nil, microerror.Maskf(invalidConfigError, "%T.VaultToken must not be empty", c)
 	}
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", harness.DefaultKubeConfig)
@@ -114,7 +109,6 @@ func NewHost(c HostConfig) (*Host, error) {
 
 		clusterID:       c.ClusterID,
 		targetNamespace: c.TargetNamespace,
-		vaultToken:      c.VaultToken,
 	}
 
 	return h, nil
@@ -253,11 +247,4 @@ func (h *Host) RestConfig() *rest.Config {
 
 func (h *Host) TargetNamespace() string {
 	return h.targetNamespace
-}
-
-func (h *Host) Teardown() {
-	HelmCmd("delete vault --purge")
-	h.k8sClient.CoreV1().
-		Namespaces().
-		Delete("giantswarm", &metav1.DeleteOptions{})
 }
