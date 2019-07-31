@@ -186,15 +186,6 @@ func IsTestReleaseTimeout(err error) bool {
 	return microerror.Cause(err) == testReleaseTimeoutError
 }
 
-var tillerInstallationFailedError = &microerror.Error{
-	Kind: "tillerInstallationFailedError",
-}
-
-// IsTillerInstallationFailed asserts tillerInstallationFailedError.
-func IsTillerInstallationFailed(err error) bool {
-	return microerror.Cause(err) == tillerInstallationFailedError
-}
-
 var tillerNotFoundError = &microerror.Error{
 	Kind: "tillerNotFoundError",
 }
@@ -204,13 +195,13 @@ func IsTillerNotFound(err error) bool {
 	return microerror.Cause(err) == tillerNotFoundError
 }
 
-var tillerOutdatedError = &microerror.Error{
-	Kind: "tillerOutdatedError",
+var tillerInvalidVersionError = &microerror.Error{
+	Kind: "tillerInvalidVersionError",
 }
 
-// IsTillerOutdated asserts tillerOutdatedError.
-func IsTillerOutdated(err error) bool {
-	return microerror.Cause(err) == tillerOutdatedError
+// IsTillerInvalidVersion asserts tillerInvalidVersionError.
+func IsTillerInvalidVersion(err error) bool {
+	return microerror.Cause(err) == tillerInvalidVersionError
 }
 
 var tooManyResultsError = &microerror.Error{
