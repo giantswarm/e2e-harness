@@ -38,7 +38,7 @@ func New(config Config) (*Deployment, error) {
 
 // Check ensures that key properties of the deployment are correct.
 func (d *Deployment) Check(name string, replicas int, expectedLabels, expectedMatchLabels map[string]string) error {
-	ds, err := d.k8sClient.Apps().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
+	ds, err := d.k8sClient.AppsV1().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		return microerror.Maskf(notFoundError, "deployment: '%s'", name)
 	} else if err != nil {
