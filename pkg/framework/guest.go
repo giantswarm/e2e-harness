@@ -43,6 +43,9 @@ type Guest struct {
 }
 
 func NewGuest(config GuestConfig) (*Guest, error) {
+	if config.HostK8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.HostK8sClient must not be empty", config)
+	}
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
