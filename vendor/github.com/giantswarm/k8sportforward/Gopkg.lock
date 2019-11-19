@@ -206,15 +206,15 @@
   version = "v2.2.7"
 
 [[projects]]
-  digest = "1:6b7e4dcfe4299e84936290d40679c5b817b24f8bef393a2cf6391ec101fc18d0"
+  digest = "1:ab163fce25b3e8028ea7f5bb4b44878af2f6f11235401ae8c185ad6e08fce52c"
   name = "k8s.io/api"
   packages = ["core/v1"]
   pruneopts = "UT"
-  revision = "bd6ac527cfd24ad928f66798231e5bcf7f37321b"
-  version = "kubernetes-1.15.4"
+  revision = "16d7abae0d2a8ab2a6a7ad1bf3300eaacd541f56"
+  version = "kubernetes-1.16.3"
 
 [[projects]]
-  digest = "1:b101b35caea20707ee9faade08d8851a8af0192328d0ad852c567e80902bea71"
+  digest = "1:d97329834adbe69e3f35f0c34980555e19cd4f756119efe37c91168e09963efa"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -255,11 +255,11 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "f2f3a405f61d6c2cdc0d00687c1b5d90de91e9f0"
-  version = "kubernetes-1.15.4"
+  revision = "72ed19daf4bb788ae595ae4103c404cb0fa09c84"
+  version = "kubernetes-1.16.3"
 
 [[projects]]
-  digest = "1:249701d12dbbf0662699067650af478b6a1bbb545fac3648de461629d8dec6b6"
+  digest = "1:beeb95a96aafb7dca4a0e27886c43e9afd7c33a3dd94a737bd95e30048aa4953"
   name = "k8s.io/client-go"
   packages = [
     "pkg/apis/clientauthentication",
@@ -280,8 +280,8 @@
     "util/keyutil",
   ]
   pruneopts = "UT"
-  revision = "06eb1244587a17d4994ff9de4ce93756a2f16f0b"
-  version = "kubernetes-1.15.4"
+  revision = "6c5935290e3335b200f75d874a19be3093e9c36b"
+  version = "kubernetes-1.16.3"
 
 [[projects]]
   digest = "1:93e82f25d75aba18436ad1ac042cb49493f096011f2541075721ed6f9e05c044"
