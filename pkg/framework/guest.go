@@ -275,6 +275,7 @@ func (g *Guest) WaitForNodesReady(ctx context.Context, expectedNodes int) error 
 }
 
 func (g *Guest) EnsureNamespacesExists(ctx context.Context, namespaces []string) error {
+	g.logger.Log("level", "debug", "message", "ensuring needed namespaces exist")
 	for _, name := range namespaces {
 		// check for existing namespace with this name
 		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(name, metav1.GetOptions{})
@@ -287,6 +288,8 @@ func (g *Guest) EnsureNamespacesExists(ctx context.Context, namespaces []string)
 			}
 		}
 	}
+
+	g.logger.Log("level", "debug", "message", "ensured needed namespaces exist")
 
 	return nil
 }
