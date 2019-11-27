@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	requiredNamespaces = []string{"giantswarm"}
+	namespaces = []string{"giantswarm"}
 )
 
 type GuestConfig struct {
@@ -225,7 +225,7 @@ func (g *Guest) WaitForGuestReady(ctx context.Context) error {
 		return microerror.Mask(err)
 	}
 
-	err = g.EnsureNamespaces(ctx, requiredNamespaces)
+	err = g.EnsureNamespacesExists(ctx, namespaces)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -274,8 +274,8 @@ func (g *Guest) WaitForNodesReady(ctx context.Context, expectedNodes int) error 
 	return nil
 }
 
-func (g *Guest) EnsureNamespaces(ctx context.Context, requiredNamespaces []string) error {
-	for _, name := range requiredNamespaces {
+func (g *Guest) EnsureNamespacesExists(ctx context.Context, namespaces []string) error {
+	for _, name := range namespaces {
 		// check for existing namespace with this name
 		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
