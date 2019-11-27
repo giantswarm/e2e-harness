@@ -24,6 +24,10 @@ const (
 	minimumNodesReady = 3
 )
 
+var (
+	requiredNamespaces = []string{"giantswarm"}
+)
+
 type GuestConfig struct {
 	Logger micrologger.Logger
 
@@ -221,6 +225,11 @@ func (g *Guest) WaitForGuestReady(ctx context.Context) error {
 		return microerror.Mask(err)
 	}
 
+	err = g.EnsureNamespaces(ctx, requiredNamespaces)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
 	err = g.WaitForNodesReady(ctx, minimumNodesReady)
 	if err != nil {
 		return microerror.Mask(err)
@@ -262,5 +271,22 @@ func (g *Guest) WaitForNodesReady(ctx context.Context, expectedNodes int) error 
 	}
 
 	g.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("waited for %d k8s nodes to be in %#q state", expectedNodes, v1.NodeReady))
+	return nil
+}
+
+func (g *Guest) EnsureNamespaces(ctx context.Context, requiredNamespaces []string) error {
+	for _, name := range requiredNamespaces {
+		// check for existing namespace with this name
+		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(name, metav1.GetOptions{})
+
+		if existing == nil {
+			nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+			_, err := g.K8sClient().CoreV1().Namespaces().Create(nsSpec)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+		}
+	}
+
 	return nil
 }
