@@ -2,6 +2,10 @@
 
 # e2e-harness
 
+**Deprecated** We are moving away from using e2e-harness in our e2e tests.
+We now provision KinD clusters instead of using minikube. This is done by [e2ectl](https://github.com/giantswarm/e2ectl).
+Shared setup logic for e2e tests is being moved to [e2esetup](https://github.com/giantswarm/e2esetup).
+
 Harness for custom kubernetes e2e testing.
 
 ## Getting Project
