@@ -36,6 +36,10 @@ required = [
 
 [[constraint]]
   branch = "master"
+  name = "github.com/giantswarm/apiextensions"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/giantswarm/apprclient"
 
 [[constraint]]
@@ -100,7 +104,7 @@ required = [
 
 [[override]]
   name = "k8s.io/kubernetes"
-  version = "v1.15.4"
+  version = "=v1.15.4"
 
 [[override]]
   name = "k8s.io/cli-runtime"
