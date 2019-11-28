@@ -280,12 +280,14 @@ func (g *Guest) EnsureNamespacesExists(ctx context.Context, namespaces []string)
 		// check for existing namespace with this name
 		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
-		if existing == nil {
+		if existing == nil || existing.Name != name {
+			g.logger.Log("level", "debug", "message", fmt.Sprintf("Creating namespace %s", name))
 			nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
 			_, err := g.K8sClient().CoreV1().Namespaces().Create(nsSpec)
 			if err != nil {
 				return microerror.Mask(err)
 			}
+			g.logger.Log("level", "debug", "message", fmt.Sprintf("Created namespace %s", name))
 		}
 	}
 
