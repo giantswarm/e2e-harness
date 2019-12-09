@@ -22,8 +22,8 @@ RUN apk -Uuv add --update --no-cache \
       sudo=1.8.23-r2 \
       iptables=1.6.2-r0
 
-ENV KUBECTL_VERSION=v1.16.1
-ENV HELM_VERSION=v2.14.3
+ENV KUBECTL_VERSION=v1.16.3
+ENV HELM_VERSION=v2.16.1
 ENV SHIPYARD_VERSION=v0.1.0
 
 RUN wget https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
