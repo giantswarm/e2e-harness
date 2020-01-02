@@ -48,7 +48,7 @@ required = [
 
 [[constraint]]
   name = "github.com/giantswarm/helmclient"
-  branch = "master"
+  branch = "reduce-backoff-time"
 
 [[constraint]]
   name = "github.com/giantswarm/microerror"
