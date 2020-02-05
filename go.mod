@@ -10,18 +10,20 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/chai2010/gettext-go v0.0.0-20170215093142-bf70f2a70fb1 // indirect
+	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/emicklei/go-restful v2.11.1+incompatible // indirect
-	github.com/fortytw2/leaktest v1.3.0 // indirect
+	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
+	github.com/fortytw2/leaktest v1.3.1-0.20190606143808-d73c753520d9 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
 	github.com/giantswarm/apiextensions v0.0.0-20191209114846-a4fd7939e26e
 	github.com/giantswarm/apprclient v0.0.0-20191209123802-955b7e89e6e2
 	github.com/giantswarm/backoff v0.0.0-20190913091243-4dd491125192
-	github.com/giantswarm/errors v0.0.0-20191119093322-2640113be13f // indirect
+	github.com/giantswarm/errors v0.0.0-20200205145547-c12c94d9a110 // indirect
 	github.com/giantswarm/helmclient v0.0.0-20191209124624-d3c47349776d
-	github.com/giantswarm/k8sportforward v0.0.0-20191209104600-676e7106283c // indirect
-	github.com/giantswarm/microerror v0.0.0-20191011121515-e0ebc4ecf5a5
-	github.com/giantswarm/micrologger v0.0.0-20191014091141-d866337f7393
-	github.com/giantswarm/versionbundle v0.0.0-20191206123034-be95231628ae
+	github.com/giantswarm/k8sportforward v0.0.0-20191209165148-21368288d82d // indirect
+	github.com/giantswarm/microerror v0.1.1-0.20200205143715-01b76f66cae6
+	github.com/giantswarm/micrologger v0.0.0-20200205144836-079154bcae45
+	github.com/giantswarm/versionbundle v0.0.0-20200205145509-6772c2bc7b34
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -37,7 +39,6 @@ require (
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jmoiron/sqlx v1.2.0 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
-	github.com/juju/errgo v0.0.0-20140925100237-08cceb5d0b53 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
@@ -47,27 +48,26 @@ require (
 	github.com/rubenv/sql-migrate v0.0.0-20191121092708-da1cb182f00e // indirect
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.5 // indirect
+	go.uber.org/atomic v1.3.2 // indirect
+	go.uber.org/multierr v1.1.0 // indirect
+	go.uber.org/zap v1.9.1 // indirect
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
-	golang.org/x/net v0.0.0-20191207000613-e7e4b65ae663 // indirect
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	golang.org/x/sys v0.0.0-20191206220618-eeba5f6aabab // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/genproto v0.0.0-20191206224255-0243a4be9c8f // indirect
 	google.golang.org/grpc v1.25.1 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/resty.v1 v1.12.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v2 v2.2.5
+	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.16.4
 	k8s.io/apiextensions-apiserver v0.16.4
-	k8s.io/apimachinery v0.16.4
+	k8s.io/apimachinery v0.16.6
 	k8s.io/client-go v0.16.4
 	k8s.io/helm v2.16.1+incompatible
-	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-aggregator v0.16.4
 	k8s.io/kubectl v0.16.4 // indirect
 	k8s.io/kubernetes v1.16.4 // indirect
+	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6 // indirect
 	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
 )
 
