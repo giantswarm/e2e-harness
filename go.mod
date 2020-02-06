@@ -26,12 +26,10 @@ require (
 	github.com/giantswarm/versionbundle v0.0.0-20200205145509-6772c2bc7b34
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
@@ -59,43 +57,39 @@ require (
 	google.golang.org/grpc v1.25.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.16.4
-	k8s.io/apiextensions-apiserver v0.16.4
+	k8s.io/api v0.16.6
+	k8s.io/apiextensions-apiserver v0.16.6
 	k8s.io/apimachinery v0.16.6
-	k8s.io/client-go v0.16.4
+	k8s.io/client-go v0.16.6
 	k8s.io/helm v2.16.1+incompatible
-	k8s.io/kube-aggregator v0.16.4
-	k8s.io/kubectl v0.16.4 // indirect
-	k8s.io/kubernetes v1.16.4 // indirect
-	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6 // indirect
-	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
+	k8s.io/kube-aggregator v0.16.6
+	k8s.io/kubernetes v1.16.6 // indirect
 )
 
 replace (
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.1+incompatible
-	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
 	// All of that is because helm has an import to k8s.io/kubernetes which
 	// uses relative paths to those.
-	k8s.io/api v0.0.0 => k8s.io/api v0.16.4
-	k8s.io/apiextensions-apiserver v0.0.0 => k8s.io/apiextensions-apiserver v0.16.4
-	k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.16.4
-	k8s.io/apiserver v0.0.0 => k8s.io/apiserver v0.16.4
-	k8s.io/cli-runtime v0.0.0 => k8s.io/cli-runtime v0.16.4
-	k8s.io/client-go v0.0.0 => k8s.io/client-go v0.16.4
-	k8s.io/cloud-provider v0.0.0 => k8s.io/cloud-provider v0.16.4
-	k8s.io/cluster-bootstrap v0.0.0 => k8s.io/cluster-bootstrap v0.16.4
-	k8s.io/code-generator v0.0.0 => k8s.io/code-generator v0.16.4
-	k8s.io/component-base v0.0.0 => k8s.io/component-base v0.16.4
-	k8s.io/cri-api v0.0.0 => k8s.io/cri-api v0.16.4
-	k8s.io/csi-translation-lib v0.0.0 => k8s.io/csi-translation-lib v0.16.4
-	k8s.io/kube-aggregator v0.0.0 => k8s.io/kube-aggregator v0.16.4
-	k8s.io/kube-controller-manager v0.0.0 => k8s.io/kube-controller-manager v0.16.4
-	k8s.io/kube-proxy v0.0.0 => k8s.io/kube-proxy v0.16.4
-	k8s.io/kube-scheduler v0.0.0 => k8s.io/kube-scheduler v0.16.4
-	k8s.io/kubectl v0.0.0 => k8s.io/kubectl v0.16.4
-	k8s.io/kubelet v0.0.0 => k8s.io/kubelet v0.16.4
-	k8s.io/legacy-cloud-providers v0.0.0 => k8s.io/legacy-cloud-providers v0.16.4
-	k8s.io/metrics v0.0.0 => k8s.io/metrics v0.16.4
-	k8s.io/sample-apiserver v0.0.0 => k8s.io/sample-apiserver v0.16.4
+	k8s.io/api v0.0.0 => k8s.io/api v0.16.6
+	k8s.io/apiextensions-apiserver v0.0.0 => k8s.io/apiextensions-apiserver v0.16.6
+	k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.16.6
+	k8s.io/apiserver v0.0.0 => k8s.io/apiserver v0.16.6
+	k8s.io/cli-runtime v0.0.0 => k8s.io/cli-runtime v0.16.6
+	k8s.io/client-go v0.0.0 => k8s.io/client-go v0.16.6
+	k8s.io/cloud-provider v0.0.0 => k8s.io/cloud-provider v0.16.6
+	k8s.io/cluster-bootstrap v0.0.0 => k8s.io/cluster-bootstrap v0.16.6
+	k8s.io/code-generator v0.0.0 => k8s.io/code-generator v0.16.6
+	k8s.io/component-base v0.0.0 => k8s.io/component-base v0.16.6
+	k8s.io/cri-api v0.0.0 => k8s.io/cri-api v0.16.6
+	k8s.io/csi-translation-lib v0.0.0 => k8s.io/csi-translation-lib v0.16.6
+	k8s.io/kube-aggregator v0.0.0 => k8s.io/kube-aggregator v0.16.6
+	k8s.io/kube-controller-manager v0.0.0 => k8s.io/kube-controller-manager v0.16.6
+	k8s.io/kube-proxy v0.0.0 => k8s.io/kube-proxy v0.16.6
+	k8s.io/kube-scheduler v0.0.0 => k8s.io/kube-scheduler v0.16.6
+	k8s.io/kubectl v0.0.0 => k8s.io/kubectl v0.16.6
+	k8s.io/kubelet v0.0.0 => k8s.io/kubelet v0.16.6
+	k8s.io/legacy-cloud-providers v0.0.0 => k8s.io/legacy-cloud-providers v0.16.6
+	k8s.io/metrics v0.0.0 => k8s.io/metrics v0.16.6
+	k8s.io/sample-apiserver v0.0.0 => k8s.io/sample-apiserver v0.16.6
 	k8s.io/utils v0.0.0 => k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6
 )
