@@ -243,12 +243,12 @@
   revision = "2640113be13f2eec85fe785ed74418a1a2852e5d"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f3e73f108ebb31c9a021261f9aaf8c8c430dfce7716b26253065afdb18be774a"
+  branch = "retry-pull-chart"
+  digest = "1:03cf45bc359172530cd6811626d4ce6d00ca719c3a7db40722dfd5cdca6a8fb4"
   name = "github.com/giantswarm/helmclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d3c47349776d30db46c3e200ee94d16aeb22aa0b"
+  revision = "e4c74f275cc053e6eaa7fe0e4f67438ec948995f"
 
 [[projects]]
   branch = "master"
