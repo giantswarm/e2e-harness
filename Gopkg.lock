@@ -220,11 +220,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9df3a29f6c60e6a436e53384d94d15fec3187b9bf9463aaa1a7d9d61931e51ba"
+  digest = "1:0b6e8390c8a20214832d477682602576c3d3f9af28651e77694d6156a7a09023"
   name = "github.com/giantswarm/apprclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "955b7e89e6e212610b2f233082fbe76636c8acf1"
+  revision = "d6357fcac73036aa3d0e6267edffc34bd40c7d51"
 
 [[projects]]
   branch = "master"
@@ -244,11 +244,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f3e73f108ebb31c9a021261f9aaf8c8c430dfce7716b26253065afdb18be774a"
+  digest = "1:d3c4629c2a900df5b1d9ca30b4fb509ef35f796be645fa5df929110710c0ee2e"
   name = "github.com/giantswarm/helmclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d3c47349776d30db46c3e200ee94d16aeb22aa0b"
+  revision = "26da7a78a1801bb05f2b47b4b1e833ca22bb423a"
 
 [[projects]]
   branch = "master"
@@ -267,8 +267,7 @@
   revision = "e0ebc4ecf5a515b8f2a33257d08962e387120a77"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c313924ca7110c452a83502384552f4dd2ed25dd0f3ab8aa8a34707315243561"
+  digest = "1:c497795cf3848ef5a655d53f24dfc670c72f9b2fc41eeda495d66542ae6bd017"
   name = "github.com/giantswarm/micrologger"
   packages = [
     ".",
@@ -276,15 +275,16 @@
     "microloggertest",
   ]
   pruneopts = "UT"
-  revision = "d866337f739365a54de5924b8a7b29df17693ef8"
+  revision = "c87486c7d20d7878ad57a09d379d7d59328b472e"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:90fda7152f6ded9c45d67bee5f23f2d8f148eb15672f30030c095e08eccf02b0"
+  digest = "1:e6227e79e59fea0321b7206823740cdebfd813ad52b5afec79c836385f91480a"
   name = "github.com/giantswarm/versionbundle"
   packages = ["."]
   pruneopts = "UT"
-  revision = "be95231628aed039183214a0e337bfe621e3072a"
+  revision = "c6a9f18d7762cb6bcc244b6d78adfa1d1eb179f0"
 
 [[projects]]
   digest = "1:0cfcded8689c2c964c223650009c5dd9e283c22d57f18f2335aafa16cc22acf1"
