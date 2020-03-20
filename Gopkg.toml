@@ -36,19 +36,19 @@ required = [
 
 [[constraint]]
   name = "github.com/giantswarm/apiextensions"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/apprclient"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/backoff"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/helmclient"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/microerror"
@@ -60,7 +60,7 @@ required = [
 
 [[constraint]]
   name = "github.com/giantswarm/versionbundle"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
