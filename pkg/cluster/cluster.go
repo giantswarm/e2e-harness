@@ -277,11 +277,13 @@ func (c *Cluster) createKubeconfig(filePath string) error {
 	// create file
 	f, err := c.fs.Create(filePath)
 	if err != nil {
-		return microerror.Mask(err)	}
+		return microerror.Mask(err)
+	}
 	// write kubeconfig to file
 	_, err = f.WriteString(kubeConfigContent)
 	if err != nil {
-		return microerror.Mask(err)	}
+		return microerror.Mask(err)
+	}
 
 	return nil
 }
