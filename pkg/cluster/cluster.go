@@ -277,12 +277,12 @@ func (c *Cluster) createKubeconfig(filePath string) error {
 	// create file
 	f, err := c.fs.Create(filePath)
 	if err != nil {
-		return microerror.Maskf(err, fmt.Sprintf("Failed to create kubeconfig %s", filePath))
+		return microerror.Mask(err)
 	}
 	// write kubeconfig to file
 	_, err = f.WriteString(kubeConfigContent)
 	if err != nil {
-		return microerror.Maskf(err, fmt.Sprintf("Failed to write content of kubeconfig %s", filePath))
+		return microerror.Mask(err)
 	}
 
 	return nil
