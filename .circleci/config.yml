@@ -12,15 +12,3 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
-
-      - architect/integration-test:
-          name: integration-test-sub-dir
-          test-dir: "e2e/sub-dir"
-          requires:
-            - go-test
-
-      - architect/integration-test:
-          name: integration-test-integration
-          test-dir: "integration"
-          requires:
-            - go-test
