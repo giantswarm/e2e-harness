@@ -20,7 +20,7 @@ import (
 
 const (
 	e2eHarness = "e2e-harness"
-	latest = "latest"
+	latest     = "latest"
 )
 
 var (
