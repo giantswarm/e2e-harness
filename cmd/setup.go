@@ -18,6 +18,11 @@ import (
 	"github.com/giantswarm/e2e-harness/pkg/wait"
 )
 
+const (
+	e2eHarness = "e2e-harness"
+	latest     = "latest"
+)
+
 var (
 	SetupCmd = &cobra.Command{
 		Use:   "setup",
@@ -79,8 +84,8 @@ func runSetup(ctx context.Context, cmd *cobra.Command, args []string) error {
 	projectName := harness.GetProjectName()
 	// use latest tag for consumer projects (not dog-fooding e2e-harness)
 	e2eHarnessTag := projectTag
-	if projectName != "e2e-harness" {
-		e2eHarnessTag = "latest"
+	if projectName != e2eHarness {
+		e2eHarnessTag = latest
 	}
 
 	var d *docker.Docker

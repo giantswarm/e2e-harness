@@ -49,7 +49,7 @@ func (w *Wait) For(md *MatchDef) error {
 	}
 
 	timeout := time.After(md.Deadline * time.Millisecond)
-	tick := time.Tick(md.Step * time.Millisecond)
+	tick := time.Tick(md.Step * time.Millisecond) // nolint:staticcheck
 
 	w.logger.Log("debug", fmt.Sprintf("waiting for pattern %q in %q output", md.Match, md.Run))
 	for {
@@ -64,7 +64,10 @@ func (w *Wait) For(md *MatchDef) error {
 			// writing without a reader will deadlock so write in a goroutine
 			go func() {
 				defer wr.Close()
-				w.runner.RunPortForward(wr, md.Run)
+				err := w.runner.RunPortForward(wr, md.Run)
+				if err != nil {
+					panic(err)
+				}
 			}()
 			ok, err := w.matcher.Find(re, md.Match)
 			if err != nil {

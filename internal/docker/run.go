@@ -3,8 +3,9 @@ package docker
 import (
 	"context"
 
-	"github.com/giantswarm/e2e-harness/internal/exec"
 	"github.com/giantswarm/microerror"
+
+	"github.com/giantswarm/e2e-harness/internal/exec"
 )
 
 type RunConfig struct {
@@ -32,9 +33,7 @@ func Run(ctx context.Context, config RunConfig) error {
 	args = append(args, "-w", config.WorkingDirectory)
 	args = append(args, config.Image)
 
-	for _, arg := range config.Args {
-		args = append(args, arg)
-	}
+	args = append(args, config.Args...)
 
 	err := exec.Exec(ctx, "docker", args...)
 	if err != nil {

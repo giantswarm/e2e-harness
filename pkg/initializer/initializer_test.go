@@ -41,7 +41,10 @@ func TestCreateLayout(t *testing.T) {
 		}
 	})
 
-	fs.RemoveAll(baseDir)
+	err = fs.RemoveAll(baseDir)
+	if err != nil {
+		panic(err)
+	}
 	if err := subject.CreateLayout(ctx); err != nil {
 		t.Errorf("unexpected error creating layout %s", err)
 	}

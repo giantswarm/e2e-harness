@@ -14,10 +14,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const (
-	folder = "logs"
-)
-
 type Config struct {
 	K8sClient kubernetes.Interface
 	Logger    micrologger.Logger

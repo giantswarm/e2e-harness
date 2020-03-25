@@ -63,7 +63,7 @@ func (l *Localkube) SetUp(ctx context.Context) error {
 func (l *Localkube) runCmd(command string) error {
 	command = os.ExpandEnv(command)
 	items := strings.Fields(command)
-	cmd := exec.Command(items[0], items[1:]...)
+	cmd := exec.Command(items[0], items[1:]...) // nolint:gosec
 	cmd.Stderr = os.Stdout
 	cmd.Stdout = os.Stdout
 
@@ -79,7 +79,7 @@ func downloadFromURL(url string) error {
 	}
 	defer output.Close()
 
-	response, err := http.Get(url)
+	response, err := http.Get(url) // nolint:gosec
 	if err != nil {
 		return microerror.Mask(err)
 	}
