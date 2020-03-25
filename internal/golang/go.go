@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/giantswarm/e2e-harness/internal/docker"
 	"github.com/giantswarm/microerror"
+
+	"github.com/giantswarm/e2e-harness/internal/docker"
 )
 
 // Go runs a go command for a project in a given working directory. Example

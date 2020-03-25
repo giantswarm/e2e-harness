@@ -7,8 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/giantswarm/e2e-harness/pkg/framework"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/giantswarm/e2e-harness/pkg/framework"
 )
 
 func TestAggregationClient(t *testing.T) {

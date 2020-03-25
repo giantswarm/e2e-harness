@@ -8,8 +8,6 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/backoff"
-	"github.com/giantswarm/e2e-harness/internal/filelogger"
-	"github.com/giantswarm/e2e-harness/pkg/harness"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -20,6 +18,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	aggregationclient "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
+
+	"github.com/giantswarm/e2e-harness/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/pkg/harness"
 )
 
 const (
