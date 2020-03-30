@@ -12,7 +12,7 @@ require (
 	github.com/giantswarm/versionbundle v0.2.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/spf13/afero v1.2.2
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.7
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.16.6
