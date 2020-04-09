@@ -19,7 +19,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.16.6
 	k8s.io/apimachinery v0.16.6
 	k8s.io/apiserver v0.16.6 // indirect
-	k8s.io/client-go v0.16.6
+	k8s.io/client-go v0.18.1
 	k8s.io/helm v2.16.4+incompatible
 	k8s.io/kube-aggregator v0.0.0
 )
