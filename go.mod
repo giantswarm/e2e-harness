@@ -17,9 +17,9 @@ require (
 	github.com/spf13/cobra v0.0.5
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.17.3
-	k8s.io/apiextensions-apiserver v0.17.3
-	k8s.io/apimachinery v0.17.3
-	k8s.io/client-go v0.17.3
-	k8s.io/kube-aggregator v0.17.3
+	k8s.io/api v0.17.7
+	k8s.io/apiextensions-apiserver v0.17.7
+	k8s.io/apimachinery v0.17.7
+	k8s.io/client-go v0.17.7
+	k8s.io/kube-aggregator v0.17.7
 )
