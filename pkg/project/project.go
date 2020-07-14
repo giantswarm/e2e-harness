@@ -152,6 +152,7 @@ func (p *Project) CommonTearDownSteps(ctx context.Context) error {
 }
 
 func (p *Project) Test(ctx context.Context) error {
+	p.logger.Log("level", "debug", "message", fmt.Sprintf("e2e-harness version %q", version))
 	p.logger.Log("level", "info", "message", "started tests")
 
 	// --test-dir is mounted in /e2e in the test container, and the binary with
