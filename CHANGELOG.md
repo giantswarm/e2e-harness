@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade helmclient to 1.0.2.
+- Upgrade helmclient to 1.0.4.
+- Upgrade k8s dependencies to 0.17.7.
 
 ## [0.2.0] 2020-03-25
 
