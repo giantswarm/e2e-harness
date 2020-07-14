@@ -115,7 +115,7 @@ func NewHost(c HostConfig) (*Host, error) {
 	return h, nil
 }
 
-func (h *Host) ApplyAWSConfigPatch(patch []PatchSpec, clusterName string) error {
+func (h *Host) ApplyAWSConfigPatch(ctx context.Context, patch []PatchSpec, clusterName string) error {
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
 		return microerror.Mask(err)
@@ -124,7 +124,7 @@ func (h *Host) ApplyAWSConfigPatch(patch []PatchSpec, clusterName string) error 
 	_, err = h.g8sClient.
 		ProviderV1alpha1().
 		AWSConfigs(h.targetNamespace).
-		Patch(clusterName, types.JSONPatchType, patchBytes)
+		Patch(ctx, clusterName, types.JSONPatchType, patchBytes, metav1.PatchOptions{})
 
 	if err != nil {
 		return microerror.Mask(err)
@@ -133,10 +133,10 @@ func (h *Host) ApplyAWSConfigPatch(patch []PatchSpec, clusterName string) error 
 	return nil
 }
 
-func (h *Host) AWSCluster(name string) (*v1alpha1.AWSConfig, error) {
+func (h *Host) AWSCluster(ctx context.Context, name string) (*v1alpha1.AWSConfig, error) {
 	cluster, err := h.g8sClient.ProviderV1alpha1().
 		AWSConfigs(h.targetNamespace).
-		Get(name, metav1.GetOptions{})
+		Get(ctx, name, metav1.GetOptions{})
 
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -154,11 +154,11 @@ func (h *Host) DeleteGuestCluster(ctx context.Context, provider string) error {
 
 			switch provider {
 			case "aws":
-				err = h.g8sClient.ProviderV1alpha1().AWSConfigs(h.targetNamespace).Delete(h.clusterID, &metav1.DeleteOptions{})
+				err = h.g8sClient.ProviderV1alpha1().AWSConfigs(h.targetNamespace).Delete(ctx, h.clusterID, metav1.DeleteOptions{})
 			case "azure":
-				err = h.g8sClient.ProviderV1alpha1().AzureConfigs(h.targetNamespace).Delete(h.clusterID, &metav1.DeleteOptions{})
+				err = h.g8sClient.ProviderV1alpha1().AzureConfigs(h.targetNamespace).Delete(ctx, h.clusterID, metav1.DeleteOptions{})
 			case "kvm":
-				err = h.g8sClient.ProviderV1alpha1().KVMConfigs(h.targetNamespace).Delete(h.clusterID, &metav1.DeleteOptions{})
+				err = h.g8sClient.ProviderV1alpha1().KVMConfigs(h.targetNamespace).Delete(ctx, h.clusterID, metav1.DeleteOptions{})
 			default:
 				return microerror.Maskf(unknownProviderError, "%#q not recognized", provider)
 			}
@@ -190,11 +190,11 @@ func (h *Host) DeleteGuestCluster(ctx context.Context, provider string) error {
 
 			switch provider {
 			case "aws":
-				_, err = h.g8sClient.ProviderV1alpha1().AWSConfigs(h.targetNamespace).Get(h.clusterID, metav1.GetOptions{})
+				_, err = h.g8sClient.ProviderV1alpha1().AWSConfigs(h.targetNamespace).Get(ctx, h.clusterID, metav1.GetOptions{})
 			case "azure":
-				_, err = h.g8sClient.ProviderV1alpha1().AzureConfigs(h.targetNamespace).Get(h.clusterID, metav1.GetOptions{})
+				_, err = h.g8sClient.ProviderV1alpha1().AzureConfigs(h.targetNamespace).Get(ctx, h.clusterID, metav1.GetOptions{})
 			case "kvm":
-				_, err = h.g8sClient.ProviderV1alpha1().KVMConfigs(h.targetNamespace).Get(h.clusterID, metav1.GetOptions{})
+				_, err = h.g8sClient.ProviderV1alpha1().KVMConfigs(h.targetNamespace).Get(ctx, h.clusterID, metav1.GetOptions{})
 			default:
 				return microerror.Maskf(unknownProviderError, "%#q not recognized", provider)
 			}

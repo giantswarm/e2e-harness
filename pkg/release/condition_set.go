@@ -49,7 +49,7 @@ func newConditionSet(config conditionSetConfig) (*conditionSet, error) {
 func (c *conditionSet) CRDExists(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFunc {
 	return func() error {
 		o := func() error {
-			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return microerror.Mask(err)
 			} else if err != nil {
@@ -71,7 +71,7 @@ func (c *conditionSet) CRDExists(ctx context.Context, crd *apiextensionsv1beta1.
 func (c *conditionSet) CRDNotFound(ctx context.Context, crd *apiextensionsv1beta1.CustomResourceDefinition) ConditionFunc {
 	return func() error {
 		o := func() error {
-			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+			_, err := c.extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil
 			} else if err != nil {
@@ -94,7 +94,7 @@ func (c *conditionSet) CRDNotFound(ctx context.Context, crd *apiextensionsv1beta
 func (c *conditionSet) PodExists(ctx context.Context, namespace, labelSelector string) ConditionFunc {
 	return func() error {
 		o := func() error {
-			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
 			if err != nil {
 				return microerror.Mask(err)
 			}
@@ -123,7 +123,7 @@ func (c *conditionSet) PodExists(ctx context.Context, namespace, labelSelector s
 func (c *conditionSet) PodNotFound(ctx context.Context, namespace, labelSelector string) ConditionFunc {
 	return func() error {
 		o := func() error {
-			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+			pods, err := c.k8sClient.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
 			if err != nil {
 				return microerror.Mask(err)
 			}
@@ -148,7 +148,7 @@ func (c *conditionSet) PodNotFound(ctx context.Context, namespace, labelSelector
 func (c *conditionSet) SecretExists(ctx context.Context, namespace, name string) ConditionFunc {
 	return func() error {
 		o := func() error {
-			_, err := c.k8sClient.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+			_, err := c.k8sClient.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return microerror.Mask(err)
 			} else if err != nil {
@@ -170,7 +170,7 @@ func (c *conditionSet) SecretExists(ctx context.Context, namespace, name string)
 func (c *conditionSet) SecretNotFound(ctx context.Context, namespace, name string) ConditionFunc {
 	return func() error {
 		o := func() error {
-			_, err := c.k8sClient.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+			_, err := c.k8sClient.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil
 			} else if err != nil {

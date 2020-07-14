@@ -79,7 +79,7 @@ func (f *FileLogger) EnsurePodLogging(ctx context.Context, namespace, name strin
 		req := f.k8sClient.CoreV1().RESTClient().Get().Namespace(namespace).Name(name).Resource("pods").SubResource("log").Param("follow", strconv.FormatBool(true))
 
 		o := func() error {
-			logStream, err = req.Stream()
+			logStream, err = req.Stream(ctx)
 			if err != nil {
 				return microerror.Mask(err)
 			}
