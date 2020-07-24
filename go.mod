@@ -4,18 +4,17 @@ go 1.13
 
 require (
 	github.com/ghodss/yaml v1.0.0
-	github.com/giantswarm/apiextensions v0.4.14-0.20200714152258-d202c698cf21
-	github.com/giantswarm/apprclient v0.2.1-0.20200714164930-8ed30555e572
+	github.com/giantswarm/apiextensions v0.4.17-0.20200723160042-89aed92d1080
+	github.com/giantswarm/apprclient v0.2.1-0.20200724085653-63c7eb430dcf
 	github.com/giantswarm/backoff v0.2.0
-	github.com/giantswarm/helmclient v1.0.5-0.20200714164134-5926fe4dda96
+	github.com/giantswarm/helmclient v1.0.6-0.20200724131413-ea0311052b6e
 	github.com/giantswarm/microerror v0.2.0
 	github.com/giantswarm/micrologger v0.3.1
 	github.com/giantswarm/versionbundle v0.2.0
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-querystring v1.0.0 // indirect
-	github.com/spf13/afero v1.3.1
+	github.com/spf13/afero v1.3.2
 	github.com/spf13/cobra v1.0.0
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.5
 	k8s.io/apiextensions-apiserver v0.18.5
