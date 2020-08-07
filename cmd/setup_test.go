@@ -3,7 +3,7 @@ package cmd_test
 import (
 	"testing"
 
-	"github.com/giantswarm/e2e-harness/cmd"
+	"github.com/giantswarm/e2e-harness/v2/cmd"
 )
 
 func TestSetupFlags(t *testing.T) {

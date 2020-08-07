@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
-	"github.com/giantswarm/apprclient"
+	"github.com/giantswarm/apiextensions/v2/pkg/clientset/versioned"
+	"github.com/giantswarm/apprclient/v2"
 	"github.com/giantswarm/backoff"
-	"github.com/giantswarm/helmclient"
+	"github.com/giantswarm/helmclient/v2"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -19,7 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/e2e-harness/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/v2/internal/filelogger"
 )
 
 const (

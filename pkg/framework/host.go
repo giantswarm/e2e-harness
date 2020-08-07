@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
-	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
+	"github.com/giantswarm/apiextensions/v2/pkg/apis/provider/v1alpha1"
+	"github.com/giantswarm/apiextensions/v2/pkg/clientset/versioned"
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -19,8 +19,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	aggregationclient "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 
-	"github.com/giantswarm/e2e-harness/internal/filelogger"
-	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v2/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/e2e-harness/internal/exec"
+	"github.com/giantswarm/e2e-harness/v2/internal/exec"
 )
 
 func Pull(ctx context.Context, image string) error {

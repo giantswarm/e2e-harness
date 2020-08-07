@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/afero"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/runner"
-	"github.com/giantswarm/e2e-harness/pkg/wait"
+	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v2/pkg/runner"
+	"github.com/giantswarm/e2e-harness/v2/pkg/wait"
 )
 
 const (
