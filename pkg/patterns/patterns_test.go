@@ -6,7 +6,7 @@ import (
 
 	"github.com/giantswarm/micrologger/microloggertest"
 
-	"github.com/giantswarm/e2e-harness/pkg/patterns"
+	"github.com/giantswarm/e2e-harness/v2/pkg/patterns"
 )
 
 func TestFindMatch(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
+	"github.com/giantswarm/apiextensions/v2/pkg/clientset/versioned"
 	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -95,14 +95,14 @@ func (g *Guest) RestConfig() *rest.Config {
 }
 
 // Initialize sets up the Guest fields that are not directly injected.
-func (g *Guest) Initialize() error {
+func (g *Guest) Initialize(ctx context.Context) error {
 
 	var guestG8sClient versioned.Interface
 	var guestK8sClient kubernetes.Interface
 	var guestRestConfig *rest.Config
 	{
 		n := fmt.Sprintf("%s-api", g.clusterID)
-		s, err := g.hostK8sClient.CoreV1().Secrets("default").Get(n, metav1.GetOptions{})
+		s, err := g.hostK8sClient.CoreV1().Secrets("default").Get(ctx, n, metav1.GetOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -140,7 +140,7 @@ func (g *Guest) Initialize() error {
 // only happen as soon as certain requirements have been met. A requirement for
 // the guest framework is a set up host cluster.
 func (g *Guest) Setup(ctx context.Context) error {
-	err := g.Initialize()
+	err := g.Initialize(ctx)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -153,13 +153,13 @@ func (g *Guest) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (g *Guest) WaitForAPIDown() error {
+func (g *Guest) WaitForAPIDown(ctx context.Context) error {
 	time.Sleep(1 * time.Second)
 
 	g.logger.Log("level", "debug", "message", "waiting for k8s API to be down")
 
 	o := func() error {
-		_, err := g.k8sClient.CoreV1().Services("default").Get("kubernetes", metav1.GetOptions{})
+		_, err := g.k8sClient.CoreV1().Services("default").Get(ctx, "kubernetes", metav1.GetOptions{})
 		if err != nil {
 			return nil
 		}
@@ -181,11 +181,11 @@ func (g *Guest) WaitForAPIDown() error {
 	return nil
 }
 
-func (g *Guest) WaitForAPIUp() error {
+func (g *Guest) WaitForAPIUp(ctx context.Context) error {
 	g.logger.Log("level", "debug", "message", "waiting for k8s API to be up")
 
 	o := func() error {
-		_, err := g.k8sClient.CoreV1().Services("default").Get("kubernetes", metav1.GetOptions{})
+		_, err := g.k8sClient.CoreV1().Services("default").Get(ctx, "kubernetes", metav1.GetOptions{})
 		if err != nil {
 			return microerror.Maskf(waitError, err.Error())
 		}
@@ -210,7 +210,7 @@ func (g *Guest) WaitForAPIUp() error {
 func (g *Guest) WaitForGuestReady(ctx context.Context) error {
 	var err error
 
-	err = g.WaitForAPIUp()
+	err = g.WaitForAPIUp(ctx)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -232,7 +232,7 @@ func (g *Guest) WaitForNodesReady(ctx context.Context, expectedNodes int) error 
 	g.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("waiting for %d k8s nodes to be in %#q state", expectedNodes, v1.NodeReady))
 
 	o := func() error {
-		nodes, err := g.k8sClient.CoreV1().Nodes().List(metav1.ListOptions{})
+		nodes, err := g.k8sClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -268,12 +268,12 @@ func (g *Guest) EnsureNamespacesExists(ctx context.Context, namespaces []string)
 	g.logger.Log("level", "debug", "message", "ensuring needed namespaces exist")
 	for _, name := range namespaces {
 		// check for existing namespace with this name
-		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(name, metav1.GetOptions{})
+		existing, _ := g.K8sClient().CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 
 		if existing == nil || existing.Name != name {
 			g.logger.Log("level", "debug", "message", fmt.Sprintf("Creating namespace %s", name))
 			nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
-			_, err := g.K8sClient().CoreV1().Namespaces().Create(nsSpec)
+			_, err := g.K8sClient().CoreV1().Namespaces().Create(ctx, nsSpec, metav1.CreateOptions{})
 			if err != nil {
 				return microerror.Mask(err)
 			}

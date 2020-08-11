@@ -153,7 +153,7 @@ just keep in mind these considerations:
 // +build k8srequired
 ```
 * The kube config file path for connecting to the test cluster can be obtained from
-the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/pkg/harness` package.
+the `DefaultKubeConfig` constant in the `giantswarm/e2e-harness/v2/pkg/harness` package.
 
 ## Projects using `e2e-harness`
 

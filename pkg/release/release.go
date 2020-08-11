@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
-	"github.com/giantswarm/apprclient"
+	"github.com/giantswarm/apiextensions/v2/pkg/clientset/versioned"
+	"github.com/giantswarm/apprclient/v2"
 	"github.com/giantswarm/backoff"
-	"github.com/giantswarm/helmclient"
+	"github.com/giantswarm/helmclient/v2/pkg/helmclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
@@ -19,7 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/e2e-harness/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/v2/internal/filelogger"
 )
 
 const (
@@ -220,7 +220,7 @@ func (r *Release) EnsureInstalled(ctx context.Context, name string, chartInfo Ch
 	if isOperator {
 		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("finding operator pod name for release %#q", name))
 
-		operatorPodName, err = r.podName(operatorPodNamespace, fmt.Sprintf("app=%s", name))
+		operatorPodName, err = r.podName(ctx, operatorPodNamespace, fmt.Sprintf("app=%s", name))
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -317,10 +317,10 @@ func (r *Release) InstallOperator(ctx context.Context, name string, chartInfo Ch
 
 	labelSelector := fmt.Sprintf("app=%s", name)
 
-	podName, err := r.podName(podNamespace, labelSelector)
+	podName, err := r.podName(ctx, podNamespace, labelSelector)
 	if IsNotFound(err) {
 		podNamespace = "giantswarm"
-		podName, err = r.podName(podNamespace, labelSelector)
+		podName, err = r.podName(ctx, podNamespace, labelSelector)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -429,10 +429,10 @@ func (r *Release) WaitForChartInfo(ctx context.Context, release string, version 
 	return nil
 }
 
-func (r *Release) podName(namespace, labelSelector string) (string, error) {
+func (r *Release) podName(ctx context.Context, namespace, labelSelector string) (string, error) {
 	pods, err := r.k8sClient.CoreV1().
 		Pods(namespace).
-		List(metav1.ListOptions{
+		List(ctx, metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 	if err != nil {

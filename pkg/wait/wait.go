@@ -8,8 +8,8 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/e2e-harness/pkg/patterns"
-	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/e2e-harness/v2/pkg/patterns"
+	"github.com/giantswarm/e2e-harness/v2/pkg/runner"
 )
 
 const (

@@ -11,7 +11,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/e2e-harness/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
 )
 
 type Config struct {
