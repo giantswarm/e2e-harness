@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade apiextensions to 3.7.0
+- Upgrade helmclient to 3.0.1
+
 ## [2.0.0] - 2020-08-11
 
 ### Changed
