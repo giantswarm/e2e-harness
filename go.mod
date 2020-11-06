@@ -1,4 +1,4 @@
-module github.com/giantswarm/e2e-harness/v2
+module github.com/giantswarm/e2e-harness/v3
 
 go 1.13
 
