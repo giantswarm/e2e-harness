@@ -9,8 +9,8 @@ import (
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/spf13/afero"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
-	"github.com/giantswarm/e2e-harness/v2/pkg/initializer"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/initializer"
 )
 
 const (

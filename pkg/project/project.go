@@ -13,14 +13,14 @@ import (
 	"github.com/spf13/afero"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
-	"github.com/giantswarm/e2e-harness/v2/pkg/runner"
-	"github.com/giantswarm/e2e-harness/v2/pkg/wait"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/runner"
+	"github.com/giantswarm/e2e-harness/v3/pkg/wait"
 )
 
 const (
 	DefaultDirectory = "integration"
-	version          = "2.0.0"
+	version          = "3.0.0"
 )
 
 type E2e struct {

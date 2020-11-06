@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/giantswarm/e2e-harness/v2/cmd"
+	"github.com/giantswarm/e2e-harness/v3/cmd"
 )
 
 func main() {

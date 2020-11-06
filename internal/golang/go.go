@@ -9,7 +9,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/e2e-harness/v2/internal/docker"
+	"github.com/giantswarm/e2e-harness/v3/internal/docker"
 )
 
 // Go runs a go command for a project in a given working directory. Example

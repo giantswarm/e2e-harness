@@ -19,7 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/e2e-harness/v2/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/v3/internal/filelogger"
 )
 
 const (

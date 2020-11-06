@@ -10,8 +10,8 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/builder"
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/builder"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
 )
 
 type Minikube struct {

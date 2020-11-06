@@ -13,8 +13,8 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
-	"github.com/giantswarm/e2e-harness/v2/pkg/runner"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/runner"
 )
 
 type Config struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/e2e-harness/v2/internal/docker"
+	"github.com/giantswarm/e2e-harness/v3/internal/docker"
 )
 
 // PullDockerImage implements tasks.Task func type. It is meant to be ran

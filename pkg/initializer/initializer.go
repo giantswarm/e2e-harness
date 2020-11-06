@@ -10,7 +10,7 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/afero"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
 )
 
 const (
@@ -30,7 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
 )
 
 func getK8sClient() (kubernetes.Interface, error) {

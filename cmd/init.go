@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/e2e-harness/v2/cmd/internal"
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
-	"github.com/giantswarm/e2e-harness/v2/pkg/initializer"
-	"github.com/giantswarm/e2e-harness/v2/pkg/tasks"
+	"github.com/giantswarm/e2e-harness/v3/cmd/internal"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/initializer"
+	"github.com/giantswarm/e2e-harness/v3/pkg/tasks"
 )
 
 var (
