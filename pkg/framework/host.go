@@ -19,8 +19,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	aggregationclient "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 
-	"github.com/giantswarm/e2e-harness/v2/internal/filelogger"
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/internal/filelogger"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
 )
 
 const (

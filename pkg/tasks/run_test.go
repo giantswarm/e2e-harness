@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/giantswarm/e2e-harness/v2/pkg/tasks"
+	"github.com/giantswarm/e2e-harness/v3/pkg/tasks"
 )
 
 var (

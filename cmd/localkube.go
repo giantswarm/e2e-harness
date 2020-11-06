@@ -6,9 +6,9 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/e2e-harness/v2/cmd/internal"
-	"github.com/giantswarm/e2e-harness/v2/pkg/localkube"
-	"github.com/giantswarm/e2e-harness/v2/pkg/tasks"
+	"github.com/giantswarm/e2e-harness/v3/cmd/internal"
+	"github.com/giantswarm/e2e-harness/v3/pkg/localkube"
+	"github.com/giantswarm/e2e-harness/v3/pkg/tasks"
 )
 
 var (

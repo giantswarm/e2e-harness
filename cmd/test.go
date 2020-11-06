@@ -8,15 +8,15 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/e2e-harness/v2/cmd/internal"
-	"github.com/giantswarm/e2e-harness/v2/internal/golang"
-	"github.com/giantswarm/e2e-harness/v2/pkg/compiler"
-	"github.com/giantswarm/e2e-harness/v2/pkg/docker"
-	"github.com/giantswarm/e2e-harness/v2/pkg/harness"
-	"github.com/giantswarm/e2e-harness/v2/pkg/patterns"
-	"github.com/giantswarm/e2e-harness/v2/pkg/project"
-	"github.com/giantswarm/e2e-harness/v2/pkg/tasks"
-	"github.com/giantswarm/e2e-harness/v2/pkg/wait"
+	"github.com/giantswarm/e2e-harness/v3/cmd/internal"
+	"github.com/giantswarm/e2e-harness/v3/internal/golang"
+	"github.com/giantswarm/e2e-harness/v3/pkg/compiler"
+	"github.com/giantswarm/e2e-harness/v3/pkg/docker"
+	"github.com/giantswarm/e2e-harness/v3/pkg/harness"
+	"github.com/giantswarm/e2e-harness/v3/pkg/patterns"
+	"github.com/giantswarm/e2e-harness/v3/pkg/project"
+	"github.com/giantswarm/e2e-harness/v3/pkg/tasks"
+	"github.com/giantswarm/e2e-harness/v3/pkg/wait"
 )
 
 var (
